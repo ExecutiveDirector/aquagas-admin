@@ -1,0 +1,116 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+
+/*
+:root {
+  * Dark theme colors *
+  --bg: #e2e5eb;         /* main background *
+  --card: #1f4381;       /* cards / surfaces *
+  --accent: #0ea5a4;     /* primary accent (teal) *
+  --text: black;       /* main text (light gray) *
+  --text-muted: #1b6ee3; /* secondary text */
+  /*--hover: #0f2333;       hover state for sidebar items */
+/*}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: Inter, system-ui, Arial, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+}
+
+.app {
+  display: flex;
+  min-height: 100vh;
+}
+
+/* Sidebar *
+.sidebar {
+  width: 220px;
+  background: cadetblue;
+  padding: 16px;
+}
+.sidebar a {
+  display: block;
+  color: var(--text);
+  text-decoration: none;
+  padding: 8px;
+  border-radius: 6px;
+  margin-bottom: 6px;
+  transition: background 0.2s, color 0.2s;
+}
+.sidebar a:hover {
+  background: var(--hover);
+  color: var(--accent);
+}
+
+/* Header *
+.header {
+  height: 60px;
+  background: #073c3b;
+  display: flex;
+  align-items: center;
+  padding: 0 16px;
+  justify-content: space-between;
+  color: var(--text);
+}
+
+/* Content *
+.content {
+  flex: 1;
+  padding: 16px;
+}
+
+/* Card 
+.card {
+  background: var(--card);
+  padding: 12px;
+  border-radius: 8px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.4);
+}
+
+/* Form 
+.form-row {
+  margin-bottom: 12px;
+}
+
+input,
+select {
+  width: 100%;
+  padding: 8px;
+  border-radius: 6px;
+
+  color: var(--text);
+  outline: none;
+  transition: border 0.2s, background 0.2s;
+}
+input:focus,
+select:focus {
+  border-color: var(--accent);
+  background: #132035;
+}
+
+/* Buttons 
+button {
+  padding: 8px 12px;
+  border-radius: 6px;
+  border: none;
+  background: var(--accent);
+  color: #135822;
+  cursor: pointer;
+  font-weight: 500;
+  transition: background 0.2s, transform 0.1s;
+}
+button:hover {
+  background: #0cb0af;
+}
+button:active {
+  transform: scale(0.98);
+}
+*/
