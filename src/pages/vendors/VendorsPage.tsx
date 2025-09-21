@@ -1,37 +1,21 @@
-import React, { useEffect, useState } from 'react';
-import {
-  getDashboardStats,
-  listVendors,
-  vendorRegister,
-  getVendorDetails,
-  getVendorProducts,
-  getVendorReviews,
-  getRecentOrders,
-  getInventory,
-  updateInventory,
-  recordInventoryMovement,
-  getLowStockAlerts,
-  getVendorOrders,
-  updateOrderStatus,
-  getVendorOrderDetails,
-  getSalesAnalytics,
-  getProductAnalytics,
-  getOutlets,
-  createOutlet,
-  updateOutlet,
-  updateVendor, // New import
-} from '../../services/adminService';
-import { Store } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Search, Plus, AlertCircle, RefreshCw } from 'lucide-react';
+import VendorsList from './VendorList';
+import type { UpdateVendorFormData } from './VendorDetails';
+import VendorDetails from './VendorDetails';
+import VendorDashboard from './VendorDashboard';
+import type { InventoryMovement } from './InventoryManagement';
+import InventoryManagement from './InventoryManagement';
+import type { AddVendorFormData } from './AddVendorForm';
+import AddVendorForm from './AddVendorForm';
+import { listVendors, getDashboardStats, updateVendor, vendorRegister, getInventory, updateInventory, recordInventoryMovement, getLowStockAlerts, testApiConnection } from '../../services/adminService';
+import { isAuthenticated, logout, isAdmin, getToken } from '../../services/auth';
 
-// Type definitions (unchanged)
 interface Vendor {
   vendor_id: string;
   business_name: string;
   trading_name?: string;
   brand?: 'Total' | 'Rubis' | 'Shell' | 'Kobil' | 'Vivo' | 'Independent';
-  business_registration_no?: string;
-  tax_pin?: string;
-  license_number?: string;
   contact_person: string;
   business_phone?: string;
   business_email?: string;
@@ -43,12 +27,8 @@ interface Vendor {
   minimum_order_amount: number;
   delivery_radius_km: number;
   average_prep_time_minutes: number;
-  business_hours?: string;
-  verification_documents?: string;
-  bank_account_details?: string;
   currency: string;
   is_active: boolean;
-  outlets?: Outlet[];
   created_at: string;
   updated_at: string;
 }
@@ -59,32 +39,6 @@ interface Product {
   stock: number;
   price: number;
   vendor_id: string;
-}
-
-interface Review {
-  review_id: string;
-  rating: number;
-  comment: string;
-  vendor_id: string;
-  user_id: string;
-  created_at: string;
-}
-
-interface Order {
-  order_id: string;
-  vendor_id: string;
-  user_id: string;
-  status: string;
-  order_value: number;
-  items?: OrderItem[];
-  created_at: string;
-}
-
-interface OrderItem {
-  product_id: string;
-  name: string;
-  quantity: number;
-  price: number;
 }
 
 interface DashboardStats {
@@ -98,749 +52,471 @@ interface DashboardStats {
   completedOrders?: number;
 }
 
-interface Outlet {
-  outlet_id: string;
-  vendor_id: string;
-  name: string;
-  address: string;
-  created_at: string;
+interface ErrorDetails {
+  message: string;
+  status?: number;
+  endpoint?: string;
+  canRetry: boolean;
+  isAuthError: boolean;
 }
 
-interface SalesAnalytics {
-  revenue: number;
-  totalSales?: number;
-  period?: string;
-}
-
-interface ProductAnalytics extends Product {
-  orders: Order[];
-  totalSold?: number;
-}
-
-export default function VendorsPage() {
-  const [items, setItems] = useState<Vendor[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [selectedVendor, setSelectedVendor] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState('list');
-  const [formData, setFormData] = useState({
-    business_name: '',
-    contact_person: '',
-    business_phone: '',
-    business_email: '',
-    password: '',
-  });
-  const [updateFormData, setUpdateFormData] = useState({
-    business_name: '',
-    contact_person: '',
-    business_phone: '',
-    business_email: '',
-    trading_name: '',
-  });
-  const [vendorDetails, setVendorDetails] = useState<Vendor | null>(null);
-  const [vendorProducts, setVendorProducts] = useState<Product[]>([]);
-  const [vendorReviews, setVendorReviews] = useState<Review[]>([]);
-  const [dashboardStats, setDashboardStats] = useState<DashboardStats | null>(null);
-  const [recentOrders, setRecentOrders] = useState<Order[]>([]);
+const VendorsPage: React.FC = () => {
+  const [vendors, setVendors] = useState<Vendor[]>([]);
+  const [selectedVendorId, setSelectedVendorId] = useState<string | null>(null);
   const [inventory, setInventory] = useState<Product[]>([]);
+  const [dashboardStats, setDashboardStats] = useState<DashboardStats>({
+    users: 0,
+    vendors: 0,
+    riders: 0,
+    orders: 0,
+    todayRevenue: 0,
+  });
   const [lowStockAlerts, setLowStockAlerts] = useState<Product[]>([]);
-  const [vendorOrders, setVendorOrders] = useState<Order[]>([]);
-  const [orderDetails, setOrderDetails] = useState<Order | null>(null);
-  const [salesAnalytics, setSalesAnalytics] = useState<SalesAnalytics | null>(null);
-  const [productAnalytics, setProductAnalytics] = useState<ProductAnalytics[]>([]);
-  const [outlets, setOutlets] = useState<Outlet[]>([]);
-  const [newOutlet, setNewOutlet] = useState({ name: '', address: '' });
-  const [inventoryUpdate, setInventoryUpdate] = useState({ productId: '', updates: {} });
-  const [inventoryMovement, setInventoryMovement] = useState({ product_id: '', quantity: 0, type: 'in' as 'in' | 'out' });
-  const [orderStatusUpdate, setOrderStatusUpdate] = useState({ orderId: '', status: '' });
+  const [searchQuery, setSearchQuery] = useState('');
+  const [activeSection, setActiveSection] = useState<'dashboard' | 'list' | 'add' | 'details' | 'inventory' | 'debug'>('dashboard');
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<ErrorDetails | null>(null);
+  const [retryCount, setRetryCount] = useState(0);
 
-  useEffect(() => {
-    (async () => {
-      try {
-        const response = await listVendors();
-        setItems(response.data || []);
-      } catch (err: any) {
-        setError(err?.response?.data?.error || 'Failed to load vendors');
-      } finally {
-        setLoading(false);
+  // Helper function to create detailed error info
+  const createErrorDetails = (err: any, endpoint?: string): ErrorDetails => {
+    const status = err.response?.status;
+    const isAuthError = status === 401 || status === 403;
+    
+    return {
+      message: err.response?.data?.error || err.message || 'An unknown error occurred',
+      status,
+      endpoint,
+      canRetry: !isAuthError && status !== 404,
+      isAuthError
+    };
+  };
+
+  // Enhanced data fetching with better error handling
+  const fetchData = async (retryAttempt = 0) => {
+    setIsLoading(true);
+    setError(null);
+
+    try {
+      console.log('VendorsPage: Starting data fetch attempt', retryAttempt + 1);
+      
+      // Test API connectivity first
+      const apiTest = await testApiConnection();
+      if (!apiTest.success) {
+        throw new Error(`API connectivity test failed: ${apiTest.error}`);
       }
-    })();
-  }, []);
 
-  const handleSelectVendor = async (vendorId: string) => {
-    setSelectedVendor(vendorId);
-    setActiveTab('details');
-    try {
-      const [details, products, reviews, stats, orders, inventoryData, lowStock, vendorOrdersData, sales, productAnalyticsData, outletsData] = await Promise.all([
-        getVendorDetails(vendorId),
-        getVendorProducts(vendorId),
-        getVendorReviews(vendorId),
-        getDashboardStats(vendorId),
-        getRecentOrders(vendorId),
-        getInventory(vendorId),
-        getLowStockAlerts(vendorId),
-        getVendorOrders(vendorId),
-        getSalesAnalytics(vendorId),
-        getProductAnalytics(vendorId),
-        getOutlets(vendorId),
-      ]);
-      setVendorDetails(details.data);
-      setVendorProducts(products.data || []);
-      setVendorReviews(reviews.data || []);
-      setDashboardStats(stats);
-      setRecentOrders(orders.data || []);
-      setInventory(inventoryData.data || []);
-      setLowStockAlerts(lowStock.data || []);
-      setVendorOrders(vendorOrdersData.data || []);
-      setSalesAnalytics(sales.data);
-      setProductAnalytics(productAnalyticsData.data || []);
-      setOutlets(outletsData.data || []);
-      // Initialize update form with current vendor details
-      setUpdateFormData({
-        business_name: details.data.business_name || '',
-        contact_person: details.data.contact_person || '',
-        business_phone: details.data.business_phone || '',
-        business_email: details.data.business_email || '',
-        trading_name: details.data.trading_name || '',
+      // Fetch dashboard stats
+      console.log('Fetching dashboard stats...');
+      const statsResponse = await getDashboardStats();
+      setDashboardStats(statsResponse);
+      console.log('✅ Dashboard stats loaded');
+
+      // Fetch vendors list
+      console.log('Fetching vendors list...');
+      const vendorsResponse = await listVendors({ page: 1, limit: 20, search: searchQuery });
+      setVendors((vendorsResponse.data as Vendor[]) || []);
+      console.log('✅ Vendors loaded:', vendorsResponse.data?.length || 0);
+
+      // Fetch inventory if a vendor is selected
+      if (selectedVendorId) {
+        console.log('Fetching inventory for vendor:', selectedVendorId);
+        try {
+          const inventoryResponse = await getInventory(selectedVendorId);
+          setInventory((inventoryResponse.data as Product[]) || []);
+          
+          const lowStockResponse = await getLowStockAlerts(selectedVendorId);
+          setLowStockAlerts((lowStockResponse.data as Product[]) || []);
+          console.log('✅ Inventory loaded');
+        } catch (inventoryErr: any) {
+          console.warn('⚠️ Inventory fetch failed but continuing:', inventoryErr.message);
+          // Don't fail the whole page if inventory fails
+        }
+      }
+
+      setRetryCount(0); // Reset retry count on success
+
+    } catch (err: any) {
+      console.error('❌ VendorsPage: Data fetch error:', err);
+      const errorDetails = createErrorDetails(err, 'data-fetch');
+      setError(errorDetails);
+
+      // Don't auto-retry auth errors
+      if (!errorDetails.isAuthError && retryAttempt < 2) {
+        console.log(`⏳ Retrying in 2 seconds... (attempt ${retryAttempt + 2}/3)`);
+        setTimeout(() => {
+          setRetryCount(retryAttempt + 1);
+          fetchData(retryAttempt + 1);
+        }, 2000);
+      }
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Authentication check on mount only
+  useEffect(() => {
+    console.log('🔍 VendorsPage: Checking authentication...');
+    
+    if (!isAuthenticated()) {
+      console.warn('❌ User is not authenticated');
+      setError({
+        message: 'You are not authenticated. Please login again.',
+        isAuthError: true,
+        canRetry: false
       });
-    } catch (err: any) {
-      setError(err?.response?.data?.error || 'Failed to load vendor details');
+      return;
     }
-  };
 
-  const handleAddVendor = async (e: React.FormEvent) => {
-    e.preventDefault();
-    try {
-      const response = await vendorRegister({
-        business_name: formData.business_name,
-        contact_person: formData.contact_person,
-        business_email: formData.business_email,
-        business_phone: formData.business_phone,
-        password: formData.password,
+    if (!isAdmin()) {
+      console.warn('❌ User is not an admin');
+      setError({
+        message: 'You do not have admin privileges to access this page.',
+        isAuthError: true,
+        canRetry: false
       });
-      alert('Vendor added successfully: ' + response.message);
-      setFormData({
-        business_name: '',
-        contact_person: '',
-        business_email: '',
-        business_phone: '',
-        password: '',
-      });
-      const updatedVendors = await listVendors();
-      setItems(updatedVendors.data || []);
-    } catch (err: any) {
-      setError(err?.response?.data?.error || 'Failed to add vendor');
+      return;
     }
+
+    console.log('✅ Authentication check passed');
+    fetchData();
+  }, [selectedVendorId, searchQuery]);
+
+  const retryFetch = () => {
+    setRetryCount(0);
+    fetchData();
   };
 
-  const handleUpdateVendor = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!selectedVendor) return;
+  const handleLogin = () => {
+    logout(); // This will clear tokens and redirect
+  };
+
+  // Test API connection manually
+  const runApiTest = async () => {
     try {
-      const response = await updateVendor(selectedVendor, updateFormData);
-      alert('Vendor updated successfully: ' + response.message);
-      const updatedDetails = await getVendorDetails(selectedVendor);
-      setVendorDetails(updatedDetails.data);
+      setIsLoading(true);
+      const result = await testApiConnection();
+      if (result.success) {
+        alert('✅ API connection successful!\n\n' + JSON.stringify(result.data, null, 2));
+      } else {
+        alert('❌ API connection failed!\n\n' + JSON.stringify(result.error, null, 2));
+      }
     } catch (err: any) {
-      setError(err?.response?.data?.error || 'Failed to update vendor');
+      alert('❌ API test error: ' + err.message);
+    } finally {
+      setIsLoading(false);
     }
   };
 
-  const handleUpdateInventory = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!selectedVendor) return;
+  const filteredVendors = vendors.filter(vendor =>
+    vendor.business_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    vendor.business_email?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    vendor.contact_person.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
+  const selectedVendor = vendors.find(vendor => vendor.vendor_id === selectedVendorId);
+
+  // Enhanced error handlers that don't auto-redirect
+  const handleUpdateVendor = async (data: UpdateVendorFormData): Promise<void> => {
+    if (!selectedVendorId) return;
+    setIsLoading(true);
+    setError(null);
     try {
-      const response = await updateInventory(selectedVendor, inventoryUpdate.productId, inventoryUpdate.updates);
-      alert('Inventory updated: ' + response.message);
-      const updatedInventory = await getInventory(selectedVendor);
-      setInventory(updatedInventory.data || []);
+      await updateVendor(selectedVendorId, data);
+      setVendors(prev =>
+        prev.map(vendor =>
+          vendor.vendor_id === selectedVendorId
+            ? { ...vendor, ...data, updated_at: new Date().toISOString() }
+            : vendor
+        )
+      );
     } catch (err: any) {
-      setError(err?.response?.data?.error || 'Failed to update inventory');
+      console.error('VendorsPage: Update vendor error:', err);
+      const errorDetails = createErrorDetails(err, 'update-vendor');
+      setError(errorDetails);
+      throw err;
+    } finally {
+      setIsLoading(false);
     }
   };
 
-  const handleRecordInventoryMovement = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!selectedVendor) return;
+  const handleAddVendor = async (data: AddVendorFormData): Promise<void> => {
+    setIsLoading(true);
+    setError(null);
     try {
-      const response = await recordInventoryMovement(selectedVendor, inventoryMovement);
-      alert('Inventory movement recorded: ' + response.message);
-      const updatedInventory = await getInventory(selectedVendor);
-      setInventory(updatedInventory.data || []);
+      const response = await vendorRegister(data);
+      const newVendor: Vendor = {
+        ...data,
+        vendor_id: (response.data as any)?.vendor_id || String(Date.now()),
+        rating: 0,
+        total_reviews: 0,
+        is_verified: false,
+        is_featured: false,
+        commission_rate: 0.1,
+        minimum_order_amount: 1000,
+        delivery_radius_km: 5,
+        average_prep_time_minutes: 30,
+        currency: 'KES',
+        is_active: true,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      };
+      setVendors(prev => [...prev, newVendor]);
+      setActiveSection('list');
     } catch (err: any) {
-      setError(err?.response?.data?.error || 'Failed to record inventory movement');
+      console.error('VendorsPage: Add vendor error:', err);
+      const errorDetails = createErrorDetails(err, 'add-vendor');
+      setError(errorDetails);
+      throw err;
+    } finally {
+      setIsLoading(false);
     }
   };
 
-  const handleUpdateOrderStatus = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!selectedVendor) return;
+  const handleUpdateInventory = async (productId: string, updates: any): Promise<void> => {
+    if (!selectedVendorId) return;
+    setIsLoading(true);
+    setError(null);
     try {
-      const response = await updateOrderStatus(selectedVendor, orderStatusUpdate.orderId, orderStatusUpdate.status);
-      alert('Order status updated: ' + response.message);
-      const updatedOrders = await getVendorOrders(selectedVendor);
-      setVendorOrders(updatedOrders.data || []);
+      await updateInventory(selectedVendorId, productId, updates);
+      setInventory(prev =>
+        prev.map(item =>
+          item.product_id === productId ? { ...item, ...updates } : item
+        )
+      );
+      const lowStockResponse = await getLowStockAlerts(selectedVendorId);
+      setLowStockAlerts((lowStockResponse.data as Product[]) || []);
     } catch (err: any) {
-      setError(err?.response?.data?.error || 'Failed to update order status');
+      console.error('VendorsPage: Update inventory error:', err);
+      const errorDetails = createErrorDetails(err, 'update-inventory');
+      setError(errorDetails);
+      throw err;
+    } finally {
+      setIsLoading(false);
     }
   };
 
-  const handleCreateOutlet = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!selectedVendor) return;
+  const handleRecordMovement = async (movement: InventoryMovement): Promise<void> => {
+    if (!selectedVendorId) return;
+    setIsLoading(true);
+    setError(null);
     try {
-      const response = await createOutlet(selectedVendor, newOutlet);
-      alert('Outlet created: ' + response.message);
-      const updatedOutlets = await getOutlets(selectedVendor);
-      setOutlets(updatedOutlets.data || []);
-      setNewOutlet({ name: '', address: '' });
+      await recordInventoryMovement(selectedVendorId, movement);
+      setInventory(prev =>
+        prev.map(item =>
+          item.product_id === movement.product_id
+            ? {
+                ...item,
+                stock:
+                  movement.type === 'in'
+                    ? item.stock + movement.quantity
+                    : item.stock - movement.quantity,
+              }
+            : item
+        )
+      );
+      const lowStockResponse = await getLowStockAlerts(selectedVendorId);
+      setLowStockAlerts((lowStockResponse.data as Product[]) || []);
     } catch (err: any) {
-      setError(err?.response?.data?.error || 'Failed to create outlet');
+      console.error('VendorsPage: Record inventory movement error:', err);
+      const errorDetails = createErrorDetails(err, 'record-movement');
+      setError(errorDetails);
+      throw err;
+    } finally {
+      setIsLoading(false);
     }
   };
-
-  const handleUpdateOutlet = async (outletId: string, updates: { name?: string; address?: string }) => {
-    if (!selectedVendor) return;
-    try {
-      const response = await updateOutlet(selectedVendor, outletId, updates);
-      alert('Outlet updated: ' + response.message);
-      const updatedOutlets = await getOutlets(selectedVendor);
-      setOutlets(updatedOutlets.data || []);
-    } catch (err: any) {
-      setError(err?.response?.data?.error || 'Failed to update outlet');
-    }
-  };
-
-  const handleGetOrderDetails = async (orderId: string) => {
-    if (!selectedVendor) return;
-    try {
-      const response = await getVendorOrderDetails(selectedVendor, orderId);
-      setOrderDetails(response.data);
-    } catch (err: any) {
-      setError(err?.response?.data?.error || 'Failed to load order details');
-    }
-  };
-
-  const renderTabContent = () => {
-    switch (activeTab) {
-      case 'list':
-        return (
-          <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
-            <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">Vendors</h2>
-            <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead className="bg-gray-50 dark:bg-gray-700">
-                  <tr>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">ID</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Business Name</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Email</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Contact Person</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Actions</th>
-                  </tr>
-                </thead>
-                <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
-                  {items.map((v, index) => (
-                    <tr key={v.vendor_id} className={index % 2 === 0 ? 'bg-gray-50 dark:bg-gray-900/20' : ''}>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">{v.vendor_id}</td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">{v.business_name}</td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">{v.business_email || 'N/A'}</td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">{v.contact_person}</td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <button
-                          onClick={() => handleSelectVendor(v.vendor_id)}
-                          className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-                        >
-                          View Details
-                        </button>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </div>
-        );
-      case 'logistics':
-        return (
-          <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
-            <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">Admin Logistics</h2>
-            <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-4">Add Vendor</h3>
-            <form className="space-y-4 max-w-md" onSubmit={handleAddVendor}>
-              <input
-                type="text"
-                placeholder="Business Name"
-                value={formData.business_name}
-                onChange={(e) => setFormData({ ...formData, business_name: e.target.value })}
-                className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                required
-              />
-              <input
-                type="text"
-                placeholder="Contact Person"
-                value={formData.contact_person}
-                onChange={(e) => setFormData({ ...formData, contact_person: e.target.value })}
-                className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                required
-              />
-              <input
-                type="email"
-                placeholder="Business Email"
-                value={formData.business_email}
-                onChange={(e) => setFormData({ ...formData, business_email: e.target.value })}
-                className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                required
-              />
-              <input
-                type="text"
-                placeholder="Business Phone Number"
-                value={formData.business_phone}
-                onChange={(e) => setFormData({ ...formData, business_phone: e.target.value })}
-                className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                required
-              />
-              <input
-                type="password"
-                placeholder="Password"
-                value={formData.password}
-                onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                required
-              />
-              <button
-                type="submit"
-                className="w-full px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-              >
-                Add Vendor
-              </button>
-            </form>
-            <h3 className="text-lg font-medium text-gray-900 dark:text-white mt-6">Other Logistics Actions</h3>
-            <p className="text-gray-600 dark:text-gray-400">Additional logistics features can be added here (e.g., manage delivery zones, assign riders, etc.).</p>
-          </div>
-        );
-      case 'details':
-        return (
-          <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
-            <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">Vendor Details</h2>
-            {vendorDetails && (
-              <div className="space-y-4">
-                <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-4">Update Vendor</h3>
-                <form className="space-y-4 max-w-md" onSubmit={handleUpdateVendor}>
-                  <input
-                    type="text"
-                    placeholder="Business Name"
-                    value={updateFormData.business_name}
-                    onChange={(e) => setUpdateFormData({ ...updateFormData, business_name: e.target.value })}
-                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    required
-                  />
-                  <input
-                    type="text"
-                    placeholder="Contact Person"
-                    value={updateFormData.contact_person}
-                    onChange={(e) => setUpdateFormData({ ...updateFormData, contact_person: e.target.value })}
-                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    required
-                  />
-                  <input
-                    type="email"
-                    placeholder="Business Email"
-                    value={updateFormData.business_email}
-                    onChange={(e) => setUpdateFormData({ ...updateFormData, business_email: e.target.value })}
-                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  />
-                  <input
-                    type="text"
-                    placeholder="Business Phone Number"
-                    value={updateFormData.business_phone}
-                    onChange={(e) => setUpdateFormData({ ...updateFormData, business_phone: e.target.value })}
-                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  />
-                  <input
-                    type="text"
-                    placeholder="Trading Name"
-                    value={updateFormData.trading_name}
-                    onChange={(e) => setUpdateFormData({ ...updateFormData, trading_name: e.target.value })}
-                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  />
-                  <button
-                    type="submit"
-                    className="w-full px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-                  >
-                    Update Vendor
-                  </button>
-                </form>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <p><strong>ID:</strong> {vendorDetails.vendor_id}</p>
-                    <p><strong>Business Name:</strong> {vendorDetails.business_name}</p>
-                    <p><strong>Trading Name:</strong> {vendorDetails.trading_name || 'N/A'}</p>
-                    <p><strong>Contact Person:</strong> {vendorDetails.contact_person}</p>
-                    <p><strong>Business Email:</strong> {vendorDetails.business_email || 'N/A'}</p>
-                    <p><strong>Business Phone:</strong> {vendorDetails.business_phone || 'N/A'}</p>
-                    <p><strong>Brand:</strong> {vendorDetails.brand || 'N/A'}</p>
-                  </div>
-                  <div>
-                    <p><strong>Rating:</strong> {vendorDetails.rating}/5 ({vendorDetails.total_reviews} reviews)</p>
-                    <p><strong>Verified:</strong> {vendorDetails.is_verified ? 'Yes' : 'No'}</p>
-                    <p><strong>Featured:</strong> {vendorDetails.is_featured ? 'Yes' : 'No'}</p>
-                    <p><strong>Active:</strong> {vendorDetails.is_active ? 'Yes' : 'No'}</p>
-                    <p><strong>Commission Rate:</strong> {(vendorDetails.commission_rate * 100).toFixed(2)}%</p>
-                    <p><strong>Min Order Amount:</strong> {vendorDetails.currency} {vendorDetails.minimum_order_amount}</p>
-                    <p><strong>Delivery Radius:</strong> {vendorDetails.delivery_radius_km} km</p>
-                    <p><strong>Avg Prep Time:</strong> {vendorDetails.average_prep_time_minutes} minutes</p>
-                  </div>
-                </div>
-
-                <h3 className="text-lg font-medium text-gray-900 dark:text-white mt-6">Outlets ({outlets.length})</h3>
-                <ul className="list-disc pl-5 space-y-2">
-                  {outlets.map((outlet) => (
-                    <li key={outlet.outlet_id} className="flex justify-between items-center bg-gray-50 dark:bg-gray-900/20 p-2 rounded">
-                      <span>{outlet.name} - {outlet.address}</span>
-                      <button
-                        onClick={() => {
-                          const newName = prompt('New name:');
-                          if (newName) handleUpdateOutlet(outlet.outlet_id, { name: newName });
-                        }}
-                        className="px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700"
-                      >
-                        Update
-                      </button>
-                    </li>
-                  ))}
-                </ul>
-
-                <h3 className="text-lg font-medium text-gray-900 dark:text-white mt-6">Create Outlet</h3>
-                <form className="space-y-4 max-w-md" onSubmit={handleCreateOutlet}>
-                  <input
-                    type="text"
-                    placeholder="Outlet Name"
-                    value={newOutlet.name}
-                    onChange={(e) => setNewOutlet({ ...newOutlet, name: e.target.value })}
-                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    required
-                  />
-                  <input
-                    type="text"
-                    placeholder="Outlet Address"
-                    value={newOutlet.address}
-                    onChange={(e) => setNewOutlet({ ...newOutlet, address: e.target.value })}
-                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    required
-                  />
-                  <button
-                    type="submit"
-                    className="w-full px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-                  >
-                    Create Outlet
-                  </button>
-                </form>
-
-                <h3 className="text-lg font-medium text-gray-900 dark:text-white mt-6">Products ({vendorProducts.length})</h3>
-                <ul className="list-disc pl-5 space-y-2">
-                  {vendorProducts.map((product) => (
-                    <li key={product.product_id} className="bg-gray-50 dark:bg-gray-900/20 p-2 rounded">
-                      {product.name} - Stock: {product.stock} - Price: ${product.price}
-                    </li>
-                  ))}
-                </ul>
-
-                <h3 className="text-lg font-medium text-gray-900 dark:text-white mt-6">Current Inventory ({inventory.length} items)</h3>
-                <ul className="list-disc pl-5 space-y-2">
-                  {inventory.map((item) => (
-                    <li key={item.product_id} className="bg-gray-50 dark:bg-gray-900/20 p-2 rounded">
-                      {item.name} - Stock: {item.stock} - Price: ${item.price}
-                    </li>
-                  ))}
-                </ul>
-
-                <h3 className="text-lg font-medium text-gray-900 dark:text-white mt-6">Inventory Management</h3>
-                <form className="space-y-4 max-w-md" onSubmit={handleUpdateInventory}>
-                  <input
-                    type="text"
-                    placeholder="Product ID"
-                    value={inventoryUpdate.productId}
-                    onChange={(e) => setInventoryUpdate({ ...inventoryUpdate, productId: e.target.value })}
-                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    required
-                  />
-                  <input
-                    type="text"
-                    placeholder="Updates (JSON)"
-                    value={JSON.stringify(inventoryUpdate.updates)}
-                    onChange={(e) => {
-                      try {
-                        const parsed = JSON.parse(e.target.value || '{}');
-                        setInventoryUpdate({ ...inventoryUpdate, updates: parsed });
-                      } catch {
-                        // Invalid JSON, ignore
-                      }
-                    }}
-                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    required
-                  />
-                  <button
-                    type="submit"
-                    className="w-full px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-                  >
-                    Update Inventory
-                  </button>
-                </form>
-
-                <form className="space-y-4 max-w-md mt-4" onSubmit={handleRecordInventoryMovement}>
-                  <input
-                    type="text"
-                    placeholder="Product ID"
-                    value={inventoryMovement.product_id}
-                    onChange={(e) => setInventoryMovement({ ...inventoryMovement, product_id: e.target.value })}
-                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    required
-                  />
-                  <input
-                    type="number"
-                    placeholder="Quantity"
-                    value={inventoryMovement.quantity}
-                    onChange={(e) => setInventoryMovement({ ...inventoryMovement, quantity: parseInt(e.target.value) || 0 })}
-                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    required
-                  />
-                  <select
-                    value={inventoryMovement.type}
-                    onChange={(e) => setInventoryMovement({ ...inventoryMovement, type: e.target.value as 'in' | 'out' })}
-                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  >
-                    <option value="in">In</option>
-                    <option value="out">Out</option>
-                  </select>
-                  <button
-                    type="submit"
-                    className="w-full px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-                  >
-                    Record Movement
-                  </button>
-                </form>
-
-                <h3 className="text-lg font-medium text-gray-900 dark:text-white mt-6">Low Stock Alerts ({lowStockAlerts.length})</h3>
-                <ul className="list-disc pl-5 space-y-2">
-                  {lowStockAlerts.map((product) => (
-                    <li key={product.product_id} className="bg-gray-50 dark:bg-gray-900/20 p-2 rounded text-red-600 dark:text-red-400">
-                      {product.name} - Stock: {product.stock}
-                    </li>
-                  ))}
-                </ul>
-
-                <h3 className="text-lg font-medium text-gray-900 dark:text-white mt-6">Reviews ({vendorReviews.length})</h3>
-                <ul className="list-disc pl-5 space-y-2">
-                  {vendorReviews.map((review) => (
-                    <li key={review.review_id} className="bg-gray-50 dark:bg-gray-900/20 p-2 rounded">
-                      Rating: {review.rating}/5 - {review.comment}
-                    </li>
-                  ))}
-                </ul>
-
-                <h3 className="text-lg font-medium text-gray-900 dark:text-white mt-6">Dashboard Stats</h3>
-                {dashboardStats && (
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                    <div className="bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-900/20 dark:to-blue-800/20 rounded-lg p-4">
-                      <h4 className="text-sm font-medium text-blue-600 dark:text-blue-400 uppercase">Total Users</h4>
-                      <p className="text-2xl font-bold text-blue-900 dark:text-blue-100">{dashboardStats.users}</p>
-                    </div>
-                    <div className="bg-gradient-to-br from-green-50 to-green-100 dark:from-green-900/20 dark:to-green-800/20 rounded-lg p-4">
-                      <h4 className="text-sm font-medium text-green-600 dark:text-green-400 uppercase">Total Vendors</h4>
-                      <p className="text-2xl font-bold text-green-900 dark:text-green-100">{dashboardStats.vendors}</p>
-                    </div>
-                    <div className="bg-gradient-to-br from-purple-50 to-purple-100 dark:from-purple-900/20 dark:to-purple-800/20 rounded-lg p-4">
-                      <h4 className="text-sm font-medium text-purple-600 dark:text-purple-400 uppercase">Total Riders</h4>
-                      <p className="text-2xl font-bold text-purple-900 dark:text-purple-100">{dashboardStats.riders}</p>
-                    </div>
-                    <div className="bg-gradient-to-br from-orange-50 to-orange-100 dark:from-orange-900/20 dark:to-orange-800/20 rounded-lg p-4">
-                      <h4 className="text-sm font-medium text-orange-600 dark:text-orange-400 uppercase">Today's Revenue</h4>
-                      <p className="text-2xl font-bold text-orange-900 dark:text-orange-100">${dashboardStats.todayRevenue}</p>
-                    </div>
-                    {dashboardStats.totalRevenue && (
-                      <div className="bg-gradient-to-br from-teal-50 to-teal-100 dark:from-teal-900/20 dark:to-teal-800/20 rounded-lg p-4">
-                        <h4 className="text-sm font-medium text-teal-600 dark:text-teal-400 uppercase">Total Revenue</h4>
-                        <p className="text-2xl font-bold text-teal-900 dark:text-teal-100">${dashboardStats.totalRevenue}</p>
-                      </div>
-                    )}
-                    {dashboardStats.pendingOrders && (
-                      <div className="bg-gradient-to-br from-yellow-50 to-yellow-100 dark:from-yellow-900/20 dark:to-yellow-800/20 rounded-lg p-4">
-                        <h4 className="text-sm font-medium text-yellow-600 dark:text-yellow-400 uppercase">Pending Orders</h4>
-                        <p className="text-2xl font-bold text-yellow-900 dark:text-yellow-100">{dashboardStats.pendingOrders}</p>
-                      </div>
-                    )}
-                    {dashboardStats.completedOrders && (
-                      <div className="bg-gradient-to-br from-green-50 to-green-100 dark:from-green-900/20 dark:to-green-800/20 rounded-lg p-4">
-                        <h4 className="text-sm font-medium text-green-600 dark:text-green-400 uppercase">Completed Orders</h4>
-                        <p className="text-2xl font-bold text-green-900 dark:text-green-100">{dashboardStats.completedOrders}</p>
-                      </div>
-                    )}
-                  </div>
-                )}
-
-                <h3 className="text-lg font-medium text-gray-900 dark:text-white mt-6">Recent Orders ({recentOrders.length})</h3>
-                <ul className="list-disc pl-5 space-y-2">
-                  {recentOrders.map((order) => (
-                    <li key={order.order_id} className="flex justify-between items-center bg-gray-50 dark:bg-gray-900/20 p-2 rounded">
-                      <span>Order {order.order_id} - Status: {order.status} - Value: ${order.order_value}</span>
-                      <button
-                        onClick={() => handleGetOrderDetails(order.order_id)}
-                        className="px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700"
-                      >
-                        View Details
-                      </button>
-                    </li>
-                  ))}
-                </ul>
-
-                <h3 className="text-lg font-medium text-gray-900 dark:text-white mt-6">Vendor Orders ({vendorOrders.length})</h3>
-                <ul className="list-disc pl-5 space-y-2">
-                  {vendorOrders.map((order) => (
-                    <li key={order.order_id} className="bg-gray-50 dark:bg-gray-900/20 p-2 rounded">
-                      Order {order.order_id} - Status: {order.status} - Value: ${order.order_value}
-                    </li>
-                  ))}
-                </ul>
-
-                {orderDetails && (
-                  <div className="mt-6">
-                    <h4 className="text-lg font-medium text-gray-900 dark:text-white">Order Details</h4>
-                    <p><strong>Order ID:</strong> {orderDetails.order_id}</p>
-                    <p><strong>Status:</strong> {orderDetails.status}</p>
-                    <p><strong>Order Value:</strong> ${orderDetails.order_value}</p>
-                    <p><strong>Items:</strong></p>
-                    <ul className="list-disc pl-5 space-y-2">
-                      {orderDetails.items?.map((item) => (
-                        <li key={item.product_id} className="bg-gray-50 dark:bg-gray-900/20 p-2 rounded">
-                          {item.name} - Qty: {item.quantity} - Price: ${item.price}
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                )}
-
-                <h3 className="text-lg font-medium text-gray-900 dark:text-white mt-6">Update Order Status</h3>
-                <form className="space-y-4 max-w-md" onSubmit={handleUpdateOrderStatus}>
-                  <input
-                    type="text"
-                    placeholder="Order ID"
-                    value={orderStatusUpdate.orderId}
-                    onChange={(e) => setOrderStatusUpdate({ ...orderStatusUpdate, orderId: e.target.value })}
-                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    required
-                  />
-                  <input
-                    type="text"
-                    placeholder="Status"
-                    value={orderStatusUpdate.status}
-                    onChange={(e) => setOrderStatusUpdate({ ...orderStatusUpdate, status: e.target.value })}
-                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    required
-                  />
-                  <button
-                    type="submit"
-                    className="w-full px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-                  >
-                    Update Status
-                  </button>
-                </form>
-
-                <h3 className="text-lg font-medium text-gray-900 dark:text-white mt-6">Sales Analytics</h3>
-                {salesAnalytics && (
-                  <div className="space-y-2">
-                    <p><strong>Total Revenue:</strong> ${salesAnalytics.revenue}</p>
-                    {salesAnalytics.totalSales && <p><strong>Total Sales:</strong> {salesAnalytics.totalSales}</p>}
-                    {salesAnalytics.period && <p><strong>Period:</strong> {salesAnalytics.period}</p>}
-                  </div>
-                )}
-
-                <h3 className="text-lg font-medium text-gray-900 dark:text-white mt-6">Product Analytics ({productAnalytics.length})</h3>
-                <ul className="list-disc pl-5 space-y-2">
-                  {productAnalytics.map((product) => (
-                    <li key={product.product_id} className="bg-gray-50 dark:bg-gray-900/20 p-2 rounded">
-                      {product.name} - Orders: {product.orders?.length || 0}
-                      {product.totalSold && ` - Total Sold: ${product.totalSold}`}
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            )}
-          </div>
-        );
-      default:
-        return <div className="text-red-600 dark:text-red-400">Invalid tab</div>;
-    }
-  };
-
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-[400px]">
-        <div className="flex flex-col items-center space-y-4">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
-          <div className="text-gray-600 dark:text-gray-400">Loading vendors...</div>
-        </div>
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="flex items-center justify-center min-h-[400px]">
-        <div className="text-center max-w-md mx-auto p-6">
-          <div className="text-red-500 flex items-center justify-center mb-4">
-            <Store className="w-8 h-8 mr-2" />
-            <span className="text-lg font-semibold">Error</span>
-          </div>
-          <p className="text-gray-600 dark:text-gray-400 mb-4">{error}</p>
-          <button
-            onClick={() => window.location.reload()}
-            className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
-          >
-            Retry
-          </button>
-        </div>
-      </div>
-    );
-  }
 
   return (
-    <div className="space-y-6">
-      <nav className="flex space-x-2 border-b border-gray-200 dark:border-gray-700 pb-2">
-        <button
-          className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
-            activeTab === 'list'
-              ? 'bg-blue-600 text-white border-blue-600'
-              : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
-          }`}
-          onClick={() => setActiveTab('list')}
-        >
-          Vendors List
-        </button>
-        <button
-          className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
-            activeTab === 'logistics'
-              ? 'bg-blue-600 text-white border-blue-600'
-              : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
-          }`}
-          onClick={() => setActiveTab('logistics')}
-        >
-          Admin Logistics
-        </button>
-        {selectedVendor && (
+    <div className="container mx-auto px-4 py-8">
+      <div className="flex justify-between items-center mb-6">
+        <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Vendor Management</h1>
+        <div className="flex items-center space-x-4">
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+            <input
+              type="text"
+              placeholder="Search vendors..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              disabled={isLoading}
+            />
+          </div>
           <button
-            className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
-              activeTab === 'details'
-                ? 'bg-blue-600 text-white border-blue-600'
-                : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
-            }`}
-            onClick={() => setActiveTab('details')}
+            onClick={() => setActiveSection('add')}
+            className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50"
+            disabled={isLoading}
           >
-            Vendor Details
+            <Plus className="w-4 h-4 mr-2" />
+            Add Vendor
           </button>
-        )}
-      </nav>
+        </div>
+      </div>
 
-      <main>{renderTabContent()}</main>
+      {/* Enhanced Error Display */}
+      {error && (
+        <div className={`mb-4 p-4 rounded-lg ${error.isAuthError 
+          ? 'bg-red-50 dark:bg-red-900/20 text-red-800 dark:text-red-400 border border-red-200 dark:border-red-800' 
+          : 'bg-yellow-50 dark:bg-yellow-900/20 text-yellow-800 dark:text-yellow-400 border border-yellow-200 dark:border-yellow-800'
+        }`}>
+          <div className="flex items-start">
+            <AlertCircle className="w-5 h-5 mr-3 mt-0.5 flex-shrink-0" />
+            <div className="flex-grow">
+              <h4 className="font-semibold mb-1">
+                {error.isAuthError ? 'Authentication Error' : 'Connection Error'}
+              </h4>
+              <p className="mb-2">{error.message}</p>
+              {error.status && (
+                <p className="text-sm opacity-75">HTTP Status: {error.status}</p>
+              )}
+              {error.endpoint && (
+                <p className="text-sm opacity-75">Endpoint: {error.endpoint}</p>
+              )}
+              
+              <div className="flex gap-2 mt-3">
+                {error.isAuthError ? (
+                  <button
+                    onClick={handleLogin}
+                    className="px-3 py-1 bg-red-600 text-white rounded text-sm hover:bg-red-700"
+                  >
+                    Go to Login
+                  </button>
+                ) : error.canRetry ? (
+                  <button
+                    onClick={retryFetch}
+                    disabled={isLoading}
+                    className="flex items-center px-3 py-1 bg-yellow-600 text-white rounded text-sm hover:bg-yellow-700 disabled:opacity-50"
+                  >
+                    <RefreshCw className="w-3 h-3 mr-1" />
+                    Retry
+                  </button>
+                ) : null}
+                
+                <button
+                  onClick={runApiTest}
+                  disabled={isLoading}
+                  className="px-3 py-1 bg-blue-600 text-white rounded text-sm hover:bg-blue-700 disabled:opacity-50"
+                >
+                  Test API
+                </button>
+                
+                <button
+                  onClick={() => setActiveSection('debug')}
+                  className="px-3 py-1 bg-gray-600 text-white rounded text-sm hover:bg-gray-700"
+                >
+                  Debug Info
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Retry indicator */}
+      {retryCount > 0 && (
+        <div className="mb-4 p-3 bg-blue-50 dark:bg-blue-900/20 text-blue-800 dark:text-blue-400 rounded-lg">
+          <div className="flex items-center">
+            <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
+            Retrying connection... (Attempt {retryCount + 1}/3)
+          </div>
+        </div>
+      )}
+
+      <div className="flex border-b border-gray-200 dark:border-gray-700 mb-6">
+        {[
+          { id: 'dashboard', label: 'Dashboard' },
+          { id: 'list', label: 'Vendors List' },
+          { id: 'inventory', label: 'Inventory' },
+          { id: 'debug', label: 'Debug' }
+        ].map(tab => (
+          <button
+            key={tab.id}
+            onClick={() => {
+              setActiveSection(tab.id as any);
+              if (tab.id !== 'debug') setSelectedVendorId(null);
+            }}
+            className={`px-4 py-2 text-sm font-medium ${
+              activeSection === tab.id
+                ? 'border-b-2 border-blue-500 text-blue-600 dark:text-blue-400'
+                : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
+            }`}
+            disabled={isLoading}
+          >
+            {tab.label}
+          </button>
+        ))}
+      </div>
+
+      {activeSection === 'debug' && (
+        <div className="space-y-4">
+          <div className="bg-gray-50 dark:bg-gray-800 p-4 rounded-lg">
+            <h3 className="text-lg font-semibold mb-3">Debug Information</h3>
+            <div className="space-y-2 text-sm">
+              <p><strong>Token:</strong> {getToken() ? 'Present' : 'Missing'}</p>
+              <p><strong>Authenticated:</strong> {isAuthenticated() ? 'Yes' : 'No'}</p>
+              <p><strong>Admin:</strong> {isAdmin() ? 'Yes' : 'No'}</p>
+              <p><strong>API Base URL:</strong> {import.meta.env.VITE_API_BASE_URL || 'http://localhost:4000/api'}</p>
+              <p><strong>Current Path:</strong> {window.location.pathname}</p>
+              <p><strong>Vendors Count:</strong> {vendors.length}</p>
+              {error && (
+                <div className="mt-3 p-3 bg-red-100 dark:bg-red-900/20 rounded">
+                  <p><strong>Last Error:</strong> {JSON.stringify(error, null, 2)}</p>
+                </div>
+              )}
+            </div>
+            <button
+              onClick={runApiTest}
+              disabled={isLoading}
+              className="mt-3 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50"
+            >
+              Run Full API Test
+            </button>
+          </div>
+        </div>
+      )}
+
+      {activeSection === 'dashboard' && (
+        <VendorDashboard stats={dashboardStats} loading={isLoading} />
+      )}
+
+      {activeSection === 'list' && (
+        <VendorsList
+          vendors={filteredVendors}
+          onSelectVendor={(vendorId) => {
+            setSelectedVendorId(vendorId);
+            setActiveSection('details');
+          }}
+          loading={isLoading}
+        />
+      )}
+
+      {activeSection === 'details' && selectedVendor && (
+        <VendorDetails
+          vendor={selectedVendor}
+          onUpdate={handleUpdateVendor}
+          loading={isLoading}
+        />
+      )}
+
+      {activeSection === 'inventory' && selectedVendorId && (
+        <InventoryManagement
+          inventory={inventory}
+          lowStockAlerts={lowStockAlerts}
+          onUpdateInventory={handleUpdateInventory}
+          onRecordMovement={handleRecordMovement}
+          loading={isLoading}
+        />
+      )}
+
+      {activeSection === 'add' && (
+        <AddVendorForm
+          onSubmit={handleAddVendor}
+          loading={isLoading}
+        />
+      )}
     </div>
   );
-}
+};
+
+export default VendorsPage;

@@ -6,6 +6,12 @@ interface ApiResponse<T = any> {
   data?: T;
   message?: string;
   error?: string;
+  pagination?: {
+    page: number;
+    limit: number;
+    total: number;
+    totalPages: number;
+  };
 }
 
 interface AdminDashboardStats {
@@ -27,25 +33,83 @@ interface LoginResponse {
   account?: any;
 }
 
-import type { User } from "../pages/users/types";
+interface Vendor {
+  vendor_id: string;
+  business_name: string;
+  trading_name?: string;
+  brand?: 'Total' | 'Rubis' | 'Shell' | 'Kobil' | 'Vivo' | 'Independent';
+  contact_person: string;
+  business_phone?: string;
+  business_email?: string;
+  rating: number;
+  total_reviews: number;
+  is_verified: boolean;
+  is_featured: boolean;
+  commission_rate: number;
+  minimum_order_amount: number;
+  delivery_radius_km: number;
+  average_prep_time_minutes: number;
+  currency: string;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+import type { User } from '../pages/users/types';
+
+// Authentication Check
+// export function isAdmin(): boolean {
+//   try {
+//     const userInfo = localStorage.getItem('userInfo');
+//     if (!userInfo) {
+//       console.warn('isAdmin: No userInfo found in localStorage');
+//       return false;
+//     }
+//     const parsed = JSON.parse(userInfo);
+//     const isAdminUser = parsed.role === 'admin' || parsed.admin_role === 'super_admin';
+//     if (!isAdminUser) {
+//       console.warn('isAdmin: User is not an admin or super_admin', {
+//         role: parsed.role,
+//         admin_role: parsed.admin_role,
+//       });
+//     }
+//     return isAdminUser;
+//   } catch (error) {
+//     console.error('isAdmin: Error parsing userInfo:', error);
+//     return false;
+//   }
+// }
+export function isAdmin(): boolean {
+  try {
+    const userInfo = localStorage.getItem('userInfo');
+    if (!userInfo) return false;
+    const parsed = JSON.parse(userInfo);
+
+    return (
+      parsed.role === 'admin' &&
+      (
+        parsed.admin_role === 'super_admin' ||
+        ['finance', 'support', 'operations', 'marketing', 'inventory'].includes(parsed.admin_role)
+      )
+    );
+  } catch {
+    return false;
+  }
+}
 
 // Authentication Functions
-export async function adminLogin(
-  email: string,
-  password: string
-): Promise<LoginResponse> {
+export async function adminLogin(email: string, password: string): Promise<LoginResponse> {
   try {
     const res = await api.post<LoginResponse>('/v1/auth/login', { email, password });
     
-    const { token } = res.data;
+    const { token, account, role, admin_role } = res.data;
     if (token) {
       localStorage.setItem('token', token);
+      const userInfo = { account, role, admin_role };
+      localStorage.setItem('userInfo', JSON.stringify(userInfo));
+      console.log('Stored userInfo:', userInfo);
     }
     
-    if (res.data.account) {
-      localStorage.setItem('account', JSON.stringify(res.data.account));
-    }
-
     return res.data;
   } catch (error: any) {
     console.error('Admin login error:', error);
@@ -128,10 +192,13 @@ export async function updateVendorStatus(vendorId: string, status: string): Prom
   return res.data;
 }
 
-// Vendor Authentication
-export async function vendorLogin(credentials: { business_email: string; password: string }): Promise<ApiResponse> {
-  const res = await api.post('/v1/vendors/login', credentials);
-  return res.data;
+export async function updateVendor(vendorId: string, updates: Partial<Vendor>): Promise<ApiResponse> {
+  try {
+    const res = await api.patch<ApiResponse>(`/v1/admin/vendors/${vendorId}`, updates);
+    return res.data;
+  } catch (error: any) {
+    throw new Error(error.response?.data?.message || error.message || 'Failed to update vendor');
+  }
 }
 
 export async function vendorRegister(vendorData: {
@@ -140,8 +207,16 @@ export async function vendorRegister(vendorData: {
   business_email: string;
   business_phone: string;
   password: string;
+  trading_name?: string;
+  brand?: 'Total' | 'Rubis' | 'Shell' | 'Kobil' | 'Vivo' | 'Independent';
 }): Promise<ApiResponse> {
-  const res = await api.post('/v1/vendors/register', vendorData);
+  const res = await api.post('/v1/admin/vendors/register', vendorData);
+  return res.data;
+}
+
+// Vendor Authentication
+export async function vendorLogin(credentials: { business_email: string; password: string }): Promise<ApiResponse> {
+  const res = await api.post('/v1/vendors/login', credentials);
   return res.data;
 }
 
@@ -197,17 +272,6 @@ export async function getVendorOrders(vendorId: string): Promise<ApiResponse> {
   return res.data;
 }
 
-export async function updateVendor(
-  vendorId: string, 
-  updates: Partial<Vendor>
-): Promise<ApiResponse> {
-  try {
-    const res = await api.patch<ApiResponse>(`/v1/admin/vendors/${vendorId}`, updates);
-    return res.data;
-  } catch (error: any) {
-    throw new Error(error.response?.data?.message || error.message || 'Failed to update vendor');
-  }
-}
 export async function updateVendorOrderStatus(vendorId: string, orderId: string, update: { status: string }): Promise<ApiResponse> {
   const res = await api.put(`/v1/admin/vendors/${vendorId}/orders/${orderId}/status`, update);
   return res.data;
@@ -704,4 +768,30 @@ export async function exportReport(reportType: 'orders' | 'users' | 'revenue', f
   const params = { ...filters };
   const res = await api.get(`/v1/admin/reports/${reportType}/export/${format}`, { params, responseType: 'blob' });
   return res.data;
+}
+// Test API connectivity
+export async function testApiConnection(): Promise<{success: boolean, data?: any, error?: any, status?: number}> {
+  try {
+    console.log('Testing API connection to:', import.meta.env.VITE_API_BASE_URL || 'http://localhost:4000/api');
+    
+    // First try the test endpoint
+    const response = await api.get('/v1/admin/test');
+    console.log('API test successful:', response.data);
+    return { success: true, data: response.data };
+  } catch (error: any) {
+    console.error('API test failed:', error);
+    
+    // Return detailed error info
+    return { 
+      success: false, 
+      error: {
+        message: error.response?.data?.error || error.message,
+        status: error.response?.status,
+        statusText: error.response?.statusText,
+        url: error.config?.url,
+        headers: error.config?.headers?.Authorization ? 'Bearer [TOKEN]' : 'No Auth Header'
+      },
+      status: error.response?.status
+    };
+  }
 }

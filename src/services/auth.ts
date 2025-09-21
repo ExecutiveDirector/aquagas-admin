@@ -9,7 +9,6 @@ interface LoginResponse {
   account?: any;
 }
 
-// UNIFIED login function - matches your backend endpoint
 export async function login(email: string, password: string): Promise<LoginResponse> {
   try {
     console.log('Attempting login to /v1/auth/login');
@@ -22,16 +21,22 @@ export async function login(email: string, password: string): Promise<LoginRespo
       // Store token consistently
       localStorage.setItem('token', token);
       
-      // Store user info
-      if (account || role || admin_role) {
-        const userInfo = {
-          account,
-          role,
-          admin_role,
-          ...response.data
-        };
-        localStorage.setItem('userInfo', JSON.stringify(userInfo));
+      // Store user info with the exact structure needed for auth checks
+      const userInfo = {
+        account,
+        role,
+        admin_role,
+        // Store all response data for compatibility
+        ...response.data
+      };
+      localStorage.setItem('userInfo', JSON.stringify(userInfo));
+      
+      // Also store account separately for backward compatibility
+      if (account) {
+        localStorage.setItem('account', JSON.stringify(account));
       }
+      
+      console.log('Stored userInfo:', userInfo);
     }
     
     return response.data;
@@ -46,7 +51,6 @@ export function logout(): void {
   localStorage.removeItem('token');
   localStorage.removeItem('userInfo');
   localStorage.removeItem('account');
-  localStorage.removeItem('rememberMe');
   sessionStorage.removeItem('token');
   sessionStorage.removeItem('userInfo');
   
@@ -60,11 +64,19 @@ export function getToken(): string | null {
 
 export function getAccount(): any {
   try {
+    // Try userInfo first, then fallback to account
     const userInfo = localStorage.getItem('userInfo') || sessionStorage.getItem('userInfo');
     if (userInfo) {
       const parsed = JSON.parse(userInfo);
       return parsed.account || parsed;
     }
+    
+    // Fallback to direct account storage
+    const account = localStorage.getItem('account');
+    if (account) {
+      return JSON.parse(account);
+    }
+    
     return null;
   } catch (error) {
     console.error('Error parsing user info:', error);
@@ -74,20 +86,51 @@ export function getAccount(): any {
 
 export function isAuthenticated(): boolean {
   const token = getToken();
-  const account = getAccount();
-  return !!(token && account);
+  return !!token; // Just check for token presence since we verify it on backend
 }
 
-// Check if user has admin role
+// Updated admin check to match backend logic exactly
 export function isAdmin(): boolean {
+  try {
+    const userInfo = localStorage.getItem('userInfo');
+    if (!userInfo) {
+      console.warn('isAdmin: No userInfo found in localStorage');
+      return false;
+    }
+    
+    const parsed = JSON.parse(userInfo);
+    
+    // Must have admin role
+    if (parsed.role !== 'admin') {
+      console.warn('isAdmin: User role is not admin:', parsed.role);
+      return false;
+    }
+    
+    // Admin role is sufficient, admin_role is for sub-permissions
+    console.log('Admin check passed:', { role: parsed.role, admin_role: parsed.admin_role });
+    return true;
+  } catch (error) {
+    console.error('isAdmin: Error parsing userInfo:', error);
+    return false;
+  }
+}
+
+// Additional helper to get admin role
+export function getAdminRole(): string | null {
   try {
     const userInfo = localStorage.getItem('userInfo');
     if (userInfo) {
       const parsed = JSON.parse(userInfo);
-      return parsed.role === 'admin';
+      return parsed.admin_role || null;
     }
-    return false;
+    return null;
   } catch (error) {
-    return false;
+    console.error('Error getting admin role:', error);
+    return null;
   }
+}
+
+// Helper to check if user is super admin
+export function isSuperAdmin(): boolean {
+  return isAdmin() && getAdminRole() === 'super_admin';
 }
