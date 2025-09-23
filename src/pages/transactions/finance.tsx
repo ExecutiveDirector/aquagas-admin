@@ -16,7 +16,6 @@ import {
   ChevronLeft,
   ChevronRight,
 } from 'lucide-react';
-import { useAuth } from '../../utils/AuthContext';
 import toast from 'react-hot-toast';
 import {
   getTransactions,
@@ -262,35 +261,32 @@ const TransactionTable: React.FC<{
         </table>
       </div>
 
-      const [currentPage, setCurrentPage] = useState(1);
-
-<div className="flex flex-col sm:flex-row justify-between items-center mt-4 text-sm text-gray-700 dark:text-gray-300">
-  <div className="mb-2 sm:mb-0">
-    Showing {paginatedTransactions.length} of {filteredTransactions.length} transaction(s)
-  </div>
-  <div className="flex space-x-2">
-    <button
-      onClick={() => setCurrentPage((p: number) => Math.max(p - 1, 1))}
-      disabled={currentPage === 1}
-      className="px-4 py-2 bg-gray-200 dark:bg-gray-600 text-gray-700 dark:text-gray-200 rounded-md disabled:opacity-50 transition"
-      aria-label="Previous page"
-    >
-      <ChevronLeft className="w-4 h-4" />
-    </button>
-    <span className="px-4 py-2">
-      Page {currentPage} of {totalPages}
-    </span>
-    <button
-      onClick={() => setCurrentPage((p: number) => Math.min(p + 1, totalPages))}
-      disabled={currentPage === totalPages}
-      className="px-4 py-2 bg-gray-200 dark:bg-gray-600 text-gray-700 dark:text-gray-200 rounded-md disabled:opacity-50 transition"
-      aria-label="Next page"
-    >
-      <ChevronRight className="w-4 h-4" />
-    </button>
-  </div>
-</div>
-
+      <div className="flex flex-col sm:flex-row justify-between items-center mt-4 text-sm text-gray-700 dark:text-gray-300">
+        <div className="mb-2 sm:mb-0">
+          Showing {paginatedTransactions.length} of {filteredTransactions.length} transaction(s)
+        </div>
+        <div className="flex space-x-2">
+          <button
+            onClick={() => setCurrentPage((p) => Math.max(p - 1, 1))}
+            disabled={currentPage === 1}
+            className="px-4 py-2 bg-gray-200 dark:bg-gray-600 text-gray-700 dark:text-gray-200 rounded-md disabled:opacity-50 transition"
+            aria-label="Previous page"
+          >
+            <ChevronLeft className="w-4 h-4" />
+          </button>
+          <span className="px-4 py-2">
+            Page {currentPage} of {totalPages}
+          </span>
+          <button
+            onClick={() => setCurrentPage((p) => Math.min(p + 1, totalPages))}
+            disabled={currentPage === totalPages}
+            className="px-4 py-2 bg-gray-200 dark:bg-gray-600 text-gray-700 dark:text-gray-200 rounded-md disabled:opacity-50 transition"
+            aria-label="Next page"
+          >
+            <ChevronRight className="w-4 h-4" />
+          </button>
+        </div>
+      </div>
 
       {selectedTransaction && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
@@ -340,7 +336,6 @@ const TransactionTable: React.FC<{
 };
 
 const Finance: React.FC = () => {
-  const { user } = useAuth();
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedTransaction, setSelectedTransaction] = useState<Transaction | null>(null);
@@ -354,7 +349,7 @@ const Finance: React.FC = () => {
   // Fetch transactions from adminService
   useEffect(() => {
     const fetchData = async () => {
-      if (!user || !isAdmin()) {
+      if (!isAdmin()) {
         toast.error('Please log in as an admin to view financial data.');
         setLoading(false);
         return;
@@ -375,7 +370,7 @@ const Finance: React.FC = () => {
     };
 
     fetchData();
-  }, [user, dateRange]);
+  }, [dateRange]);
 
   const financialStats = useMemo((): FinancialStats => {
     const completedTransactions = transactions.filter((t) => t.status === 'completed');
@@ -576,9 +571,7 @@ const Finance: React.FC = () => {
                 KSH {financialStats.totalRevenue.toLocaleString()}
               </p>
               <p
-                className={`text-sm ${
-                  financialStats.monthlyGrowth >= 0 ? 'text-green-600' : 'text-red-600'
-                } flex items-center mt-1`}
+                className={`text-sm ${financialStats.monthlyGrowth >= 0 ? 'text-green-600' : 'text-red-600'} flex items-center mt-1`}
               >
                 {financialStats.monthlyGrowth >= 0 ? (
                   <TrendingUp className="w-3 h-3 mr-1" />
