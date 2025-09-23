@@ -25,6 +25,7 @@ import NotificationsPage from "../pages/notifications/NotificationsPage";
 
 import { listUsers, getAccount, logout, isAuthenticated } from "../services/api";
 import Support from "../pages/support/SupportPage";
+import Finance from "../pages/transactions/finance";
 
 function DashboardLayout() {
   const location = useLocation();
@@ -79,6 +80,8 @@ function DashboardLayout() {
         return <UsersPage listUsers={listUsers} />;
       case "/riders":
         return <RidersPage />;
+        case "/transactions":
+          return <Finance />;
       case "/vendors":
         return <VendorsPage />;
       case "/notifications":
@@ -90,7 +93,7 @@ function DashboardLayout() {
         if (
           path.startsWith("/orders") ||
           path.startsWith("/products") ||
-          path.startsWith("/transactions") ||
+          //path.startsWith("/transactions") ||
          // path.startsWith("/support") ||
           path.startsWith("/analytics") ||
           path.startsWith("/settings")

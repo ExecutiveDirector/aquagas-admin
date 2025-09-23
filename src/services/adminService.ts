@@ -57,6 +57,30 @@ interface Vendor {
 
 import type { User } from '../pages/users/types';
 
+interface Transaction {
+  id: string;
+  type: 'revenue' | 'expense' | 'commission' | 'payout';
+  amount: number;
+  description: string;
+  status: 'pending' | 'completed' | 'failed' | 'cancelled';
+  date: string;
+  vendor?: string;
+  rider?: string;
+  mpesa_code?: string;
+  order_id?: string;
+  category: string;
+}
+
+interface Refund {
+  id: string;
+  order_id: string;
+  amount: number;
+  status: 'pending' | 'approved' | 'rejected';
+  reason: string;
+  requested_at: string;
+  processed_at?: string;
+  user_id?: string;
+}
 // Authentication Check
 // export function isAdmin(): boolean {
 //   try {
@@ -769,6 +793,96 @@ export async function exportReport(reportType: 'orders' | 'users' | 'revenue', f
   const res = await api.get(`/v1/admin/reports/${reportType}/export/${format}`, { params, responseType: 'blob' });
   return res.data;
 }
+
+
+// Finance Management Functions
+export async function getTransactions(
+  page: number = 1,
+  limit: number = 20,
+  filters?: {
+    user_id?: string;
+    type?: string;
+    status?: string;
+    start_date?: string;
+    end_date?: string;
+  }
+): Promise<ApiResponse<Transaction[]>> {
+  try {
+    const params: any = { page, limit, ...filters };
+    const res = await api.get('/v1/payments/transactions', { params });
+    console.log('Fetched transactions:', res.data);
+    return res.data;
+  } catch (error: any) {
+    console.error('Get transactions error:', error);
+    if (error.response?.status === 401) {
+      console.error('Authentication failed - redirecting to login');
+      localStorage.removeItem('token');
+      localStorage.removeItem('userInfo');
+      sessionStorage.removeItem('token');
+      sessionStorage.removeItem('userInfo');
+      window.location.href = '/login';
+    }
+    throw new Error(error.response?.data?.error || 'Failed to fetch transactions');
+  }
+}
+
+export async function getTransactionDetails(transactionId: string): Promise<ApiResponse<Transaction>> {
+  try {
+    const res = await api.get(`/v1/payments/transactions/${transactionId}`);
+    console.log('Fetched transaction details:', res.data);
+    return res.data;
+  } catch (error: any) {
+    console.error('Get transaction details error:', error);
+    throw new Error(error.response?.data?.error || 'Failed to fetch transaction details');
+  }
+}
+
+export async function getRefunds(
+  page: number = 1,
+  limit: number = 20,
+  filters?: {
+    status?: string;
+    user_id?: string;
+    start_date?: string;
+    end_date?: string;
+  }
+): Promise<ApiResponse<Refund[]>> {
+  try {
+    const params: any = { page, limit, ...filters };
+    const res = await api.get('/v1/payments/refunds', { params });
+    console.log('Fetched refunds:', res.data);
+    return res.data;
+  } catch (error: any) {
+    console.error('Get refunds error:', error);
+    if (error.response?.status === 401) {
+      console.error('Authentication failed - redirecting to login');
+      localStorage.removeItem('token');
+      localStorage.removeItem('userInfo');
+      sessionStorage.removeItem('token');
+      sessionStorage.removeItem('userInfo');
+      window.location.href = '/login';
+    }
+    throw new Error(error.response?.data?.error || 'Failed to fetch refunds');
+  }
+}
+
+export async function processRefund(
+  refundId: string,
+  data: {
+    status: 'approved' | 'rejected';
+    notes?: string;
+  }
+): Promise<ApiResponse> {
+  try {
+    const res = await api.put(`/v1/payments/refunds/${refundId}`, data);
+    console.log('Processed refund:', res.data);
+    return res.data;
+  } catch (error: any) {
+    console.error('Process refund error:', error);
+    throw new Error(error.response?.data?.error || 'Failed to process refund');
+  }
+}
+
 // Test API connectivity
 export async function testApiConnection(): Promise<{success: boolean, data?: any, error?: any, status?: number}> {
   try {

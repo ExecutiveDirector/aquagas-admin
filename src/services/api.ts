@@ -24,18 +24,24 @@ api.interceptors.request.use((config) => {
     
     // Debug: Check if token is expired
     try {
-      const payload = JSON.parse(atob(token.split('.')[1]));
+      const payload = JSON.parse(atob(token.split(".")[1]));
       const now = Math.floor(Date.now() / 1000);
+    
       if (payload.exp < now) {
-        console.warn('⚠️ Token appears to be expired!', {
+        console.warn("⚠️ Token appears to be expired!", {
           exp: payload.exp,
-          now: now,
-          expired: payload.exp < now
+          now,
+          expired: payload.exp < now,
         });
       }
     } catch (e) {
-      console.warn('⚠️ Could not parse token payload:', e.message);
+      if (e instanceof Error) {
+        console.warn("⚠️ Could not parse token payload:", e.message);
+      } else {
+        console.warn("⚠️ Could not parse token payload:", e);
+      }
     }
+    
   }
   
   return config;
@@ -62,28 +68,49 @@ api.interceptors.response.use(
     
     // Enhanced debugging for auth errors
     if (error.response?.status === 401) {
-      console.group('🚫 401 UNAUTHORIZED - Detailed Analysis');
-      console.log('URL:', error.config?.url);
-      console.log('Method:', error.config?.method?.toUpperCase());
-      console.log('Headers sent:', error.config?.headers);
-      console.log('Server response:', error.response?.data);
-      
-      const token = localStorage.getItem('token');
+      console.group("🚫 401 UNAUTHORIZED - Detailed Analysis");
+    
+      console.log("URL:", error.config?.url);
+      console.log("Method:", error.config?.method?.toUpperCase());
+      console.log("Headers sent:", error.config?.headers);
+      console.log("Server response:", error.response?.data);
+    
+      const token = localStorage.getItem("token");
+    
       if (token) {
         try {
-          const payload = JSON.parse(atob(token.split('.')[1]));
+          interface JwtPayload {
+            exp: number;
+            iat?: number;
+            [key: string]: any;
+          }
+    
+          const payload = JSON.parse(
+            atob(token.split(".")[1])
+          ) as JwtPayload;
+    
           const now = Math.floor(Date.now() / 1000);
-          console.log('Token payload:', payload);
-          console.log('Token expired:', payload.exp < now);
-          console.log('Token expires at:', new Date(payload.exp * 1000).toISOString());
+    
+          console.log("Token payload:", payload);
+          console.log("Token expired:", payload.exp < now);
+          console.log(
+            "Token expires at:",
+            new Date(payload.exp * 1000).toISOString()
+          );
         } catch (e) {
-          console.log('Token parsing failed:', e.message);
+          if (e instanceof Error) {
+            console.log("Token parsing failed:", e.message);
+          } else {
+            console.log("Token parsing failed:", e);
+          }
         }
       } else {
-        console.log('No token found in localStorage');
+        console.log("No token found in localStorage");
       }
+    
       console.groupEnd();
     }
+    
 
     if (error.response?.status === 403) {
       console.group('🚫 403 FORBIDDEN - Access Denied');
