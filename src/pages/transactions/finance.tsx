@@ -266,26 +266,23 @@ const TransactionTable: React.FC<{
           Showing {paginatedTransactions.length} of {filteredTransactions.length} transaction(s)
         </div>
         <div className="flex space-x-2">
-          <button
-            onClick={() => setCurrentPage((p) => Math.max(p - 1, 1))}
-            disabled={currentPage === 1}
-            className="px-4 py-2 bg-gray-200 dark:bg-gray-600 text-gray-700 dark:text-gray-200 rounded-md disabled:opacity-50 transition"
-            aria-label="Previous page"
-          >
-            <ChevronLeft className="w-4 h-4" />
-          </button>
-          <span className="px-4 py-2">
-            Page {currentPage} of {totalPages}
-          </span>
-          <button
-            onClick={() => setCurrentPage((p) => Math.min(p + 1, totalPages))}
-            disabled={currentPage === totalPages}
-            className="px-4 py-2 bg-gray-200 dark:bg-gray-600 text-gray-700 dark:text-gray-200 rounded-md disabled:opacity-50 transition"
-            aria-label="Next page"
-          >
-            <ChevronRight className="w-4 h-4" />
-          </button>
-        </div>
+  <button
+    onClick={() => setCurrentPage((p: number) => Math.max(p - 1, 1))}
+    disabled={currentPage === 1}
+    className="px-4 py-2 bg-gray-200 dark:bg-gray-600 text-gray-700 dark:text-gray-200 rounded-md disabled:opacity-50 transition"
+    aria-label="Previous page"
+  >
+    <ChevronLeft className="w-4 h-4" />
+  </button>
+  <button
+    onClick={() => setCurrentPage((p: number) => Math.min(p + 1, totalPages))}
+    disabled={currentPage === totalPages}
+    className="px-4 py-2 bg-gray-200 dark:bg-gray-600 text-gray-700 dark:text-gray-200 rounded-md disabled:opacity-50 transition"
+    aria-label="Next page"
+  >
+    <ChevronRight className="w-4 h-4" />
+  </button>
+</div>
       </div>
 
       {selectedTransaction && (

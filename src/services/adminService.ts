@@ -81,6 +81,43 @@ interface Refund {
   processed_at?: string;
   user_id?: string;
 }
+interface Product {
+  product_id: string;
+  category_id: number;
+  product_name: string;
+  product_code: string;
+  brand?: string;
+  description?: string;
+  size_specification?: string;
+  unit_of_measure: 'kg' | 'liters' | 'pieces' | 'meters';
+  base_price: number;
+  min_price?: number;
+  max_price?: number;
+  weight_kg?: number;
+  dimensions_json?: string;
+  carbon_footprint_kg?: number;
+  safety_certifications?: string;
+  storage_requirements?: string;
+  product_images?: string;
+  specifications?: string;
+  is_active: boolean;
+  is_featured: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+interface Category {
+  category_id: number;
+  category_name: string;
+  parent_category_id?: number;
+  description?: string;
+  icon_url?: string;
+  sort_order: number;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
 // Authentication Check
 // export function isAdmin(): boolean {
 //   try {
@@ -739,6 +776,7 @@ export async function closeSupportTicket(ticketId: string, resolution: string): 
 }
 
 // Order Management
+// Order Management
 export async function listOrders(page: number = 1, limit: number = 20, filters?: {
   status?: string;
   vendor_id?: string;
@@ -882,7 +920,85 @@ export async function processRefund(
     throw new Error(error.response?.data?.error || 'Failed to process refund');
   }
 }
+// services/adminService.ts (Product-related functions only)
 
+// Product Management Functions
+export async function listProducts(page: number = 1, limit: number = 20, search?: string): Promise<ApiResponse<Product[]>> {
+  try {
+    const params: any = { page, limit };
+    if (search) params.search = search;
+    const res = await api.get('/v1/admin/products', { params });
+    return res.data;
+  } catch (error: any) {
+    throw new Error(error.response?.data?.error || 'Failed to fetch products');
+  }
+}
+
+export async function createProduct(data: Partial<Product>): Promise<ApiResponse<Product>> {
+  try {
+    const res = await api.post('/v1/admin/products', data);
+    return res.data;
+  } catch (error: any) {
+    throw new Error(error.response?.data?.error || 'Failed to create product');
+  }
+}
+
+export async function updateProduct(productId: string, data: Partial<Product>): Promise<ApiResponse<Product>> {
+  try {
+    const res = await api.put(`/v1/admin/products/${productId}`, data);
+    return res.data;
+  } catch (error: any) {
+    throw new Error(error.response?.data?.error || 'Failed to update product');
+  }
+}
+
+export async function deleteProduct(productId: string): Promise<ApiResponse> {
+  try {
+    const res = await api.delete(`/v1/admin/products/${productId}`);
+    return res.data;
+  } catch (error: any) {
+    throw new Error(error.response?.data?.error || 'Failed to delete product');
+  }
+}
+
+// Category Management Functions
+export async function listCategories(page: number = 1, limit: number = 20, search?: string): Promise<ApiResponse<Category[]>> {
+  try {
+    const params: any = { page, limit };
+    if (search) params.search = search;
+    const res = await api.get('/v1/admin/categories', { params });
+    return res.data;
+  } catch (error: any) {
+    throw new Error(error.response?.data?.error || 'Failed to fetch categories');
+  }
+}
+
+export async function createCategory(data: Partial<Category>): Promise<ApiResponse<Category>> {
+  try {
+    const res = await api.post('/v1/admin/categories', data);
+    return res.data;
+  } catch (error: any) {
+    throw new Error(error.response?.data?.error || 'Failed to create category');
+  }
+}
+
+export async function updateCategory(categoryId: string, data: Partial<Category>): Promise<ApiResponse<Category>> {
+  try {
+    const res = await api.put(`/v1/admin/categories/${categoryId}`, data);
+    return res.data;
+  } catch (error: any) {
+    throw new Error(error.response?.data?.error || 'Failed to update category');
+  }
+}
+
+export async function deleteCategory(categoryId: string): Promise<ApiResponse> {
+  try {
+    const res = await api.delete(`/v1/admin/categories/${categoryId}`);
+    return res.data;
+  } catch (error: any) {
+    throw new Error(error.response?.data?.error || 'Failed to delete category');
+  }
+}
 // Test API connectivity
 export async function testApiConnection(): Promise<{success: boolean, data?: any, error?: any, status?: number}> {
   try {

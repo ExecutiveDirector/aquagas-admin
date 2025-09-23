@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Package, Plus, Edit, Trash2, AlertCircle, Search } from 'lucide-react';
+import { Plus, Edit, Trash2, AlertCircle, Search } from 'lucide-react';
 import toast from 'react-hot-toast';
 import {
   listProducts,
@@ -12,7 +12,7 @@ import {
   deleteCategory,
   isAdmin,
 } from '../../services/adminService';
-import type { ApiResponse } from '../../services/adminService';
+//import type { ApiResponse } from '../../services/adminService';
 
 interface Product {
   product_id: string;
@@ -91,7 +91,7 @@ const ProductPage: React.FC = () => {
     try {
       setIsLoading(true);
       const res = await createProduct(data);
-      setProducts(prev => [...prev, res.data]);
+      setProducts(prev => [...prev, res.data!]);
       toast.success('Product created successfully');
       setActiveTab('products');
     } catch (err: any) {
@@ -105,7 +105,7 @@ const ProductPage: React.FC = () => {
     try {
       setIsLoading(true);
       const res = await updateProduct(productId, data);
-      setProducts(prev => prev.map(p => p.product_id === productId ? res.data : p));
+      setProducts(prev => prev.map(p => p.product_id === productId ? res.data! : p));
       toast.success('Product updated successfully');
       setSelectedProduct(null);
     } catch (err: any) {
@@ -133,7 +133,7 @@ const ProductPage: React.FC = () => {
     try {
       setIsLoading(true);
       const res = await createCategory(data);
-      setCategories(prev => [...prev, res.data]);
+      setCategories(prev => [...prev, res.data!]);
       toast.success('Category created successfully');
       setActiveTab('categories');
     } catch (err: any) {
@@ -147,7 +147,7 @@ const ProductPage: React.FC = () => {
     try {
       setIsLoading(true);
       const res = await updateCategory(categoryId, data);
-      setCategories(prev => prev.map(c => c.category_id.toString() === categoryId ? res.data : c));
+      setCategories(prev => prev.map(c => c.category_id.toString() === categoryId ? res.data! : c));
       toast.success('Category updated successfully');
       setSelectedCategory(null);
     } catch (err: any) {
@@ -671,5 +671,3 @@ const CategoryForm: React.FC<CategoryFormProps> = ({ category, onSubmit, onCance
 };
 
 export default ProductPage;
-</parameter
-</xai:function_call
