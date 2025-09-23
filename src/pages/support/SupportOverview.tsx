@@ -5,7 +5,7 @@ import {
   MessageSquare, AlertCircle, Clock, CheckCircle2, Star, Zap,
   Calendar, Book, ThumbsUp, TrendingUp
 } from 'lucide-react';
-import { SupportTicket } from '../../services/supportService';
+import type { SupportTicket } from './SupportService';
 
 interface SupportStats {
   totalTickets: number;
