@@ -2,7 +2,7 @@
 import api from './api';
 
 // Type definitions
-interface ApiResponse<T = any> {
+export interface ApiResponse<T = any> {
   data?: T;
   message?: string;
   error?: string;
