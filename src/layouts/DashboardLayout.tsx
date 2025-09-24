@@ -94,7 +94,7 @@ function DashboardLayout() {
         return <NotificationsPage />;
       case "/support":
         return <Support/>;
-        case "/settngs":
+        case "/settings":
           return <Settings />;
       default:
         const path = location.pathname;
