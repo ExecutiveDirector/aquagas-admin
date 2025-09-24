@@ -94,6 +94,8 @@ function DashboardLayout() {
         return <NotificationsPage />;
       case "/support":
         return <Support/>;
+        case "/settngs":
+          return <Settings />;
       default:
         const path = location.pathname;
         if (
@@ -102,7 +104,7 @@ function DashboardLayout() {
           //path.startsWith("/transactions") ||
          // path.startsWith("/support") ||
           path.startsWith("/analytics") ||
-          path.startsWith("/settings")
+          // path.startsWith("/settings")
         ) {
           return (
             <div className="text-center py-12">
