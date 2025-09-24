@@ -103,7 +103,7 @@ function DashboardLayout() {
           // path.startsWith("/products") ||
           //path.startsWith("/transactions") ||
          // path.startsWith("/support") ||
-          path.startsWith("/analytics") ||
+          path.startsWith("/analytics") 
           // path.startsWith("/settings")
         ) {
           return (
