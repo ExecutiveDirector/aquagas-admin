@@ -7,7 +7,6 @@ import {
   Truck,
   Bell,
   BarChart,
-  Settings,
   LogOut,
   Menu,
   X,
@@ -16,7 +15,6 @@ import {
   Package,
   MessageSquare,
 } from "lucide-react";
-
 import AdminHome from "../pages/home/AdminHome";
 import UsersPage from "../pages/users/UsersPage";
 import RidersPage from "../pages/riders/RidersPage";
@@ -24,11 +22,12 @@ import VendorsPage from "../pages/vendors/VendorsPage";
 import NotificationsPage from "../pages/notifications/NotificationsPage";
 
 import { listUsers, getAccount, logout, isAuthenticated } from "../services/api";
-import Support from "../pages/support/SupportPage";
+//import Support from "../pages/support/SupportPage";
 import Finance from "../pages/transactions/finance";
 import ProductPage from "../pages/products/ProductPage";
 import OrdersPage from "../pages/orders/OrderPage";
 import SupportPage from "../pages/support/SupportPage";
+import Settings from "../pages/settings/settings";
 
 function DashboardLayout() {
   const location = useLocation();
