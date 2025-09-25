@@ -2,8 +2,7 @@ import React, { useState, useEffect, type FormEvent } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Settings as SettingsIcon, Plus, Search, Filter, Edit3, Trash2,
-  Save, X, Eye, EyeOff, AlertTriangle, CheckCircle2, Info,
-  Database, Shield, Bell, CreditCard, Truck
+  Save, X, Eye, EyeOff, AlertTriangle, CheckCircle2, Database, Shield, Bell, CreditCard, Truck
 } from 'lucide-react';
 
 // Define interface for system setting (updated to match your model)

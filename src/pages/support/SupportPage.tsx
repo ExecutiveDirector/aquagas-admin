@@ -6,7 +6,6 @@ import {
   Shield, Headphones
 } from 'lucide-react';
 import { toast, Toaster } from 'react-hot-toast';
-
 // Import all support components (these would be in separate files)
 import CreateTicketForm from './CreateTicketForm';
 import SupportTickets from './SupportTickets';
