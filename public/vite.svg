@@ -1,1 +1,152 @@
-<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" aria-hidden="true" role="img" class="iconify iconify--logos" width="31.88" height="32" preserveAspectRatio="xMidYMid meet" viewBox="0 0 256 257"><defs><linearGradient id="IconifyId1813088fe1fbc01fb466" x1="-.828%" x2="57.636%" y1="7.652%" y2="78.411%"><stop offset="0%" stop-color="#41D1FF"></stop><stop offset="100%" stop-color="#BD34FE"></stop></linearGradient><linearGradient id="IconifyId1813088fe1fbc01fb467" x1="43.376%" x2="50.316%" y1="2.242%" y2="89.03%"><stop offset="0%" stop-color="#FFEA83"></stop><stop offset="8.333%" stop-color="#FFDD35"></stop><stop offset="100%" stop-color="#FFA800"></stop></linearGradient></defs><path fill="url(#IconifyId1813088fe1fbc01fb466)" d="M255.153 37.938L134.897 252.976c-2.483 4.44-8.862 4.466-11.382.048L.875 37.958c-2.746-4.814 1.371-10.646 6.827-9.67l120.385 21.517a6.537 6.537 0 0 0 2.322-.004l117.867-21.483c5.438-.991 9.574 4.796 6.877 9.62Z"></path><path fill="url(#IconifyId1813088fe1fbc01fb467)" d="M185.432.063L96.44 17.501a3.268 3.268 0 0 0-2.634 3.014l-5.474 92.456a3.268 3.268 0 0 0 3.997 3.378l24.777-5.718c2.318-.535 4.413 1.507 3.936 3.838l-7.361 36.047c-.495 2.426 1.782 4.5 4.151 3.78l15.304-4.649c2.372-.72 4.652 1.36 4.15 3.788l-11.698 56.621c-.732 3.542 3.979 5.473 5.943 2.437l1.313-2.028l72.516-144.72c1.215-2.423-.88-5.186-3.54-4.672l-25.505 4.922c-2.396.462-4.435-1.77-3.759-4.114l16.646-57.705c.677-2.35-1.37-4.583-3.769-4.113Z"></path></svg>
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Smart Gas — blueprint-style logo (editable SVG)
+     - Edit colors by changing gradient stops and stroke colors
+     - Change the text by editing the <text> element (or convert to paths in an editor)
+-->
+<svg xmlns="http://www.w3.org/2000/svg"
+     xmlns:xlink="http://www.w3.org/1999/xlink"
+     viewBox="0 0 512 512" width="512" height="512" role="img" aria-label="Smart Gas logo">
+  <defs>
+    <!-- Blueprint background radial glow -->
+    <radialGradient id="gGlow" cx="50%" cy="40%" r="60%">
+      <stop offset="0%" stop-color="#E8F6FF" stop-opacity="0.85"/>
+      <stop offset="50%" stop-color="#C7EAFF" stop-opacity="0.45"/>
+      <stop offset="100%" stop-color="#0b1220" stop-opacity="0.12"/>
+    </radialGradient>
+
+    <!-- Cylinder outline gradient (blue technical) -->
+    <linearGradient id="gBlue" x1="0%" x2="100%" y1="0%" y2="100%">
+      <stop offset="0%" stop-color="#3AA7FF"/>
+      <stop offset="100%" stop-color="#0A6EDB"/>
+    </linearGradient>
+
+    <!-- Flame gradient (tech + warm accent) -->
+    <linearGradient id="gFlame" x1="0%" x2="100%" y1="0%" y2="100%">
+      <stop offset="0%" stop-color="#41D1FF"/>
+      <stop offset="40%" stop-color="#64A1FF"/>
+      <stop offset="100%" stop-color="#FFA800"/>
+    </linearGradient>
+
+    <!-- Thin stroke style for blueprint lines -->
+    <style type="text/css"><![CDATA[
+      .line { fill: none; stroke: url(#gBlue); stroke-width: 6; stroke-linecap: round; stroke-linejoin: round; }
+      .thin { fill: none; stroke: url(#gBlue); stroke-width: 3; stroke-linecap: round; stroke-linejoin: round; stroke-opacity:0.95; }
+      .wire { fill:none; stroke:#77B9FF; stroke-width:2; stroke-dasharray:0; stroke-opacity:0.9 }
+      .flame-fill { fill: url(#gFlame); stroke: none; }
+      .title { font-family: "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; font-weight:700; fill:#0A4F9A; font-size:48px; letter-spacing:2px; }
+      .subtle-grid { fill:none; stroke:#BFE6FF; stroke-width:1; stroke-opacity:0.22; }
+    ]]></style>
+  </defs>
+
+  <!-- soft vignette background -->
+  <rect width="100%" height="100%" fill="url(#gGlow)"/>
+
+  <!-- light blueprint grid (subtle) -->
+  <g transform="translate(64,40)">
+    <g id="grid">
+      <!-- vertical grid -->
+      <g>
+        <!-- 8 vertical lines -->
+        <line class="subtle-grid" x1="0" y1="0" x2="0" y2="360"/>
+        <line class="subtle-grid" x1="40" y1="0" x2="40" y2="360"/>
+        <line class="subtle-grid" x1="80" y1="0" x2="80" y2="360"/>
+        <line class="subtle-grid" x1="120" y1="0" x2="120" y2="360"/>
+        <line class="subtle-grid" x1="160" y1="0" x2="160" y2="360"/>
+        <line class="subtle-grid" x1="200" y1="0" x2="200" y2="360"/>
+      </g>
+      <!-- horizontal grid -->
+      <g>
+        <line class="subtle-grid" x1="0" y1="0" x2="200" y2="0"/>
+        <line class="subtle-grid" x1="0" y1="60" x2="200" y2="60"/>
+        <line class="subtle-grid" x1="0" y1="120" x2="200" y2="120"/>
+        <line class="subtle-grid" x1="0" y1="180" x2="200" y2="180"/>
+        <line class="subtle-grid" x1="0" y1="240" x2="200" y2="240"/>
+        <line class="subtle-grid" x1="0" y1="300" x2="200" y2="300"/>
+      </g>
+    </g>
+  </g>
+
+  <!-- Logo group centered -->
+  <g transform="translate(156,56)">
+
+    <!-- Cylinder base shadow (thin, blueprint style) -->
+    <ellipse cx="100" cy="320" rx="64" ry="12" fill="none" stroke="#123859" stroke-opacity="0.06" stroke-width="10"/>
+
+    <!-- Cylinder outline (rounded rectangle with top handle) -->
+    <g id="cylinder">
+      <!-- body -->
+      <path class="line" d="M36 56
+                           h128
+                           a32 32 0 0 1 32 32
+                           v184
+                           a32 32 0 0 1 -32 32
+                           h-128
+                           a32 32 0 0 1 -32 -32
+                           v-184
+                           a32 32 0 0 1 32 -32
+                           z" />
+
+      <!-- internal guideline center vertical -->
+      <line class="thin" x1="100" y1="80" x2="100" y2="288"/>
+
+      <!-- internal horizontal blueprint guides -->
+      <line class="thin" x1="48" y1="144" x2="152" y2="144"/>
+      <line class="thin" x1="48" y1="208" x2="152" y2="208"/>
+
+      <!-- top handle / valve guard -->
+      <rect class="line" x="72" y="16" width="56" height="20" rx="3" />
+      <rect class="thin" x="86" y="10" width="28" height="12" rx="2" />
+
+      <!-- valve stem -->
+      <rect class="thin" x="94" y="32" width="12" height="24" rx="2"/>
+
+      <!-- small mounting lines -->
+      <line class="thin" x1="40" y1="72" x2="44" y2="72"/>
+      <line class="thin" x1="156" y1="72" x2="152" y2="72"/>
+
+      <!-- bottom foot -->
+      <rect class="line" x="60" y="296" width="80" height="12" rx="6" />
+    </g>
+
+    <!-- stylized flame placed inside the cylinder with gradient fill -->
+    <g transform="translate(60,88) scale(0.86)">
+      <!-- outer flame (blue -> orange gradient) -->
+      <path class="flame-fill" d="M68 6
+                                 C80 24 84 44 68 66
+                                 C62 76 54 86 48 96
+                                 C42 86 32 76 26 66
+                                 C10 44 14 24 26 6
+                                 C36 -8 56 -6 68 6 Z" />
+      <!-- inner tech-flame cutout (lighter) -->
+      <path d="M64 20
+               C72 34 74 44 64 56
+               C60 62 54 68 50 74
+               C46 68 40 62 36 56
+               C26 44 28 34 36 20
+               C44 10 56 8 64 20 Z"
+            fill="#E8FBFF" fill-opacity="0.36" />
+    </g>
+
+    <!-- small circuit / smart lines around flame -->
+    <g transform="translate(18,50)">
+      <line class="wire" x1="6" y1="20" x2="-12" y2="6"/>
+      <circle cx="-12" cy="6" r="3" fill="#77B9FF"/>
+      <line class="wire" x1="190" y1="40" x2="210" y2="50"/>
+      <circle cx="210" cy="50" r="3" fill="#77B9FF"/>
+      <line class="wire" x1="160" y1="12" x2="180" y2="-6"/>
+      <circle cx="180" cy="-6" r="3" fill="#77B9FF"/>
+      <!-- connector from flame to outer circuit -->
+      <path class="wire" d="M126 150 L156 170 L176 170" />
+      <circle cx="176" cy="170" r="3" fill="#77B9FF"/>
+    </g>
+
+  </g>
+
+  <!-- Brand name under the logo -->
+  <g transform="translate(0,400)">
+    <text x="50%" y="0" text-anchor="middle" class="title">SMART GAS</text>
+    <!-- smaller tagline (optional) -->
+    <text x="50%" y="44" text-anchor="middle" font-family="Inter, Roboto, Arial" font-size="14" fill="#0A4F9A" opacity="0.85">Smart refills • Safe deliveries • Connected</text>
+  </g>
+
+</svg>

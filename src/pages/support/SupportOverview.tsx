@@ -1,4 +1,4 @@
-// components/support/SupportOverview.tsx
+// pages/support/SupportOverview.tsx
 import React from 'react';
 import { motion } from 'framer-motion';
 import {
