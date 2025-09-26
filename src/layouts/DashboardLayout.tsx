@@ -26,7 +26,7 @@ import { listUsers, getAccount, logout, isAuthenticated } from "../services/api"
 import Finance from "../pages/transactions/finance";
 import ProductPage from "../pages/products/ProductPage";
 import OrdersPage from "../pages/orders/OrderPage";
-//mport SupportPage from "../pages/support/SupportPage";
+import SupportPage from "../pages/support/SupportPage";
 import Settings from "../pages/settings/settings";
 
 function DashboardLayout() {
@@ -92,8 +92,8 @@ function DashboardLayout() {
             return <OrdersPage />;
       case "/notifications":
         return <NotificationsPage />;
-        // case "/support":
-         // return <SupportPage />;        
+        case "/support":
+         return <SupportPage />;        
         case "/settings":
           return <Settings />;
       default:
@@ -102,7 +102,7 @@ function DashboardLayout() {
           // path.startsWith("/orders") ||
           // path.startsWith("/products") ||
           //path.startsWith("/transactions") ||
-          path.startsWith("/support") ||
+          // path.startsWith("/support") ||
           path.startsWith("/analytics") 
           // path.startsWith("/settings")
         ) {

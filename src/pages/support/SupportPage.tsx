@@ -6,35 +6,17 @@ import {
   Shield, Headphones
 } from 'lucide-react';
 import { toast, Toaster } from 'react-hot-toast';
-// Import all support components (these would be in separate files)
+
+// Import types from the updated service
+import { supportService } from './SupportService';
+import type { SupportTicket, FAQ, KnowledgeBaseItem } from './SupportService';
+
+// Import your existing components (make sure these exist in your project)
 import CreateTicketForm from './CreateTicketForm';
 import SupportTickets from './SupportTickets';
 import FAQ from './FAQ';
 import KnowledgeBase from './KnowledgeBase';
 import SupportOverview from './SupportOverview';
-import { supportService } from './SupportService';
-import type { SupportTicket } from './SupportService';
-
-// Types for component state
-interface KnowledgeBaseItem {
-  id: number;
-  title: string;
-  content: string;
-  category: string;
-  views: number;
-  helpful_votes: number;
-  tags: string[];
-  created_at: string;
-  updated_at: string;
-}
-
-interface FAQ {
-  id: number;
-  question: string;
-  answer: string;
-  category: string;
-  helpful_count: number;
-}
 
 // Main SupportPage component
 export default function SupportPage() {
@@ -51,6 +33,7 @@ export default function SupportPage() {
   const [loading, setLoading] = useState(true);
   const [ticketsLoading, setTicketsLoading] = useState(false);
   const [showCreateTicketModal, setShowCreateTicketModal] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   // Tab configuration
   const tabs = [
@@ -95,8 +78,16 @@ export default function SupportPage() {
   // Load initial data
   const loadData = useCallback(async () => {
     setLoading(true);
+    setError(null);
+
     try {
-      // Load all data in parallel
+      // Test connection first
+      const isConnected = await supportService.testConnection();
+      if (!isConnected) {
+        throw new Error('Unable to connect to support service. Please check your connection.');
+      }
+
+      // Load all data in parallel with proper error handling
       const [ticketsResult, knowledgeResult, faqResult] = await Promise.allSettled([
         supportService.getUserTickets(),
         supportService.getKnowledgeBase(),
@@ -105,28 +96,33 @@ export default function SupportPage() {
 
       // Handle tickets
       if (ticketsResult.status === 'fulfilled') {
-        setTickets(ticketsResult.value);
+        setTickets(ticketsResult.value || []);
       } else {
         console.error('Error loading tickets:', ticketsResult.reason);
+        toast.error('Failed to load tickets');
       }
 
       // Handle knowledge base
       if (knowledgeResult.status === 'fulfilled') {
-        setKnowledgeBase(knowledgeResult.value);
+        setKnowledgeBase(knowledgeResult.value || []);
       } else {
         console.error('Error loading knowledge base:', knowledgeResult.reason);
+        toast.error('Failed to load knowledge base');
       }
 
       // Handle FAQs
       if (faqResult.status === 'fulfilled') {
-        setFAQs(faqResult.value);
+        setFAQs(faqResult.value || []);
       } else {
         console.error('Error loading FAQs:', faqResult.reason);
+        toast.error('Failed to load FAQs');
       }
 
     } catch (error) {
       console.error('Error loading support data:', error);
-      toast.error('Failed to load support data');
+      const errorMessage = error instanceof Error ? error.message : 'Failed to load support data';
+      setError(errorMessage);
+      toast.error(errorMessage);
     } finally {
       setLoading(false);
     }
@@ -137,7 +133,7 @@ export default function SupportPage() {
     setTicketsLoading(true);
     try {
       const result = await supportService.getUserTickets();
-      setTickets(result);
+      setTickets(result || []);
     } catch (error) {
       console.error('Error loading tickets:', error);
       toast.error('Failed to load tickets');
@@ -169,6 +165,29 @@ export default function SupportPage() {
 
   // Get current tab info
   const currentTab = tabs.find(tab => tab.id === activeTab);
+
+  // Error state
+  if (error && loading) {
+    return (
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
+        <div className="bg-white dark:bg-gray-800 p-8 rounded-xl shadow-sm border border-gray-200 dark:border-gray-600 max-w-md mx-auto text-center">
+          <MessageSquare className="h-16 w-16 text-red-500 mx-auto mb-4" />
+          <h2 className="text-xl font-bold text-gray-800 dark:text-gray-200 mb-2">
+            Connection Error
+          </h2>
+          <p className="text-gray-600 dark:text-gray-400 mb-4">
+            {error}
+          </p>
+          <button
+            onClick={loadData}
+            className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg"
+          >
+            Retry Connection
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
@@ -441,220 +460,3 @@ export default function SupportPage() {
     </div>
   );
 }
-
-// // Mock implementations of the imported components for this demo
-// // In a real app, these would be separate files
-
-// function SupportOverview({ tickets, knowledgeBase, loading, onNavigateToTab }) {
-//   const supportStats = React.useMemo(() => {
-//     const totalTickets = tickets.length;
-//     const openTickets = tickets.filter(t => t.status === 'open').length;
-//     const inProgressTickets = tickets.filter(t => t.status === 'in_progress').length;
-//     const resolvedTickets = tickets.filter(t => t.status === 'resolved').length;
-    
-//     return {
-//       totalTickets,
-//       openTickets,
-//       inProgressTickets,
-//       resolvedTickets,
-//       avgResolutionTime: 24,
-//       avgSatisfactionRating: 4.8
-//     };
-//   }, [tickets]);
-
-//   const stats = [
-//     { label: 'Total Tickets', value: supportStats.totalTickets, icon: MessageSquare, color: 'text-blue-600', bg: 'bg-blue-100 dark:bg-blue-900/20' },
-//     { label: 'Open', value: supportStats.openTickets, icon: Clock, color: 'text-orange-600', bg: 'bg-orange-100 dark:bg-orange-900/20' },
-//     { label: 'In Progress', value: supportStats.inProgressTickets, icon: Settings, color: 'text-purple-600', bg: 'bg-purple-100 dark:bg-purple-900/20' },
-//     { label: 'Resolved', value: supportStats.resolvedTickets, icon: Shield, color: 'text-green-600', bg: 'bg-green-100 dark:bg-green-900/20' }
-//   ];
-
-//   if (loading) {
-//     return (
-//       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-//         {Array.from({ length: 4 }).map((_, i) => (
-//           <div key={i} className="bg-gray-200 dark:bg-gray-700 p-6 rounded-xl animate-pulse">
-//             <div className="h-4 bg-gray-300 dark:bg-gray-600 rounded mb-2"></div>
-//             <div className="h-8 bg-gray-300 dark:bg-gray-600 rounded"></div>
-//           </div>
-//         ))}
-//       </div>
-//     );
-//   }
-
-//   return (
-//     <div className="space-y-6">
-//       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-//         {stats.map((stat) => {
-//           const IconComponent = stat.icon;
-//           return (
-//             <motion.div
-//               key={stat.label}
-//               whileHover={{ scale: 1.02 }}
-//               className={`${stat.bg} p-6 rounded-xl border border-gray-200 dark:border-gray-600 cursor-pointer`}
-//               onClick={() => onNavigateToTab('tickets')}
-//             >
-//               <div className="flex items-center justify-between">
-//                 <div>
-//                   <p className="text-3xl font-bold text-gray-800 dark:text-gray-200">
-//                     {stat.value}
-//                   </p>
-//                   <p className="text-sm text-gray-600 dark:text-gray-400">
-//                     {stat.label}
-//                   </p>
-//                 </div>
-//                 <IconComponent className={`h-8 w-8 ${stat.color}`} />
-//               </div>
-//             </motion.div>
-//           );
-//         })}
-//       </div>
-
-//       <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-600 p-6">
-//         <h2 className="text-xl font-bold text-gray-800 dark:text-gray-200 mb-4">Quick Actions</h2>
-//         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-//           <button
-//             onClick={() => onNavigateToTab('create-ticket')}
-//             className="p-4 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg hover:border-blue-500 transition-colors group"
-//           >
-//             <MessageSquare className="h-8 w-8 text-blue-600 mx-auto mb-2 group-hover:scale-110 transition-transform" />
-//             <h3 className="font-medium text-gray-800 dark:text-gray-200">Create Ticket</h3>
-//             <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">Get help with any issue</p>
-//           </button>
-
-//           <button
-//             onClick={() => onNavigateToTab('knowledge')}
-//             className="p-4 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg hover:border-green-500 transition-colors group"
-//           >
-//             <Book className="h-8 w-8 text-green-600 mx-auto mb-2 group-hover:scale-110 transition-transform" />
-//             <h3 className="font-medium text-gray-800 dark:text-gray-200">Browse Help</h3>
-//             <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">Find answers instantly</p>
-//           </button>
-
-//           <button
-//             onClick={() => onNavigateToTab('chat')}
-//             className="p-4 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg hover:border-purple-500 transition-colors group"
-//           >
-//             <MessageCircle className="h-8 w-8 text-purple-600 mx-auto mb-2 group-hover:scale-110 transition-transform" />
-//             <h3 className="font-medium text-gray-800 dark:text-gray-200">Live Chat</h3>
-//             <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">Chat with support agent</p>
-//           </button>
-//         </div>
-//       </div>
-//     </div>
-//   );
-// }
-
-// function SupportTickets({ tickets, loading, onRefresh }) {
-//   if (loading) {
-//     return (
-//       <div className="bg-white dark:bg-gray-800 rounded-xl p-8 text-center">
-//         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mx-auto mb-4"></div>
-//         <p className="text-gray-600 dark:text-gray-400">Loading tickets...</p>
-//       </div>
-//     );
-//   }
-
-//   return (
-//     <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-600 p-6">
-//       <div className="flex justify-between items-center mb-6">
-//         <h2 className="text-xl font-bold text-gray-800 dark:text-gray-200">
-//           Support Tickets ({tickets.length})
-//         </h2>
-//         <button
-//           onClick={onRefresh}
-//           className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg"
-//         >
-//           Refresh
-//         </button>
-//       </div>
-      
-//       {tickets.length === 0 ? (
-//         <div className="text-center py-12">
-//           <MessageSquare className="h-16 w-16 text-gray-400 mx-auto mb-4" />
-//           <h3 className="text-lg font-medium text-gray-800 dark:text-gray-200 mb-2">
-//             No tickets yet
-//           </h3>
-//           <p className="text-gray-600 dark:text-gray-400">
-//             Create your first support ticket to get help with any issues.
-//           </p>
-//         </div>
-//       ) : (
-//         <div className="text-center py-12">
-//           <p className="text-gray-600 dark:text-gray-400">
-//             Ticket management interface would be implemented here using the SupportTickets component from your codebase.
-//           </p>
-//         </div>
-//       )}
-//     </div>
-//   );
-// }
-
-// function CreateTicketForm({ isOpen, onClose, onTicketCreated }) {
-//   if (!isOpen) return null;
-
-//   return (
-//     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-gray-900/50 backdrop-blur-sm">
-//       <div className="bg-white dark:bg-gray-800 rounded-xl shadow-xl w-full max-w-2xl p-6">
-//         <div className="flex justify-between items-center mb-6">
-//           <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-200">
-//             Create Support Ticket
-//           </h2>
-//           <button
-//             onClick={onClose}
-//             className="text-gray-500 hover:text-gray-700 text-2xl"
-//           >
-//             ×
-//           </button>
-//         </div>
-//         <div className="text-center py-8">
-//           <p className="text-gray-600 dark:text-gray-400">
-//             Create ticket form would be implemented here using your CreateTicketForm component.
-//           </p>
-//           <button
-//             onClick={() => {
-//               toast.success('Ticket created successfully!');
-//               onTicketCreated();
-//               onClose();
-//             }}
-//             className="mt-4 bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg"
-//           >
-//             Simulate Create Ticket
-//           </button>
-//         </div>
-//       </div>
-//     </div>
-//   );
-// }
-
-// function FAQ({ searchQuery, onSearchChange, standalone }) {
-//   return (
-//     <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-600 p-6">
-//       <div className="text-center py-12">
-//         <HelpCircle className="h-16 w-16 text-gray-400 mx-auto mb-4" />
-//         <h3 className="text-lg font-medium text-gray-800 dark:text-gray-200 mb-2">
-//           FAQ Component
-//         </h3>
-//         <p className="text-gray-600 dark:text-gray-400">
-//           FAQ interface would be implemented here using your FAQ component.
-//         </p>
-//       </div>
-//     </div>
-//   );
-// }
-
-// function KnowledgeBase({ searchQuery, onSearchChange, standalone }) {
-//   return (
-//     <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-600 p-6">
-//       <div className="text-center py-12">
-//         <Book className="h-16 w-16 text-gray-400 mx-auto mb-4" />
-//         <h3 className="text-lg font-medium text-gray-800 dark:text-gray-200 mb-2">
-//           Knowledge Base Component
-//         </h3>
-//         <p className="text-gray-600 dark:text-gray-400">
-//           Knowledge base interface would be implemented here using your KnowledgeBase component.
-//         </p>
-//       </div>
-//     </div>
-//   );
-// }
