@@ -6,6 +6,7 @@ import {
   Store,
   Truck,
   Bell,
+  Settings,
   BarChart,
   LogOut,
   Menu,
@@ -27,7 +28,7 @@ import Finance from "../pages/transactions/finance";
 import ProductPage from "../pages/products/ProductPage";
 import OrdersPage from "../pages/orders/OrderPage";
 import SupportPage from "../pages/support/SupportPage";
-import Settings from "../pages/settings/settings";
+import SettingPage from "../pages/settings/settings";
 
 function DashboardLayout() {
   const location = useLocation();
@@ -95,7 +96,7 @@ function DashboardLayout() {
         case "/support":
          return <SupportPage />;        
         case "/settings":
-          return <Settings />;
+          return <SettingPage />;
       default:
         const path = location.pathname;
         if (
