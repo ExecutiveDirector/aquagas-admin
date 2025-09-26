@@ -28,7 +28,7 @@ interface SettingFormData {
   is_public: boolean;
 }
 
-const Settings: React.FC = () => {
+const SettingPage: React.FC = () => {
   const [settings, setSettings] = useState<SystemSetting[]>([]);
   const [filteredSettings, setFilteredSettings] = useState<SystemSetting[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
@@ -833,4 +833,4 @@ const Settings: React.FC = () => {
   );
 };
 
-export default Settings;
+export default SettingPage;
