@@ -1,12 +1,10 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
-  Search, HelpCircle,  ChevronDown, ThumbsUp, 
-  Filter,  MessageCircle, RefreshCw, 
-  BookOpen
+  Search, HelpCircle, ChevronDown, ThumbsUp, 
+  Filter, MessageCircle, RefreshCw, BookOpen
 } from 'lucide-react';
 import { toast } from 'react-hot-toast';
-import 'react-toastify/dist/ReactToastify.css';
 
 // Types
 interface FAQ {
@@ -75,7 +73,7 @@ export default function FAQ({
   onSearchChange, 
   standalone = false 
 }: FAQProps) {
-  // State management
+  // State
   const [faqs, setFaqs] = useState<FAQ[]>([]);
   const [expandedFAQ, setExpandedFAQ] = useState<number | null>(null);
   const [loading, setLoading] = useState(true);
@@ -85,7 +83,7 @@ export default function FAQ({
   const [helpfulClicks, setHelpfulClicks] = useState<Set<number>>(new Set());
   const [showFilters, setShowFilters] = useState(false);
 
-  // Use external search query if provided, otherwise use local
+  // Use external search query if provided
   const searchQuery = externalSearchQuery || localSearchQuery;
   const handleSearchChange = onSearchChange || setLocalSearchQuery;
 
@@ -124,7 +122,7 @@ export default function FAQ({
     return ['all', ...uniqueCategories.sort()];
   }, [faqs]);
 
-  // Filter FAQs based on search and category
+  // Filtered FAQs
   const filteredFaqs = useMemo(() => {
     return faqs.filter(faq => {
       const matchesSearch = searchQuery === '' ||
@@ -137,17 +135,15 @@ export default function FAQ({
     });
   }, [faqs, searchQuery, categoryFilter]);
 
-  // Handle helpful click
+  // Mark FAQ helpful
   const handleHelpfulClick = async (id: number) => {
     if (helpfulClicks.has(id)) {
-      toast('You have already marked this as helpful'); // neutral toast
+      toast('You have already marked this as helpful');
       return;
     }
     
     try {
       await supportService.incrementFAQHelpful(id);
-      
-      // Update local state
       setFaqs(prev =>
         prev.map(faq => 
           faq.id === id 
@@ -155,10 +151,7 @@ export default function FAQ({
             : faq
         )
       );
-      
-      // Track that user clicked helpful for this FAQ
       setHelpfulClicks(prev => new Set([...prev, id]));
-      
       toast.success('Thank you for your feedback!');
     } catch (error) {
       console.error('Error marking FAQ as helpful:', error);
@@ -166,7 +159,7 @@ export default function FAQ({
     }
   };
 
-  // Toggle FAQ expansion
+  // Toggle FAQ expand/collapse
   const toggleFAQ = (id: number) => {
     setExpandedFAQ(expandedFAQ === id ? null : id);
   };
@@ -204,19 +197,21 @@ export default function FAQ({
 
   return (
     <div className="space-y-6">
-      {/* Header (only show if standalone) */}
+      {/* Header */}
       {standalone && (
         <div className="bg-gradient-to-r from-blue-600 to-purple-600 text-white p-6 rounded-xl">
           <div className="flex items-center gap-3 mb-2">
             <HelpCircle className="h-8 w-8" />
             <h1 className="text-2xl font-bold">Frequently Asked Questions</h1>
           </div>
-          <p className="text-blue-100">
-            Find quick answers to common questions about our service
-          </p>
+          <p className="text-blue-100">Find quick answers to common questions about our service</p>
         </div>
       )}
 
+      {/* Search + Filters */}
+      {/* ... your existing JSX stays mostly the same ... */}
+      {/* (omitted here for brevity, but unchanged except no react-toastify import) */}
+      
       {/* Search and Filters */}
       <div className="bg-white dark:bg-gray-800 p-4 rounded-xl shadow-sm border border-gray-200 dark:border-gray-600">
         <div className="flex flex-col space-y-4">
