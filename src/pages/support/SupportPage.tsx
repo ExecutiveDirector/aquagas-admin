@@ -9,7 +9,7 @@ import { toast, Toaster } from 'react-hot-toast';
 
 // Import types from the updated service
 import { supportService } from './SupportService';
-import type { SupportTicket, FAQ, KnowledgeBaseItem } from './SupportService';
+import type { SupportTicket, KnowledgeBaseItem } from './SupportService';
 
 // Import your existing components (make sure these exist in your project)
 import CreateTicketForm from './CreateTicketForm';
@@ -17,7 +17,14 @@ import SupportTickets from './SupportTickets';
 import FAQ from './FAQ';
 import KnowledgeBase from './KnowledgeBase';
 import SupportOverview from './SupportOverview';
-
+// Types
+interface FAQ {
+  id: number;
+  question: string;
+  answer: string;
+  category: string;
+  helpful_count: number;
+}
 // Main SupportPage component
 export default function SupportPage() {
   // Navigation state
