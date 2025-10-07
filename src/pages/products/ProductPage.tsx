@@ -218,7 +218,7 @@ const ProductManagement: React.FC = () => {
       const token = localStorage.getItem('token') || sessionStorage.getItem('token');
       const baseURL = import.meta.env.VITE_API_BASE_URL || 'https://aquagas-backend.onrender.com/api';
 
-      const response = await fetch(`${baseURL}/v1/admin/products/${productId}`, {
+      const response = await fetch(`${baseURL}/products/${productId}`, {
         method: 'DELETE',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -245,7 +245,7 @@ const ProductManagement: React.FC = () => {
       const token = localStorage.getItem('token') || sessionStorage.getItem('token');
       const baseURL = import.meta.env.VITE_API_BASE_URL || 'https://aquagas-backend.onrender.com/api';
 
-      const response = await fetch(`${baseURL}/v1/admin/categories`, {
+      const response = await fetch(`${baseURL}/categories`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,
