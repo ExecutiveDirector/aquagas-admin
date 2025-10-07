@@ -28,11 +28,25 @@ api.interceptors.request.use((config) => {
       const now = Math.floor(Date.now() / 1000);
     
       if (payload.exp < now) {
-        console.warn("⚠️ Token appears to be expired!", {
-          exp: payload.exp,
-          now,
-          expired: payload.exp < now,
+        console.warn("⚠️ Token has expired — clearing session and redirecting.", {
+          exp: new Date(payload.exp * 1000).toLocaleString(),
+          now: new Date(now * 1000).toLocaleString(),
         });
+      
+        try {
+          // 🚫 Remove any stored tokens
+          localStorage.removeItem('token');
+          sessionStorage.removeItem('token');
+        } catch (e) {
+          console.error("Failed to clear auth tokens:", e);
+        }
+      
+        // ✅ Redirect to login only if not already there
+        const currentPath = window.location.pathname;
+        if (!currentPath.includes('/login')) {
+          console.info("🔁 Redirecting to /login...");
+          window.location.replace('/login'); // safer than href (prevents back navigation)
+        }
       }
     } catch (e) {
       if (e instanceof Error) {
@@ -43,7 +57,7 @@ api.interceptors.request.use((config) => {
     }
     
   }
-  
+
   return config;
 }, (error) => {
   console.error('❌ API Request Error:', error);
