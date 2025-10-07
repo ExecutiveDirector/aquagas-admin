@@ -45,10 +45,10 @@ const ProductManagement: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [authError, setAuthError] = useState<string | null>(null);
 
-  // Check authentication
+  // Check authentication - checks both localStorage and sessionStorage
   useEffect(() => {
-    const token = localStorage.getItem('token');
-    const userInfo = localStorage.getItem('userInfo');
+    const token = localStorage.getItem('token') || sessionStorage.getItem('token');
+    const userInfo = localStorage.getItem('userInfo') || sessionStorage.getItem('userInfo');
     
     if (!token) {
       setAuthError('No authentication token found. Please log in.');
@@ -77,7 +77,7 @@ const ProductManagement: React.FC = () => {
     setError(null);
     
     try {
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem('token') || sessionStorage.getItem('token');
       const baseURL = import.meta.env.VITE_API_BASE_URL || 'https://aquagas-backend.onrender.com/api';
       
       console.log('Fetching data from:', baseURL);
@@ -146,7 +146,7 @@ const ProductManagement: React.FC = () => {
   const handleCreateProduct = async (data: Partial<Product>) => {
     try {
       setIsLoading(true);
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem('token') || sessionStorage.getItem('token');
       const baseURL = import.meta.env.VITE_API_BASE_URL || 'https://aquagas-backend.onrender.com/api';
 
       const response = await fetch(`${baseURL}/v1/admin/products`, {
@@ -179,7 +179,7 @@ const ProductManagement: React.FC = () => {
   const handleUpdateProduct = async (productId: string, data: Partial<Product>) => {
     try {
       setIsLoading(true);
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem('token') || sessionStorage.getItem('token');
       const baseURL = import.meta.env.VITE_API_BASE_URL || 'https://aquagas-backend.onrender.com/api';
 
       const response = await fetch(`${baseURL}/v1/admin/products/${productId}`, {
@@ -215,7 +215,7 @@ const ProductManagement: React.FC = () => {
     
     try {
       setIsLoading(true);
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem('token') || sessionStorage.getItem('token');
       const baseURL = import.meta.env.VITE_API_BASE_URL || 'https://aquagas-backend.onrender.com/api';
 
       const response = await fetch(`${baseURL}/v1/admin/products/${productId}`, {
@@ -242,7 +242,7 @@ const ProductManagement: React.FC = () => {
   const handleCreateCategory = async (data: Partial<Category>) => {
     try {
       setIsLoading(true);
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem('token') || sessionStorage.getItem('token');
       const baseURL = import.meta.env.VITE_API_BASE_URL || 'https://aquagas-backend.onrender.com/api';
 
       const response = await fetch(`${baseURL}/v1/admin/categories`, {
