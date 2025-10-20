@@ -11,12 +11,13 @@ interface UserFormProps {
 
 const UserForm: React.FC<UserFormProps> = ({ initialValues = {}, onSubmit, loading, isEditing = false }) => {
   const [form, setForm] = useState<Partial<User>>({
-    fullName: initialValues.fullName || "",
+    first_name: initialValues.first_name || "",
+    last_name: initialValues.last_name || "",
     email: initialValues.email || "",
     phone_number: initialValues.phone_number || "",
     password: initialValues.password || "",
-    role: initialValues.role || "", // Initialize to empty to force selection
-    status: initialValues.status || "Active", // Default to Active
+    role: "user", // Fixed to 'user' for customer registration
+    status: initialValues.status || "active", // Default to active (lowercase to match ENUM)
   });
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
 
@@ -28,7 +29,8 @@ const UserForm: React.FC<UserFormProps> = ({ initialValues = {}, onSubmit, loadi
   const validateForm = (): boolean => {
     const newErrors: { [key: string]: string } = {};
 
-    if (!form.fullName) newErrors.fullName = "Full name is required";
+    if (!form.first_name) newErrors.first_name = "First name is required";
+    if (!form.last_name) newErrors.last_name = "Last name is required";
     if (!form.email && !form.phone_number) {
       newErrors.email = "Either email or phone number is required";
       newErrors.phone_number = "Either email or phone number is required";
@@ -46,7 +48,8 @@ const UserForm: React.FC<UserFormProps> = ({ initialValues = {}, onSubmit, loadi
     if (validateForm()) {
       onSubmit({
         ...form,
-        role: form.role?.toLowerCase(), // Ensure role is lowercase
+        role: form.role?.toLowerCase(), // Ensure role is lowercase to match ENUM
+        status: form.status?.toLowerCase(), // Ensure status is lowercase to match ENUM
       });
     } else {
       toast.error("Please fill in all required fields");
@@ -57,22 +60,34 @@ const UserForm: React.FC<UserFormProps> = ({ initialValues = {}, onSubmit, loadi
     <form onSubmit={handleSubmit} className="flex flex-col space-y-2">
       <div>
         <input
-          name="fullName"
-          placeholder="Full Name"
-          value={form.fullName}
+          name="first_name"
+          placeholder="First Name"
+          value={form.first_name}
           onChange={handleChange}
-          className={`border p-2 w-full ${errors.fullName ? "border-red-500" : "border-gray-300"}`}
+          className={`border p-2 w-full rounded ${errors.first_name ? "border-red-500" : "border-gray-300"}`}
         />
-        {errors.fullName && <p className="text-red-500 text-sm mt-1">{errors.fullName}</p>}
+        {errors.first_name && <p className="text-red-500 text-sm mt-1">{errors.first_name}</p>}
+      </div>
+
+      <div>
+        <input
+          name="last_name"
+          placeholder="Last Name"
+          value={form.last_name}
+          onChange={handleChange}
+          className={`border p-2 w-full rounded ${errors.last_name ? "border-red-500" : "border-gray-300"}`}
+        />
+        {errors.last_name && <p className="text-red-500 text-sm mt-1">{errors.last_name}</p>}
       </div>
 
       <div>
         <input
           name="email"
+          type="email"
           placeholder="Email"
           value={form.email}
           onChange={handleChange}
-          className={`border p-2 w-full ${errors.email ? "border-red-500" : "border-gray-300"}`}
+          className={`border p-2 w-full rounded ${errors.email ? "border-red-500" : "border-gray-300"}`}
         />
         {errors.email && <p className="text-red-500 text-sm mt-1">{errors.email}</p>}
       </div>
@@ -80,10 +95,10 @@ const UserForm: React.FC<UserFormProps> = ({ initialValues = {}, onSubmit, loadi
       <div>
         <input
           name="phone_number"
-          placeholder="Phone"
+          placeholder="Phone Number (E.164 format, e.g., +254712345678)"
           value={form.phone_number}
           onChange={handleChange}
-          className={`border p-2 w-full ${errors.phone_number ? "border-red-500" : "border-gray-300"}`}
+          className={`border p-2 w-full rounded ${errors.phone_number ? "border-red-500" : "border-gray-300"}`}
         />
         {errors.phone_number && <p className="text-red-500 text-sm mt-1">{errors.phone_number}</p>}
       </div>
@@ -95,7 +110,7 @@ const UserForm: React.FC<UserFormProps> = ({ initialValues = {}, onSubmit, loadi
           placeholder={isEditing ? "New Password (optional)" : "Password"}
           value={form.password}
           onChange={handleChange}
-          className={`border p-2 w-full ${errors.password ? "border-red-500" : "border-gray-300"}`}
+          className={`border p-2 w-full rounded ${errors.password ? "border-red-500" : "border-gray-300"}`}
         />
         {errors.password && <p className="text-red-500 text-sm mt-1">{errors.password}</p>}
       </div>
@@ -105,13 +120,13 @@ const UserForm: React.FC<UserFormProps> = ({ initialValues = {}, onSubmit, loadi
           name="role"
           value={form.role}
           onChange={handleChange}
-          className={`border p-2 w-full ${errors.role ? "border-red-500" : "border-gray-300"}`}
+          className={`border p-2 w-full rounded ${errors.role ? "border-red-500" : "border-gray-300"}`}
         >
           <option value="">Select role</option>
+          <option value="user">User</option>
           <option value="admin">Admin</option>
           <option value="rider">Rider</option>
           <option value="vendor">Vendor</option>
-          <option value="customer">Customer</option>
         </select>
         {errors.role && <p className="text-red-500 text-sm mt-1">{errors.role}</p>}
       </div>
@@ -121,11 +136,12 @@ const UserForm: React.FC<UserFormProps> = ({ initialValues = {}, onSubmit, loadi
           name="status"
           value={form.status}
           onChange={handleChange}
-          className={`border p-2 w-full ${errors.status ? "border-red-500" : "border-gray-300"}`}
+          className={`border p-2 w-full rounded ${errors.status ? "border-red-500" : "border-gray-300"}`}
         >
           <option value="">Select status</option>
-          <option value="Active">Active</option>
-          <option value="Inactive">Inactive</option>
+          <option value="active">Active</option>
+          <option value="inactive">Inactive</option>
+          <option value="suspended">Suspended</option>
         </select>
         {errors.status && <p className="text-red-500 text-sm mt-1">{errors.status}</p>}
       </div>

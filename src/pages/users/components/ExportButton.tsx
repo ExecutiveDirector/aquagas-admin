@@ -137,7 +137,8 @@ const ExportButton: React.FC<ExportButtonProps> = ({
   const prepareExportData = useCallback(() => {
     const headers = [
       'ID',
-      'Full Name',
+      'First Name', 
+      'Last Name',
       'Email',
       'Phone Number',
       'Role',
@@ -148,7 +149,8 @@ const ExportButton: React.FC<ExportButtonProps> = ({
 
     const data = users.map(user => [
       user.id || '',
-      user.fullName || '',
+      user.first_name || '', 
+      user.last_name || '',
       user.email || '',
       user.phone_number || '',
       user.role || '',

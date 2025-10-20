@@ -37,6 +37,40 @@ const ConfirmDeleteModal: React.FC<ConfirmDeleteModalProps> = ({
 
   if (!isOpen || !user) return null;
 
+  // Helper functions
+  const getFullName = () => {
+    // Support both old and new format
+    if (user.fullName) return user.fullName;
+    const first = user.first_name || '';
+    const last = user.last_name || '';
+    return `${first} ${last}`.trim() || 'N/A';
+  };
+
+  const getInitials = () => {
+    // Support both old and new format
+    if (user.fullName) {
+      return user.fullName
+        .split(' ')
+        .map(n => n[0])
+        .join('')
+        .toUpperCase()
+        .slice(0, 2) || 'U';
+    }
+    const first = user.first_name?.charAt(0)?.toUpperCase() || '';
+    const last = user.last_name?.charAt(0)?.toUpperCase() || '';
+    return (first + last) || 'U';
+  };
+
+  const formatRole = (role?: string) => {
+    if (!role) return 'N/A';
+    return role.charAt(0).toUpperCase() + role.slice(1);
+  };
+
+  const formatStatus = (status?: string) => {
+    if (!status) return 'N/A';
+    return status.charAt(0).toUpperCase() + status.slice(1);
+  };
+
   // Handle backdrop click
   const handleBackdropClick = (e: React.MouseEvent<HTMLDivElement>) => {
     if (e.target === e.currentTarget && !loading) {
@@ -74,16 +108,16 @@ const ConfirmDeleteModal: React.FC<ConfirmDeleteModalProps> = ({
           {/* User Details */}
           <div className="mt-4 bg-gray-50 rounded-lg p-4">
             <div className="flex items-center">
-              <div className="flex-shrink-0 h-10 w-10 rounded-full bg-gray-200 flex items-center justify-center">
-                <span className="text-sm font-medium text-gray-700">
-                  {user.fullName?.charAt(0)?.toUpperCase() || 'U'}
+              <div className="flex-shrink-0 h-10 w-10 rounded-full bg-gradient-to-r from-blue-500 to-purple-600 flex items-center justify-center">
+                <span className="text-sm font-medium text-white">
+                  {getInitials()}
                 </span>
               </div>
               <div className="ml-3">
-                <p className="text-sm font-medium text-gray-900">{user.fullName}</p>
-                <p className="text-sm text-gray-500">{user.email}</p>
+                <p className="text-sm font-medium text-gray-900">{getFullName()}</p>
+                <p className="text-sm text-gray-500">{user.email || 'No email'}</p>
                 <p className="text-xs text-gray-400">
-                  {user.role} • {user.status}
+                  {formatRole(user.role)} • {formatStatus(user.status)}
                 </p>
               </div>
             </div>
@@ -119,7 +153,7 @@ const ConfirmDeleteModal: React.FC<ConfirmDeleteModalProps> = ({
               type="button"
               onClick={onClose}
               disabled={loading}
-              className="inline-flex justify-center px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="inline-flex justify-center px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
             >
               Cancel
             </button>
@@ -127,7 +161,7 @@ const ConfirmDeleteModal: React.FC<ConfirmDeleteModalProps> = ({
               type="button"
               onClick={onConfirm}
               disabled={loading}
-              className="inline-flex justify-center px-4 py-2 text-sm font-medium text-white bg-red-600 border border-transparent rounded-md shadow-sm hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="inline-flex justify-center px-4 py-2 text-sm font-medium text-white bg-red-600 border border-transparent rounded-md shadow-sm hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
             >
               {loading ? (
                 <div className="flex items-center">
