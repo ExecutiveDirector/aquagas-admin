@@ -29,8 +29,7 @@ interface SupportTicket {
 
 // Support service for API calls
 class SupportService {
-  private API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
-
+  private API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://aquagas-backend.onrender.com/api';
   private async getAuthHeaders(): Promise<HeadersInit> {
     const token = localStorage.getItem('auth_token') || sessionStorage.getItem('auth_token');
     return {

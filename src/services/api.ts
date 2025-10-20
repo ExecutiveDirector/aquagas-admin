@@ -180,6 +180,7 @@ interface DashboardStats {
   totalRevenue?: number;
   pendingOrders?: number;
   completedOrders?: number;
+  sparklines?: Record<string, number[]>; // optional future extension
 }
 
 interface ApiResponse<T = any> {
@@ -331,35 +332,107 @@ export function isAdmin(): boolean {
 }
 
 // Dashboard Functions
-export async function getDashboardStats(vendorId?: string): Promise<DashboardStats> {
+// export async function getDashboardStats(vendorId?: string): Promise<DashboardStats> {
+//   try {
+//     // Use the correct endpoint that matches your backend
+//     const endpoint = vendorId ? `/v1/admin/vendors/${vendorId}/dashboard` : '/v1/admin/dashboard';
+//     console.log('📊 Fetching dashboard stats from:', endpoint);
+    
+//     const res = await api.get(endpoint);
+//     console.log('📊 Dashboard response:', res.data);
+    
+//     // Handle different response formats from your backend
+//     const data = res.data.data || res.data;
+    
+//     // Ensure all required fields exist with defaults
+//     return {
+//       users: data.users || 0,
+//       vendors: data.vendors || 0,
+//       riders: data.riders || 0,
+//       orders: data.orders || 0,
+//       todayRevenue: data.todayRevenue || data.today_revenue || 0,
+//       totalRevenue: data.totalRevenue || data.total_revenue,
+//       pendingOrders: data.pendingOrders || data.pending_orders,
+//       completedOrders: data.completedOrders || data.completed_orders,
+//     };
+//   } catch (error: any) {
+//     console.error('📊 Dashboard stats error:', error);
+//     throw error;
+//   }
+// }
+/**
+ * Fetch dashboard statistics for the admin or specific vendor.
+ * Automatically normalizes snake_case responses.
+ */
+export async function getDashboardStats(
+  vendorId?: string,
+  options?: { signal?: AbortSignal }
+): Promise<DashboardStats> {
+  const endpoint = vendorId
+    ? `/v1/admin/vendors/${vendorId}/dashboard`
+    : `/v1/admin/dashboard`;
+
+  console.log("📊 [Dashboard] Fetching stats from:", endpoint);
+
   try {
-    // Use the correct endpoint that matches your backend
-    const endpoint = vendorId ? `/v1/admin/vendors/${vendorId}/dashboard` : '/v1/admin/dashboard';
-    console.log('📊 Fetching dashboard stats from:', endpoint);
-    
-    const res = await api.get(endpoint);
-    console.log('📊 Dashboard response:', res.data);
-    
-    // Handle different response formats from your backend
-    const data = res.data.data || res.data;
-    
-    // Ensure all required fields exist with defaults
-    return {
-      users: data.users || 0,
-      vendors: data.vendors || 0,
-      riders: data.riders || 0,
-      orders: data.orders || 0,
-      todayRevenue: data.todayRevenue || data.today_revenue || 0,
-      totalRevenue: data.totalRevenue || data.total_revenue,
-      pendingOrders: data.pendingOrders || data.pending_orders,
-      completedOrders: data.completedOrders || data.completed_orders,
+    const res = await api.get(endpoint, { signal: options?.signal });
+    const raw = res?.data?.data || res?.data || {};
+
+    console.log("📊 [Dashboard] Raw response:", raw);
+
+    // Normalize keys (handle snake_case or camelCase)
+    const normalizeKey = (key: string) =>
+      key
+        .replace(/_([a-z])/g, (_, c) => c.toUpperCase()) // today_revenue → todayRevenue
+        .replace(/^([A-Z])/, (c) => c.toLowerCase());
+
+    const normalized: Record<string, any> = {};
+    for (const key in raw) {
+      normalized[normalizeKey(key)] = raw[key];
+    }
+
+    const stats: DashboardStats = {
+      users: Number(normalized.users ?? 0),
+      vendors: Number(normalized.vendors ?? 0),
+      riders: Number(normalized.riders ?? 0),
+      orders: Number(normalized.orders ?? 0),
+      todayRevenue: Number(normalized.todayRevenue ?? 0),
+      totalRevenue: normalized.totalRevenue
+        ? Number(normalized.totalRevenue)
+        : undefined,
+      pendingOrders: normalized.pendingOrders
+        ? Number(normalized.pendingOrders)
+        : undefined,
+      completedOrders: normalized.completedOrders
+        ? Number(normalized.completedOrders)
+        : undefined,
+      sparklines: normalized.sparklines || undefined,
     };
+
+    console.log("📊 [Dashboard] Normalized stats:", stats);
+    return stats;
   } catch (error: any) {
-    console.error('📊 Dashboard stats error:', error);
-    throw error;
+    if (options?.signal?.aborted) {
+      console.warn("⚠️ [Dashboard] Fetch aborted");
+      throw new Error("Request aborted");
+    }
+
+    const status = error?.response?.status;
+    const msg =
+      error?.response?.data?.message ||
+      error?.response?.data?.error ||
+      error?.message ||
+      "Failed to fetch dashboard stats";
+
+    console.error("❌ [Dashboard] Error:", { status, msg, error });
+
+    throw new Error(
+      status
+        ? `Dashboard request failed [${status}]: ${msg}`
+        : `Dashboard request failed: ${msg}`
+    );
   }
 }
-
 // Vendor Management Functions  
 export async function listVendors(params: { 
   page?: number; 

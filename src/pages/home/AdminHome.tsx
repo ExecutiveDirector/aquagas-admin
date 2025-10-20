@@ -1,6 +1,6 @@
-//src/pages/AdminHome.tsx
-import  { useState, useEffect } from 'react';
-import { getDashboardStats } from '../../services/api'; // Make sure this import path is correct
+// src/pages/AdminHome.tsx
+import React, { useCallback, useEffect, useRef, useState } from "react";
+import { getDashboardStats } from "../../services/api"; // make sure path is correct
 
 interface DashboardStats {
   users: number;
@@ -11,234 +11,349 @@ interface DashboardStats {
   totalRevenue?: number;
   pendingOrders?: number;
   completedOrders?: number;
-}
-
-interface DebugInfo {
-  fetchStarted?: boolean;
-  timestamp?: string;
-  dataReceived?: boolean;
-  dataContent?: any;
-  success?: boolean;
-  error?: boolean;
-  errorDetails?: any;
-  fetchCompleted?: boolean;
+  // optional place for small sparkline data per metric (fallback if not provided)
+  sparklines?: {
+    users?: number[];
+    vendors?: number[];
+    riders?: number[];
+    orders?: number[];
+    todayRevenue?: number[];
+  };
 }
 
 export default function AdminHome() {
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [debugInfo, setDebugInfo] = useState<DebugInfo>({});
+  const [lastUpdated, setLastUpdated] = useState<string | null>(null);
+  const [autoRefresh, setAutoRefresh] = useState<boolean>(true);
+  const [isPolling, setIsPolling] = useState<boolean>(false);
+
+  const abortRef = useRef<AbortController | null>(null);
+  const mountedRef = useRef(true);
 
   useEffect(() => {
-    const fetchStats = async () => {
-      console.log('🔍 AdminHome: Starting to fetch stats...');
-      setDebugInfo((prev: DebugInfo) => ({
-        ...prev,
-        fetchStarted: true,
-        timestamp: new Date().toISOString(),
-      }));
-
-      try {
-        setLoading(true);
-        setError(null);
-
-        console.log('🔍 AdminHome: Calling getDashboardStats...');
-        const data = await getDashboardStats();
-        console.log('🔍 AdminHome: Received data:', data);
-
-        setStats(data);
-        setDebugInfo((prev: DebugInfo) => ({
-          ...prev,
-          dataReceived: true,
-          dataContent: data,
-          success: true,
-        }));
-      } catch (err: any) {
-        console.error('❌ AdminHome: Dashboard stats error:', err);
-
-        const errorMessage =
-          err?.response?.data?.error ||
-          err?.response?.data?.message ||
-          err?.message ||
-          'Failed to load dashboard stats';
-
-        setError(errorMessage);
-        setDebugInfo((prev: DebugInfo) => ({
-          ...prev,
-          error: true,
-          errorDetails: {
-            message: err?.message,
-            status: err?.response?.status,
-            statusText: err?.response?.statusText,
-            data: err?.response?.data,
-            config: {
-              url: err?.config?.url,
-              method: err?.config?.method,
-              headers: err?.config?.headers,
-            },
-          },
-        }));
-      } finally {
-        setLoading(false);
-        setDebugInfo((prev: DebugInfo) => ({
-          ...prev,
-          fetchCompleted: true,
-        }));
-        console.log('🔍 AdminHome: Fetch completed');
-      }
+    mountedRef.current = true;
+    return () => {
+      mountedRef.current = false;
+      abortRef.current?.abort();
     };
-
-    fetchStats();
   }, []);
 
-  // Debug render
-  console.log('🔍 AdminHome render state:', { loading, error, stats, debugInfo });
+  const fetchStats = useCallback(async () => {
+    // abort previous
+    abortRef.current?.abort();
+    const controller = new AbortController();
+    abortRef.current = controller;
 
-  return (
-    <div className="space-y-6">
-      {/* Debug Panel - Remove this in production */}
-      <div
-        style={{
-          position: 'fixed',
-          top: 0,
-          right: 0,
-          width: '300px',
-          backgroundColor: '#000',
-          color: '#00ff00',
-          padding: '10px',
-          fontSize: '12px',
-          zIndex: 9999,
-          maxHeight: '50vh',
-          overflow: 'auto',
+    setLoading(true);
+    setError(null);
+
+    try {
+      const data = await getDashboardStats({ signal: controller.signal } as any);
+      if (!mountedRef.current) return;
+      setStats(data);
+      setLastUpdated(new Date().toISOString());
+      setError(null);
+    } catch (err: any) {
+      if (err?.name === "AbortError") {
+        // aborted — ignore
+        return;
+      }
+      console.error("AdminHome fetch error:", err);
+      const message =
+        err?.response?.data?.error ||
+        err?.response?.data?.message ||
+        err?.message ||
+        "Failed to load dashboard stats";
+      setError(message);
+    } finally {
+      if (mountedRef.current) setLoading(false);
+    }
+  }, []);
+
+  // initial fetch
+  useEffect(() => {
+    fetchStats();
+  }, [fetchStats]);
+
+  // Polling (auto refresh every 60s)
+  useEffect(() => {
+    if (!autoRefresh) return;
+    let interval: number | undefined;
+    setIsPolling(true);
+    interval = window.setInterval(() => {
+      fetchStats();
+    }, 60_000); // 60s
+    return () => {
+      if (interval) window.clearInterval(interval);
+      setIsPolling(false);
+    };
+  }, [autoRefresh, fetchStats]);
+
+  // Animated count-up hook (simple)
+  const useCountUp = (value?: number, duration = 600) => {
+    const [display, setDisplay] = useState<number>(value ?? 0);
+    const rafRef = useRef<number | null>(null);
+    const startRef = useRef<number | null>(null);
+    const fromRef = useRef<number>(0);
+    useEffect(() => {
+      if (value === undefined || value === null) {
+        setDisplay(0);
+        return;
+      }
+      const start = performance.now();
+      startRef.current = start;
+      fromRef.current = display;
+      const step = (t: number) => {
+        const elapsed = t - (startRef.current ?? 0);
+        const pct = Math.min(1, elapsed / duration);
+        const next = Math.round((fromRef.current + (value - fromRef.current) * pct) * 100) / 100;
+        setDisplay(next);
+        if (pct < 1) rafRef.current = requestAnimationFrame(step);
+      };
+      rafRef.current = requestAnimationFrame(step);
+      return () => {
+        if (rafRef.current) cancelAnimationFrame(rafRef.current);
+      };
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [value]);
+    return display;
+  };
+
+  // small sparkline renderer (SVG)
+  const Sparkline = ({ points }: { points?: number[] }) => {
+    if (!points || points.length === 0) {
+      return <div className="opacity-40 text-xs">—</div>;
+    }
+    const w = 96;
+    const h = 28;
+    const min = Math.min(...points);
+    const max = Math.max(...points);
+    const range = max - min || 1;
+    const path = points
+      .map((p, i) => {
+        const x = (i / (points.length - 1)) * w;
+        const y = h - ((p - min) / range) * h;
+        return `${i === 0 ? "M" : "L"} ${x.toFixed(2)} ${y.toFixed(2)}`;
+      })
+      .join(" ");
+    return (
+      <svg width={w} height={h} viewBox={`0 0 ${w} ${h}`} className="inline-block" aria-hidden>
+        <path d={path} fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round" className="opacity-60" />
+      </svg>
+    );
+  };
+
+  const StatCard = ({
+    title,
+    value,
+    subtitle,
+    spark,
+    accent = "blue",
+  }: {
+    title: string;
+    value?: number;
+    subtitle?: string;
+    spark?: number[];
+    accent?: "blue" | "green" | "purple" | "orange" | "teal" | "yellow";
+  }) => {
+    const animated = useCountUp(value);
+    const accentMap: Record<string, string> = {
+      blue: "from-blue-50 to-blue-100 border-blue-200 text-blue-900",
+      green: "from-green-50 to-green-100 border-green-200 text-green-900",
+      purple: "from-purple-50 to-purple-100 border-purple-200 text-purple-900",
+      orange: "from-orange-50 to-orange-100 border-orange-200 text-orange-900",
+      teal: "from-teal-50 to-teal-100 border-teal-200 text-teal-900",
+      yellow: "from-yellow-50 to-yellow-100 border-yellow-200 text-yellow-900",
+    };
+    return (
+      <button
+        onClick={() => {
+          // quick affordance: copy value to clipboard (if available)
+          if (value !== undefined) {
+            navigator.clipboard?.writeText(String(value));
+          }
         }}
+        className={`w-full text-left rounded-xl p-5 border ${accentMap[accent]} dark:from-black/10 dark:to-black/10 hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-offset-2`}
+        title="Click to copy value"
+        aria-label={`${title} — ${value ?? "N/A"}`}
       >
-        {/* <div><strong>DEBUG PANEL</strong></div>
-        <div>Loading: {loading ? 'YES' : 'NO'}</div>
-        <div>Error: {error ? 'YES' : 'NO'}</div>
-        <div>Stats: {stats ? 'YES' : 'NO'}</div>
-        <div>Debug: {JSON.stringify(debugInfo, null, 2)}</div> */}
-      </div>
-
-      {/* Loading State */}
-      {loading && (
-        <div className="flex items-center justify-center min-h-96">
-          <div className="flex flex-col items-center space-y-4">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
-            <div className="text-gray-600 dark:text-gray-400">Loading dashboard...</div>
-          </div>
-        </div>
-      )}
-
-      {/* Error State */}
-      {error && (
-        <div className="flex items-center justify-center min-h-96">
-          <div className="text-center max-w-md mx-auto p-6">
-            <div className="text-red-500 flex items-center justify-center mb-4">
-              <svg className="w-8 h-8 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2"
-                  d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-              <span className="text-lg font-semibold">Error</span>
+        <div className="flex items-start justify-between">
+          <div>
+            <div className="text-xs font-medium uppercase tracking-wide text-gray-500 dark:text-gray-300">{title}</div>
+            <div className="mt-2 flex items-baseline gap-2">
+              <div className="text-2xl sm:text-3xl font-bold">{typeof value === "number" ? animated.toLocaleString() : "—"}</div>
+              {subtitle && <div className="text-sm text-gray-500 dark:text-gray-400">{subtitle}</div>}
             </div>
-            <p className="text-gray-600 dark:text-gray-400 mb-4">{error}</p>
-            <button
-              onClick={() => window.location.reload()}
-              className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
-            >
+          </div>
+          <div className="text-xs text-gray-400">{spark ? <Sparkline points={spark} /> : null}</div>
+        </div>
+      </button>
+    );
+  };
+
+  const onManualRefresh = () => {
+    fetchStats();
+  };
+
+  // nice error banner
+  const ErrorBanner = ({ message }: { message: string }) => (
+    <div role="alert" aria-live="assertive" className="bg-red-50 border-l-4 border-red-400 p-4 rounded-md">
+      <div className="flex items-start gap-3">
+        <svg className="w-6 h-6 text-red-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+        </svg>
+        <div className="flex-1">
+          <div className="font-semibold text-red-700">Unable to load dashboard</div>
+          <div className="text-sm text-red-600">{message}</div>
+          <div className="mt-3 flex gap-2">
+            <button onClick={onManualRefresh} className="px-3 py-1.5 bg-red-600 text-white rounded hover:bg-red-700">
               Retry
+            </button>
+            <button
+              onClick={() => {
+                setAutoRefresh((s) => !s);
+              }}
+              className="px-3 py-1.5 bg-gray-100 text-gray-800 rounded hover:bg-gray-200"
+            >
+              {autoRefresh ? "Stop auto-refresh" : "Enable auto-refresh"}
             </button>
           </div>
         </div>
-      )}
+      </div>
+    </div>
+  );
 
-      {/* Main Dashboard */}
-      {!loading && !error && stats && (
+  // skeleton loader for cards
+  const StatSkeleton = () => (
+    <div className="rounded-xl p-5 border from-gray-50 to-gray-100 dark:from-black/10 dark:to-black/10 animate-pulse">
+      <div className="h-4 w-28 bg-gray-200 dark:bg-gray-700 rounded mb-3" />
+      <div className="h-8 w-36 bg-gray-200 dark:bg-gray-700 rounded mb-2" />
+      <div className="h-3 w-20 bg-gray-200 dark:bg-gray-700 rounded" />
+    </div>
+  );
+
+  return (
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="flex items-center justify-between">
         <div>
-          <div className="mb-8">
-            <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">Admin Dashboard</h1>
-            <p className="text-gray-600 dark:text-gray-400">
-              Welcome back! Here's what's happening with your platform.
-            </p>
-          </div>
-
-          {/* Stats Grid */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-            {/* Users */}
-            <div className="bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-900/20 dark:to-blue-800/20 rounded-xl p-6 border border-blue-200 dark:border-blue-800">
-              <h3 className="text-sm font-medium text-blue-600 dark:text-blue-400 uppercase tracking-wide">Total Users</h3>
-              <p className="text-3xl font-bold text-blue-900 dark:text-blue-100 mt-2">
-                {stats.users.toLocaleString()}
-              </p>
-            </div>
-            {/* Vendors */}
-            <div className="bg-gradient-to-br from-green-50 to-green-100 dark:from-green-900/20 dark:to-green-800/20 rounded-xl p-6 border border-green-200 dark:border-green-800">
-              <h3 className="text-sm font-medium text-green-600 dark:text-green-400 uppercase tracking-wide">Total Vendors</h3>
-              <p className="text-3xl font-bold text-green-900 dark:text-green-100 mt-2">
-                {stats.vendors.toLocaleString()}
-              </p>
-            </div>
-            {/* Riders */}
-            <div className="bg-gradient-to-br from-purple-50 to-purple-100 dark:from-purple-900/20 dark:to-purple-800/20 rounded-xl p-6 border border-purple-200 dark:border-purple-800">
-              <h3 className="text-sm font-medium text-purple-600 dark:text-purple-400 uppercase tracking-wide">Total Riders</h3>
-              <p className="text-3xl font-bold text-purple-900 dark:text-purple-100 mt-2">
-                {stats.riders.toLocaleString()}
-              </p>
-            </div>
-            {/* Today's Revenue */}
-            <div className="bg-gradient-to-br from-orange-50 to-orange-100 dark:from-orange-900/20 dark:to-orange-800/20 rounded-xl p-6 border border-orange-200 dark:border-orange-800">
-              <h3 className="text-sm font-medium text-orange-600 dark:text-orange-400 uppercase tracking-wide">Today's Revenue</h3>
-              <p className="text-3xl font-bold text-orange-900 dark:text-orange-100 mt-2">
-                ${stats.todayRevenue?.toFixed(2) || '0.00'}
-              </p>
-            </div>
-          </div>
-
-          {/* Additional Stats if available */}
-          {(stats.totalRevenue !== undefined || stats.pendingOrders !== undefined || stats.completedOrders !== undefined) && (
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 mb-8">
-              {stats.totalRevenue !== undefined && (
-                <div className="bg-gradient-to-br from-teal-50 to-teal-100 dark:from-teal-900/20 dark:to-teal-800/20 rounded-xl p-6 border border-teal-200 dark:border-teal-800">
-                  <h3 className="text-sm font-medium text-teal-600 dark:text-teal-400 uppercase tracking-wide">Total Revenue</h3>
-                  <p className="text-2xl font-bold text-teal-900 dark:text-teal-100 mt-2">
-                    ${stats.totalRevenue.toFixed(2)}
-                  </p>
-                </div>
-              )}
-              {stats.pendingOrders !== undefined && (
-                <div className="bg-gradient-to-br from-yellow-50 to-yellow-100 dark:from-yellow-900/20 dark:to-yellow-800/20 rounded-xl p-6 border border-yellow-200 dark:border-yellow-800">
-                  <h3 className="text-sm font-medium text-yellow-600 dark:text-yellow-400 uppercase tracking-wide">Pending Orders</h3>
-                  <p className="text-2xl font-bold text-yellow-900 dark:text-yellow-100 mt-2">
-                    {stats.pendingOrders.toLocaleString()}
-                  </p>
-                </div>
-              )}
-              {stats.completedOrders !== undefined && (
-                <div className="bg-gradient-to-br from-green-50 to-green-100 dark:from-green-900/20 dark:to-green-800/20 rounded-xl p-6 border border-green-200 dark:border-green-800">
-                  <h3 className="text-sm font-medium text-green-600 dark:text-green-400 uppercase tracking-wide">Completed Orders</h3>
-                  <p className="text-2xl font-bold text-green-900 dark:text-green-100 mt-2">
-                    {stats.completedOrders.toLocaleString()}
-                  </p>
-                </div>
-              )}
-            </div>
-          )}
+          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Admin Dashboard</h1>
+          <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">Welcome back — overview of platform activity.</p>
         </div>
-      )}
 
-      {/* No Data */}
-      {!loading && !error && !stats && (
-        <div className="text-center p-8">
-          <h2 className="text-xl font-semibold text-gray-900 mb-4">No Data Available</h2>
-          <p className="text-gray-600">Unable to load dashboard data.</p>
+        <div className="flex items-center gap-3">
+          <div className="text-xs text-gray-500 dark:text-gray-400 text-right">
+            <div>{isPolling ? "Auto refresh on" : "Auto refresh off"}</div>
+            <div className="mt-1">{lastUpdated ? `Last updated: ${new Date(lastUpdated).toLocaleString()}` : "Not updated yet"}</div>
+          </div>
+
           <button
-            onClick={() => window.location.reload()}
-            className="mt-4 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600"
+            onClick={onManualRefresh}
+            disabled={loading}
+            className="px-3 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-60"
+            aria-label="Refresh dashboard"
           >
-            Reload Page
+            Refresh
+          </button>
+
+          <button
+            onClick={() => setAutoRefresh((s) => !s)}
+            className={`px-3 py-2 rounded-md border ${autoRefresh ? "border-green-400" : "border-gray-300"}`}
+            aria-pressed={autoRefresh}
+            aria-label="Toggle auto refresh"
+          >
+            {autoRefresh ? "Auto" : "Manual"}
           </button>
         </div>
-      )}
+      </div>
+
+      {/* Error */}
+      {error && <ErrorBanner message={error} />}
+
+      {/* Main content */}
+      <div>
+        {/* Stats grid */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
+          {loading && !stats ? (
+            // show 4 skeletons
+            <>
+              <StatSkeleton />
+              <StatSkeleton />
+              <StatSkeleton />
+              <StatSkeleton />
+            </>
+          ) : (
+            <>
+              <StatCard
+                title="Total Users"
+                value={stats?.users}
+                subtitle="All registered users"
+                spark={stats?.sparklines?.users}
+                accent="blue"
+              />
+              <StatCard
+                title="Total Vendors"
+                value={stats?.vendors}
+                subtitle="Active vendors"
+                spark={stats?.sparklines?.vendors}
+                accent="green"
+              />
+              <StatCard
+                title="Total Riders"
+                value={stats?.riders}
+                subtitle="Delivery riders"
+                spark={stats?.sparklines?.riders}
+                accent="purple"
+              />
+              <StatCard
+                title="Today's Revenue"
+                value={stats?.todayRevenue}
+                subtitle="USD"
+                spark={stats?.sparklines?.todayRevenue}
+                accent="orange"
+              />
+            </>
+          )}
+        </div>
+
+        {/* Additional stats row */}
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+          {loading && !stats ? (
+            <>
+              <StatSkeleton />
+              <StatSkeleton />
+              <StatSkeleton />
+            </>
+          ) : (
+            <>
+              {typeof stats?.totalRevenue !== "undefined" && (
+                <StatCard title="Total Revenue" value={stats!.totalRevenue} subtitle="USD total" accent="teal" />
+              )}
+              {typeof stats?.pendingOrders !== "undefined" && (
+                <StatCard title="Pending Orders" value={stats!.pendingOrders} subtitle="Waiting fulfillment" accent="yellow" />
+              )}
+              {typeof stats?.completedOrders !== "undefined" && (
+                <StatCard title="Completed Orders" value={stats!.completedOrders} subtitle="Successfully delivered" accent="green" />
+              )}
+            </>
+          )}
+        </div>
+
+        {/* No data fallback */}
+        {!loading && !error && !stats && (
+          <div className="text-center p-8">
+            <h2 className="text-xl font-semibold text-gray-900 mb-4">No Data Available</h2>
+            <p className="text-gray-600">Unable to load dashboard data.</p>
+            <div className="mt-4 flex justify-center gap-2">
+              <button onClick={onManualRefresh} className="px-4 py-2 bg-blue-500 text-white rounded">
+                Retry
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
     </div>
   );
 }
