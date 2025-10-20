@@ -331,36 +331,6 @@ export function isAdmin(): boolean {
   }
 }
 
-// Dashboard Functions
-// export async function getDashboardStats(vendorId?: string): Promise<DashboardStats> {
-//   try {
-//     // Use the correct endpoint that matches your backend
-//     const endpoint = vendorId ? `/v1/admin/vendors/${vendorId}/dashboard` : '/v1/admin/dashboard';
-//     console.log('📊 Fetching dashboard stats from:', endpoint);
-    
-//     const res = await api.get(endpoint);
-//     console.log('📊 Dashboard response:', res.data);
-    
-//     // Handle different response formats from your backend
-//     const data = res.data.data || res.data;
-    
-//     // Ensure all required fields exist with defaults
-//     return {
-//       users: data.users || 0,
-//       vendors: data.vendors || 0,
-//       riders: data.riders || 0,
-//       orders: data.orders || 0,
-//       todayRevenue: data.todayRevenue || data.today_revenue || 0,
-//       totalRevenue: data.totalRevenue || data.total_revenue,
-//       pendingOrders: data.pendingOrders || data.pending_orders,
-//       completedOrders: data.completedOrders || data.completed_orders,
-//     };
-//   } catch (error: any) {
-//     console.error('📊 Dashboard stats error:', error);
-//     throw error;
-//   }
-// }
-
 export async function getDashboardStats(vendorId?: string | { id: string }): Promise<DashboardStats> {
   try {
     // ✅ Handle case where vendorId might be an object
