@@ -46,31 +46,46 @@ const ProductManagement: React.FC = () => {
   const [authError, setAuthError] = useState<string | null>(null);
 
   // Check authentication - checks both localStorage and sessionStorage
-  useEffect(() => {
-    const token = localStorage.getItem('token') || sessionStorage.getItem('token');
-    const userInfo = localStorage.getItem('userInfo') || sessionStorage.getItem('userInfo');
-    
-    if (!token) {
-      setAuthError('No authentication token found. Please log in.');
-      return;
-    }
+useEffect(() => {
+  const token = localStorage.getItem('token') || sessionStorage.getItem('token');
+  const userInfo = localStorage.getItem('userInfo') || sessionStorage.getItem('userInfo');
+  
+  if (!token) {
+    setAuthError('No authentication token found. Please log in.');
+    return;
+  }
 
-    if (userInfo) {
-      try {
-        const parsed = JSON.parse(userInfo);
-        if (parsed.role !== 'admin') {
-          setAuthError('Access denied. Admin privileges required.');
-          return;
-        }
-      } catch (e) {
-        setAuthError('Invalid user information. Please log in again.');
+  if (userInfo) {
+    try {
+      const parsed = JSON.parse(userInfo);
+      
+      // Check if user has admin role
+      if (parsed.role !== 'admin') {
+        setAuthError('Access denied. Admin privileges required.');
         return;
       }
-    }
 
-    // If auth checks pass, fetch data
-    fetchData();
-  }, []);
+      // Verify admin_role is valid (if present)
+      const validAdminRoles = ['super_admin', 'finance', 'support', 'operations', 'marketing', 'inventory'];
+      if (parsed.admin_role && !validAdminRoles.includes(parsed.admin_role)) {
+        setAuthError('Access denied. Invalid admin role.');
+        return;
+      }
+
+      console.log('✅ Admin access granted:', { role: parsed.role, admin_role: parsed.admin_role });
+    } catch (e) {
+      console.error('❌ Error parsing user info:', e);
+      setAuthError('Invalid user information. Please log in again.');
+      return;
+    }
+  } else {
+    setAuthError('No user information found. Please log in.');
+    return;
+  }
+
+  // If auth checks pass, fetch data
+  fetchData();
+}, []);
 
   const fetchData = async () => {
     setIsLoading(true);
