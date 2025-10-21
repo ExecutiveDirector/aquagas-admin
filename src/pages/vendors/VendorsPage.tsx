@@ -8,30 +8,18 @@ import type { InventoryMovement } from './InventoryManagement';
 import InventoryManagement from './InventoryManagement';
 import type { AddVendorFormData } from './AddVendorForm';
 import AddVendorForm from './AddVendorForm';
-import { listVendors, getDashboardStats, updateVendor, vendorRegister, getInventory, updateInventory, recordInventoryMovement, getLowStockAlerts, testApiConnection } from '../../services/adminService';
-import { isAuthenticated, logout, isAdmin, getToken } from '../../services/auth';
-
-interface Vendor {
-  vendor_id: string;
-  business_name: string;
-  trading_name?: string;
-  brand?: 'Total' | 'Rubis' | 'Shell' | 'Kobil' | 'Vivo' | 'Independent';
-  contact_person: string;
-  business_phone?: string;
-  business_email?: string;
-  rating: number;
-  total_reviews: number;
-  is_verified: boolean;
-  is_featured: boolean;
-  commission_rate: number;
-  minimum_order_amount: number;
-  delivery_radius_km: number;
-  average_prep_time_minutes: number;
-  currency: string;
-  is_active: boolean;
-  created_at: string;
-  updated_at: string;
-}
+import { 
+  listVendors, 
+  createVendor,
+  updateVendor, 
+  getVendorInventory,
+  updateVendorInventory,
+  getVendorLowStockAlerts,
+} from '../../services/vendorService';
+import type { Vendor } from '../../services/vendorService';
+import { getDashboardStats } from '../../services/api';
+import { isAuthenticated, logout, isAdmin, getToken } from '../../services/authService';
+import type { VendorDashboardStats, DashboardStats } from '../../types';
 
 interface Product {
   product_id: string;
@@ -39,17 +27,6 @@ interface Product {
   stock: number;
   price: number;
   vendor_id: string;
-}
-
-interface DashboardStats {
-  users: number;
-  vendors: number;
-  riders: number;
-  orders: number;
-  todayRevenue: number;
-  totalRevenue?: number;
-  pendingOrders?: number;
-  completedOrders?: number;
 }
 
 interface ErrorDetails {
@@ -84,7 +61,7 @@ const VendorsPage: React.FC = () => {
     const isAuthError = status === 401 || status === 403;
     
     return {
-      message: err.response?.data?.error || err.message || 'An unknown error occurred',
+      message: err.response?.data?.error || err.response?.data?.message || err.message || 'An unknown error occurred',
       status,
       endpoint,
       canRetry: !isAuthError && status !== 404,
@@ -99,12 +76,6 @@ const VendorsPage: React.FC = () => {
 
     try {
       console.log('VendorsPage: Starting data fetch attempt', retryAttempt + 1);
-      
-      // Test API connectivity first
-      const apiTest = await testApiConnection();
-      if (!apiTest.success) {
-        throw new Error(`API connectivity test failed: ${apiTest.error}`);
-      }
 
       // Fetch dashboard stats
       console.log('Fetching dashboard stats...');
@@ -114,23 +85,26 @@ const VendorsPage: React.FC = () => {
 
       // Fetch vendors list
       console.log('Fetching vendors list...');
-      const vendorsResponse = await listVendors({ page: 1, limit: 20, search: searchQuery });
-      setVendors((vendorsResponse.data as Vendor[]) || []);
+      const vendorsResponse = await listVendors(1, 20);
+      setVendors(vendorsResponse.data || []);
       console.log('✅ Vendors loaded:', vendorsResponse.data?.length || 0);
 
-      // Fetch inventory if a vendor is selected
+      // Fetch vendor-specific data if a vendor is selected
       if (selectedVendorId) {
-        console.log('Fetching inventory for vendor:', selectedVendorId);
+        console.log('Fetching data for vendor:', selectedVendorId);
         try {
-          const inventoryResponse = await getInventory(selectedVendorId);
-          setInventory((inventoryResponse.data as Product[]) || []);
-          
-          const lowStockResponse = await getLowStockAlerts(selectedVendorId);
-          setLowStockAlerts((lowStockResponse.data as Product[]) || []);
+          // Fetch inventory
+          const inventoryResponse = await getVendorInventory(selectedVendorId);
+          setInventory(inventoryResponse.data || []);
           console.log('✅ Inventory loaded');
-        } catch (inventoryErr: any) {
-          console.warn('⚠️ Inventory fetch failed but continuing:', inventoryErr.message);
-          // Don't fail the whole page if inventory fails
+          
+          // Fetch low stock alerts
+          const lowStockResponse = await getVendorLowStockAlerts(selectedVendorId);
+          setLowStockAlerts(lowStockResponse.data || []);
+          console.log('✅ Low stock alerts loaded');
+        } catch (vendorErr: any) {
+          console.warn('⚠️ Vendor-specific data fetch failed but continuing:', vendorErr.message);
+          // Don't fail the whole page if vendor data fails
         }
       }
 
@@ -154,7 +128,7 @@ const VendorsPage: React.FC = () => {
     }
   };
 
-  // Authentication check on mount only
+  // Authentication check on mount
   useEffect(() => {
     console.log('🔍 VendorsPage: Checking authentication...');
     
@@ -180,7 +154,24 @@ const VendorsPage: React.FC = () => {
 
     console.log('✅ Authentication check passed');
     fetchData();
-  }, [selectedVendorId, searchQuery]);
+  }, []);
+
+  // Refetch when vendor selection changes
+  useEffect(() => {
+    if (selectedVendorId && isAuthenticated()) {
+      fetchData();
+    }
+  }, [selectedVendorId]);
+
+  // Search filter effect
+  useEffect(() => {
+    if (searchQuery && isAuthenticated()) {
+      const timer = setTimeout(() => {
+        fetchData();
+      }, 500);
+      return () => clearTimeout(timer);
+    }
+  }, [searchQuery]);
 
   const retryFetch = () => {
     setRetryCount(0);
@@ -195,14 +186,10 @@ const VendorsPage: React.FC = () => {
   const runApiTest = async () => {
     try {
       setIsLoading(true);
-      const result = await testApiConnection();
-      if (result.success) {
-        alert('✅ API connection successful!\n\n' + JSON.stringify(result.data, null, 2));
-      } else {
-        alert('❌ API connection failed!\n\n' + JSON.stringify(result.error, null, 2));
-      }
+      const result = await getDashboardStats();
+      alert('✅ API connection successful!\n\n' + JSON.stringify(result, null, 2));
     } catch (err: any) {
-      alert('❌ API test error: ' + err.message);
+      alert('❌ API test error: ' + (err.response?.data?.message || err.message));
     } finally {
       setIsLoading(false);
     }
@@ -216,18 +203,16 @@ const VendorsPage: React.FC = () => {
 
   const selectedVendor = vendors.find(vendor => vendor.vendor_id === selectedVendorId);
 
-  // Enhanced error handlers that don't auto-redirect
+  // Enhanced error handlers
   const handleUpdateVendor = async (data: UpdateVendorFormData): Promise<void> => {
     if (!selectedVendorId) return;
     setIsLoading(true);
     setError(null);
     try {
-      await updateVendor(selectedVendorId, data);
+      const updated = await updateVendor(selectedVendorId, data);
       setVendors(prev =>
         prev.map(vendor =>
-          vendor.vendor_id === selectedVendorId
-            ? { ...vendor, ...data, updated_at: new Date().toISOString() }
-            : vendor
+          vendor.vendor_id === selectedVendorId ? updated : vendor
         )
       );
     } catch (err: any) {
@@ -244,23 +229,7 @@ const VendorsPage: React.FC = () => {
     setIsLoading(true);
     setError(null);
     try {
-      const response = await vendorRegister(data);
-      const newVendor: Vendor = {
-        ...data,
-        vendor_id: (response.data as any)?.vendor_id || String(Date.now()),
-        rating: 0,
-        total_reviews: 0,
-        is_verified: false,
-        is_featured: false,
-        commission_rate: 0.1,
-        minimum_order_amount: 1000,
-        delivery_radius_km: 5,
-        average_prep_time_minutes: 30,
-        currency: 'KES',
-        is_active: true,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-      };
+      const newVendor = await createVendor(data);
       setVendors(prev => [...prev, newVendor]);
       setActiveSection('list');
     } catch (err: any) {
@@ -278,14 +247,14 @@ const VendorsPage: React.FC = () => {
     setIsLoading(true);
     setError(null);
     try {
-      await updateInventory(selectedVendorId, productId, updates);
+      await updateVendorInventory(selectedVendorId, productId, updates);
       setInventory(prev =>
         prev.map(item =>
           item.product_id === productId ? { ...item, ...updates } : item
         )
       );
-      const lowStockResponse = await getLowStockAlerts(selectedVendorId);
-      setLowStockAlerts((lowStockResponse.data as Product[]) || []);
+      const lowStockResponse = await getVendorLowStockAlerts(selectedVendorId);
+      setLowStockAlerts(lowStockResponse.data || []);
     } catch (err: any) {
       console.error('VendorsPage: Update inventory error:', err);
       const errorDetails = createErrorDetails(err, 'update-inventory');
@@ -301,7 +270,14 @@ const VendorsPage: React.FC = () => {
     setIsLoading(true);
     setError(null);
     try {
-      await recordInventoryMovement(selectedVendorId, movement);
+      // Note: You may need to implement recordInventoryMovement in vendorService
+      // For now, we'll just update the inventory
+      await updateVendorInventory(selectedVendorId, movement.product_id, {
+        stock: movement.type === 'in' 
+          ? inventory.find(i => i.product_id === movement.product_id)!.stock + movement.quantity
+          : inventory.find(i => i.product_id === movement.product_id)!.stock - movement.quantity
+      });
+      
       setInventory(prev =>
         prev.map(item =>
           item.product_id === movement.product_id
@@ -315,8 +291,9 @@ const VendorsPage: React.FC = () => {
             : item
         )
       );
-      const lowStockResponse = await getLowStockAlerts(selectedVendorId);
-      setLowStockAlerts((lowStockResponse.data as Product[]) || []);
+      
+      const lowStockResponse = await getVendorLowStockAlerts(selectedVendorId);
+      setLowStockAlerts(lowStockResponse.data || []);
     } catch (err: any) {
       console.error('VendorsPage: Record inventory movement error:', err);
       const errorDetails = createErrorDetails(err, 'record-movement');
@@ -427,21 +404,23 @@ const VendorsPage: React.FC = () => {
         {[
           { id: 'dashboard', label: 'Dashboard' },
           { id: 'list', label: 'Vendors List' },
-          { id: 'inventory', label: 'Inventory' },
+          { id: 'inventory', label: 'Inventory', disabled: !selectedVendorId },
           { id: 'debug', label: 'Debug' }
         ].map(tab => (
           <button
             key={tab.id}
             onClick={() => {
               setActiveSection(tab.id as any);
-              if (tab.id !== 'debug') setSelectedVendorId(null);
+              if (tab.id !== 'debug' && tab.id !== 'details' && tab.id !== 'inventory') {
+                setSelectedVendorId(null);
+              }
             }}
             className={`px-4 py-2 text-sm font-medium ${
               activeSection === tab.id
                 ? 'border-b-2 border-blue-500 text-blue-600 dark:text-blue-400'
                 : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
-            }`}
-            disabled={isLoading}
+            } ${tab.disabled ? 'opacity-50 cursor-not-allowed' : ''}`}
+            disabled={isLoading || tab.disabled}
           >
             {tab.label}
           </button>
@@ -452,16 +431,18 @@ const VendorsPage: React.FC = () => {
         <div className="space-y-4">
           <div className="bg-gray-50 dark:bg-gray-800 p-4 rounded-lg">
             <h3 className="text-lg font-semibold mb-3">Debug Information</h3>
-            <div className="space-y-2 text-sm">
-              <p><strong>Token:</strong> {getToken() ? 'Present' : 'Missing'}</p>
-              <p><strong>Authenticated:</strong> {isAuthenticated() ? 'Yes' : 'No'}</p>
-              <p><strong>Admin:</strong> {isAdmin() ? 'Yes' : 'No'}</p>
+            <div className="space-y-2 text-sm font-mono">
+              <p><strong>Token:</strong> {getToken() ? 'Present ✓' : 'Missing ✗'}</p>
+              <p><strong>Authenticated:</strong> {isAuthenticated() ? 'Yes ✓' : 'No ✗'}</p>
+              <p><strong>Admin:</strong> {isAdmin() ? 'Yes ✓' : 'No ✗'}</p>
               <p><strong>API Base URL:</strong> {import.meta.env.VITE_API_BASE_URL || 'http://localhost:4000/api'}</p>
               <p><strong>Current Path:</strong> {window.location.pathname}</p>
               <p><strong>Vendors Count:</strong> {vendors.length}</p>
+              <p><strong>Selected Vendor:</strong> {selectedVendorId || 'None'}</p>
               {error && (
                 <div className="mt-3 p-3 bg-red-100 dark:bg-red-900/20 rounded">
-                  <p><strong>Last Error:</strong> {JSON.stringify(error, null, 2)}</p>
+                  <p><strong>Last Error:</strong></p>
+                  <pre className="text-xs mt-2 overflow-auto">{JSON.stringify(error, null, 2)}</pre>
                 </div>
               )}
             </div>

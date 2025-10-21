@@ -29,7 +29,7 @@ import {
   getRiderDetails,
   getRiderAnalytics,
   getRiderOrders
-} from '../../services/adminService';
+} from '../../services/riderService';
 
 // Enhanced Rider interface matching your backend model
 interface Rider {
@@ -150,15 +150,19 @@ export default function EnhancedRidersPage() {
     }
   };
 
-  const handleUpdateStatus = async (riderId: string, status: string) => {
+  const handleUpdateStatus = async (
+    riderId: string,
+    status: 'active' | 'inactive' | 'pending' | 'busy'
+  ) => {
     try {
       setError(null);
-      await updateRiderStatus(riderId, { status });
+      await updateRiderStatus(riderId, status); // pass status directly
       await fetchRiders();
     } catch (err: any) {
-      setError(err?.response?.data?.error || 'Failed to update rider status');
+      setError(err?.message || 'Failed to update rider status');
     }
   };
+  
 
   const handleApproveRider = async (riderId: string) => {
     try {
@@ -487,19 +491,20 @@ export default function EnhancedRidersPage() {
                     )}
                     
                     <button
-                      onClick={() => handleUpdateStatus(
-                        rider.rider_id, 
-                        rider.current_status === 'available' ? 'offline' : 'available'
-                      )}
-                      className={`px-2 py-1 rounded text-xs transition-colors ${
-                        rider.current_status === 'available'
-                          ? 'bg-red-600 text-white hover:bg-red-700'
-                          : 'bg-green-600 text-white hover:bg-green-700'
-                      }`}
-                      disabled={rider.current_status === 'busy' || rider.current_status === 'on_delivery'}
-                    >
-                      {rider.current_status === 'available' ? 'Set Offline' : 'Set Available'}
-                    </button>
+  onClick={() => handleUpdateStatus(
+    rider.rider_id,
+    rider.current_status === 'available' ? 'inactive' : 'active' // map to API statuses
+  )}
+  className={`px-2 py-1 rounded text-xs transition-colors ${
+    rider.current_status === 'available'
+      ? 'bg-red-600 text-white hover:bg-red-700'
+      : 'bg-green-600 text-white hover:bg-green-700'
+  }`}
+  disabled={rider.current_status === 'busy' || rider.current_status === 'on_delivery'}
+>
+  {rider.current_status === 'available' ? 'Set Offline' : 'Set Available'}
+</button>
+
                     
                     <button
                       onClick={() => handleResetPassword(rider.rider_id, rider.email || rider.account?.email || '')}
@@ -562,7 +567,9 @@ export default function EnhancedRidersPage() {
               <div><strong>Vehicle Type:</strong> {selectedRider.vehicle_type}</div>
               <div><strong>Vehicle Registration:</strong> {selectedRider.vehicle_registration || 'N/A'}</div>
               <div><strong>License Number:</strong> {selectedRider.driving_license_no || 'N/A'}</div>
-              <div><strong>License Expiry:</strong> {formatDate(selectedRider.license_expiry_date)}</div>
+              <div>
+  <strong>License Expiry:</strong> {selectedRider.license_expiry_date ? formatDate(selectedRider.license_expiry_date) : 'N/A'}
+</div>
             </div>
           </div>
 
@@ -646,19 +653,22 @@ export default function EnhancedRidersPage() {
                     Verify Rider
                   </button>
                 )}
-                <button
-                  onClick={() => handleUpdateStatus(
-                    selectedRider.rider_id, 
-                    selectedRider.current_status === 'available' ? 'offline' : 'available'
-                  )}
-                  className={`px-4 py-2 rounded-lg transition-colors ${
-                    selectedRider.current_status === 'available'
-                      ? 'bg-red-600 text-white hover:bg-red-700'
-                      : 'bg-green-600 text-white hover:bg-green-700'
-                  }`}
-                >
-                  {selectedRider.current_status === 'available' ? 'Set Offline' : 'Set Available'}
-                </button>
+<button
+  onClick={() =>
+    handleUpdateStatus(
+      selectedRider.rider_id,
+      selectedRider.current_status === 'available' ? 'inactive' : 'active' // map to API status
+    )
+  }
+  className={`px-4 py-2 rounded-lg transition-colors ${
+    selectedRider.current_status === 'available'
+      ? 'bg-red-600 text-white hover:bg-red-700'
+      : 'bg-green-600 text-white hover:bg-green-700'
+  }`}
+>
+  {selectedRider.current_status === 'available' ? 'Set Offline' : 'Set Available'}
+</button>
+
                 <button
                   onClick={() => handleResetPassword(selectedRider.rider_id, selectedRider.email || selectedRider.account?.email || '')}
                   className="px-4 py-2 bg-yellow-600 text-white rounded-lg hover:bg-yellow-700 transition-colors"

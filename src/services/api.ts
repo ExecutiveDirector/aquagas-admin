@@ -1,70 +1,123 @@
-// services/api.ts - FIXED VERSION
+// src/services/api.ts 
 import axios from 'axios';
+import type { AxiosInstance } from 'axios';
 
-// Create axios instance
-const api = axios.create({
+// ============================================
+// TYPE DEFINITIONS
+// ============================================
+
+export interface ApiResponse<T = any> {
+  data?: T;
+  message?: string;
+  error?: string;
+  success?: boolean;
+  pagination?: {
+    page: number;
+    limit: number;
+    total: number;
+    totalPages: number;
+  };
+}
+
+export interface LoginResponse {
+  token: string;
+  message: string;
+  role: string;
+  admin_role: string | null;
+  account?: any;
+}
+
+export interface DashboardStats {
+  users: number;
+  vendors: number;
+  riders: number;
+  orders: number;
+  todayRevenue: number;
+  totalRevenue?: number;
+  pendingOrders?: number;
+  completedOrders?: number;
+  today_revenue?: number;
+  total_revenue?: number;
+  pending_orders?: number;
+  completed_orders?: number;
+}
+
+// ============================================
+// AXIOS INSTANCE CONFIGURATION
+// ============================================
+
+const api: AxiosInstance = axios.create({
   baseURL: import.meta.env.VITE_API_BASE_URL || 'https://aquagas-backend.onrender.com/api',
   headers: { 'Content-Type': 'application/json' },
-  timeout: 10000
+  timeout: 30000, // Increased to 30 seconds for slower connections
 });
 
-// Request interceptor to add auth token
-api.interceptors.request.use((config) => {
-  // Check for token in localStorage first, then sessionStorage
-  const token = localStorage.getItem('token') || sessionStorage.getItem('token');
-  
-  if (token && config.headers) {
-    config.headers.Authorization = `Bearer ${token}`;
-  }
-  
-  console.log('🔄 API Request:', config.method?.toUpperCase(), config.url);
-  console.log('🔑 Token present:', !!token);
-  if (token) {
-    console.log('🔑 Token preview:', token.substring(0, 20) + '...');
+// ============================================
+// REQUEST INTERCEPTOR
+// ============================================
+
+api.interceptors.request.use(
+  (config) => {
+    // Check for token in localStorage first, then sessionStorage
+    const token = localStorage.getItem('token') || sessionStorage.getItem('token');
     
-    // Debug: Check if token is expired
-    try {
-      const payload = JSON.parse(atob(token.split(".")[1]));
-      const now = Math.floor(Date.now() / 1000);
+    if (token && config.headers) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
     
-      if (payload.exp < now) {
-        console.warn("⚠️ Token has expired — clearing session and redirecting.", {
-          exp: new Date(payload.exp * 1000).toLocaleString(),
-          now: new Date(now * 1000).toLocaleString(),
-        });
+    console.log('🔄 API Request:', config.method?.toUpperCase(), config.url);
+    console.log('🔑 Token present:', !!token);
+    
+    if (token) {
+      console.log('🔑 Token preview:', token.substring(0, 20) + '...');
       
-        try {
-          // 🚫 Remove any stored tokens
+      // Token expiration check
+      try {
+        interface JwtPayload {
+          exp: number;
+          iat?: number;
+          [key: string]: any;
+        }
+        
+        const payload = JSON.parse(atob(token.split('.')[1])) as JwtPayload;
+        const now = Math.floor(Date.now() / 1000);
+        
+        if (payload.exp < now) {
+          console.warn('⚠️ Token has expired — clearing session', {
+            exp: new Date(payload.exp * 1000).toLocaleString(),
+            now: new Date(now * 1000).toLocaleString(),
+          });
+          
+          // Clear expired token
           localStorage.removeItem('token');
           sessionStorage.removeItem('token');
-        } catch (e) {
-          console.error("Failed to clear auth tokens:", e);
+          localStorage.removeItem('userInfo');
+          sessionStorage.removeItem('userInfo');
+          
+          // Redirect to login if not already there
+          const currentPath = window.location.pathname;
+          if (!currentPath.includes('/login')) {
+            console.info('🔁 Redirecting to /login...');
+            window.location.replace('/login');
+          }
         }
-      
-        // ✅ Redirect to login only if not already there
-        const currentPath = window.location.pathname;
-        if (!currentPath.includes('/login')) {
-          console.info("🔁 Redirecting to /login...");
-          window.location.replace('/login'); // safer than href (prevents back navigation)
-        }
-      }
-    } catch (e) {
-      if (e instanceof Error) {
-        console.warn("⚠️ Could not parse token payload:", e.message);
-      } else {
-        console.warn("⚠️ Could not parse token payload:", e);
+      } catch (e) {
+        console.warn('⚠️ Could not parse token payload:', e instanceof Error ? e.message : e);
       }
     }
     
+    return config;
+  },
+  (error) => {
+    console.error('❌ API Request Error:', error);
+    return Promise.reject(error);
   }
+);
 
-  return config;
-}, (error) => {
-  console.error('❌ API Request Error:', error);
-  return Promise.reject(error);
-});
+// ============================================
+// RESPONSE INTERCEPTOR
+// ============================================
 
-// Response interceptor for error handling
 api.interceptors.response.use(
   (response) => {
     console.log('✅ API Response:', response.status, response.config.url);
@@ -77,20 +130,18 @@ api.interceptors.response.use(
       url: error.config?.url,
       method: error.config?.method?.toUpperCase(),
       message: error.message,
-      data: error.response?.data
+      data: error.response?.data,
     });
     
-    // Enhanced debugging for auth errors
+    // Enhanced debugging for 401 errors
     if (error.response?.status === 401) {
-      console.group("🚫 401 UNAUTHORIZED - Detailed Analysis");
-    
-      console.log("URL:", error.config?.url);
-      console.log("Method:", error.config?.method?.toUpperCase());
-      console.log("Headers sent:", error.config?.headers);
-      console.log("Server response:", error.response?.data);
-    
-      const token = localStorage.getItem("token");
-    
+      console.group('🚫 401 UNAUTHORIZED - Detailed Analysis');
+      console.log('URL:', error.config?.url);
+      console.log('Method:', error.config?.method?.toUpperCase());
+      console.log('Headers sent:', error.config?.headers);
+      console.log('Server response:', error.response?.data);
+      
+      const token = localStorage.getItem('token');
       if (token) {
         try {
           interface JwtPayload {
@@ -98,34 +149,23 @@ api.interceptors.response.use(
             iat?: number;
             [key: string]: any;
           }
-    
-          const payload = JSON.parse(
-            atob(token.split(".")[1])
-          ) as JwtPayload;
-    
+          
+          const payload = JSON.parse(atob(token.split('.')[1])) as JwtPayload;
           const now = Math.floor(Date.now() / 1000);
-    
-          console.log("Token payload:", payload);
-          console.log("Token expired:", payload.exp < now);
-          console.log(
-            "Token expires at:",
-            new Date(payload.exp * 1000).toISOString()
-          );
+          
+          console.log('Token payload:', payload);
+          console.log('Token expired:', payload.exp < now);
+          console.log('Token expires at:', new Date(payload.exp * 1000).toISOString());
         } catch (e) {
-          if (e instanceof Error) {
-            console.log("Token parsing failed:", e.message);
-          } else {
-            console.log("Token parsing failed:", e);
-          }
+          console.log('Token parsing failed:', e instanceof Error ? e.message : e);
         }
       } else {
-        console.log("No token found in localStorage");
+        console.log('No token found in localStorage');
       }
-    
       console.groupEnd();
     }
     
-
+    // Enhanced debugging for 403 errors
     if (error.response?.status === 403) {
       console.group('🚫 403 FORBIDDEN - Access Denied');
       console.log('This means authentication passed but authorization failed');
@@ -134,19 +174,20 @@ api.interceptors.response.use(
       console.groupEnd();
     }
     
-    // Handle authentication errors but don't auto-redirect during development
+    // Handle authentication errors
     if (error.response?.status === 401 || error.response?.status === 403) {
-      console.log('⚠️ Authentication failed - tokens will be cleared');
+      console.log('⚠️ Authentication failed - clearing tokens');
       
-      // Clear all possible token storage locations
+      // Clear all token storage
       localStorage.removeItem('token');
       localStorage.removeItem('userInfo');
       localStorage.removeItem('account');
       sessionStorage.removeItem('token');
       sessionStorage.removeItem('userInfo');
       
-      // Only redirect if not on development/debug pages and not already on login
-      const isDevelopment = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+      // Redirect to login (with environment checks)
+      const isDevelopment = window.location.hostname === 'localhost' || 
+                           window.location.hostname === '127.0.0.1';
       const isOnLogin = window.location.pathname === '/login';
       const isDebugPage = window.location.pathname.includes('/debug');
       
@@ -154,7 +195,7 @@ api.interceptors.response.use(
         console.log('🔄 Redirecting to login page');
         setTimeout(() => {
           window.location.href = '/login';
-        }, 1000); // Small delay to allow for debugging
+        }, 1000);
       }
     }
     
@@ -162,41 +203,16 @@ api.interceptors.response.use(
   }
 );
 
-// Type definitions
-interface LoginResponse {
-  token: string;
-  message: string;
-  role: string;
-  admin_role: string | null;
-  account?: any;
-}
+// ============================================
+// UTILITY FUNCTIONS
+// ============================================
 
-interface DashboardStats {
-  users: number;
-  vendors: number;
-  riders: number;
-  orders: number;
-  todayRevenue: number;
-  totalRevenue?: number;
-  pendingOrders?: number;
-  completedOrders?: number;
-  sparklines?: Record<string, number[]>; // optional future extension
-}
-
-interface ApiResponse<T = any> {
-  data?: T;
-  message?: string;
-  error?: string;
-  pagination?: {
-    page: number;
-    limit: number;
-    total: number;
-    totalPages: number;
-  };
-}
-
-// Test API connectivity
-export async function testApiConnection(): Promise<{success: boolean, data?: any, error?: any, status?: number}> {
+export async function testApiConnection(): Promise<{
+  success: boolean;
+  data?: any;
+  error?: any;
+  status?: number;
+}> {
   try {
     console.log('🧪 Testing API connection to:', api.defaults.baseURL);
     const response = await api.get('/v1/admin/test');
@@ -204,46 +220,39 @@ export async function testApiConnection(): Promise<{success: boolean, data?: any
     return { success: true, data: response.data };
   } catch (error: any) {
     console.error('🧪 API test failed:', error);
-    return { 
-      success: false, 
+    return {
+      success: false,
       error: error.response?.data || error.message,
-      status: error.response?.status
+      status: error.response?.status,
     };
   }
 }
 
-// Authentication Functions
+// ============================================
+// AUTHENTICATION FUNCTIONS
+// ============================================
+
 export async function login(email: string, password: string): Promise<LoginResponse> {
   try {
     console.log('🔐 Attempting login to /v1/auth/login');
-    const response = await api.post('/v1/auth/login', { email, password });
+    const response = await api.post<LoginResponse>('/v1/auth/login', { email, password });
     console.log('🔐 Login successful:', response.data);
-    
-    const { token, account, role, admin_role } = response.data;
-    
+
+    const { token, account, role, admin_role, ...rest } = response.data;
+
     if (token) {
-      // Store token consistently
       localStorage.setItem('token', token);
       console.log('💾 Token stored successfully');
-      
-      // Store user info
-      if (account || role || admin_role) {
-        const userInfo = {
-          account,
-          role,
-          admin_role,
-          ...response.data
-        };
-        localStorage.setItem('userInfo', JSON.stringify(userInfo));
-        console.log('💾 User info stored:', userInfo);
-        
-        // Also store account separately for backward compatibility
-        if (account) {
-          localStorage.setItem('account', JSON.stringify(account));
-        }
+
+      const userInfo = { account, role, admin_role, ...rest };
+      localStorage.setItem('userInfo', JSON.stringify(userInfo));
+      console.log('💾 User info stored:', userInfo);
+
+      if (account) {
+        localStorage.setItem('account', JSON.stringify(account));
       }
     }
-    
+
     return response.data;
   } catch (error) {
     console.error('🔐 Login failed:', error);
@@ -251,16 +260,14 @@ export async function login(email: string, password: string): Promise<LoginRespo
   }
 }
 
+
 export function logout(): void {
   console.log('🔐 Logging out - clearing all storage');
-  // Clear all storage
   localStorage.removeItem('token');
   localStorage.removeItem('userInfo');
   localStorage.removeItem('account');
   sessionStorage.removeItem('token');
   sessionStorage.removeItem('userInfo');
-  
-  // Redirect to login
   window.location.href = '/login';
 }
 
@@ -270,14 +277,12 @@ export function getToken(): string | null {
 
 export function getAccount(): any {
   try {
-    // Try userInfo first, then fallback to account
     const userInfo = localStorage.getItem('userInfo') || sessionStorage.getItem('userInfo');
     if (userInfo) {
       const parsed = JSON.parse(userInfo);
       return parsed.account || parsed;
     }
     
-    // Fallback to direct account storage
     const account = localStorage.getItem('account');
     if (account) {
       return JSON.parse(account);
@@ -294,10 +299,14 @@ export function isAuthenticated(): boolean {
   const token = getToken();
   const account = getAccount();
   
-  // Check if token exists and is not expired
   if (token) {
     try {
-      const payload = JSON.parse(atob(token.split('.')[1]));
+      interface JwtPayload {
+        exp: number;
+        [key: string]: any;
+      }
+      
+      const payload = JSON.parse(atob(token.split('.')[1])) as JwtPayload;
       const now = Math.floor(Date.now() / 1000);
       const isExpired = payload.exp < now;
       
@@ -320,7 +329,11 @@ export function isAdmin(): boolean {
     if (userInfo) {
       const parsed = JSON.parse(userInfo);
       const result = parsed.role === 'admin' || parsed.admin_role === 'super_admin';
-      console.log('🔐 Admin check:', { role: parsed.role, admin_role: parsed.admin_role, isAdmin: result });
+      console.log('🔐 Admin check:', { 
+        role: parsed.role, 
+        admin_role: parsed.admin_role, 
+        isAdmin: result 
+      });
       return result;
     }
     console.log('🔐 No userInfo found, not admin');
@@ -331,22 +344,51 @@ export function isAdmin(): boolean {
   }
 }
 
-export async function getDashboardStats(vendorId?: string | { id: string }): Promise<DashboardStats> {
+export function getAdminRole(): string | null {
   try {
-    // ✅ Handle case where vendorId might be an object
+    const userInfo = localStorage.getItem('userInfo');
+    if (userInfo) {
+      const parsed = JSON.parse(userInfo);
+      return parsed.admin_role || null;
+    }
+    return null;
+  } catch (error) {
+    console.error('🔐 Error getting admin role:', error);
+    return null;
+  }
+}
+
+export function isSuperAdmin(): boolean {
+  try {
+    const userInfo = localStorage.getItem('userInfo');
+    if (userInfo) {
+      const parsed = JSON.parse(userInfo);
+      return parsed.admin_role === 'super_admin';
+    }
+    return false;
+  } catch (error) {
+    console.error('🔐 Error checking super admin status:', error);
+    return false;
+  }
+}
+
+// ============================================
+// DASHBOARD FUNCTIONS
+// ============================================
+
+export async function getDashboardStats(
+  vendorId?: string | { id: string }
+): Promise<DashboardStats> {
+  try {
     const id = typeof vendorId === 'object' ? vendorId.id : vendorId;
-
-    const endpoint = id
-      ? `/v1/admin/vendors/${id}/dashboard`
-      : '/v1/admin/dashboard';
-
+    const endpoint = id ? `/v1/admin/vendors/${id}/dashboard` : '/v1/admin/dashboard';
+    
     console.log('📊 Fetching dashboard stats from:', endpoint);
-
     const res = await api.get(endpoint);
     console.log('📊 Dashboard response:', res.data);
-
+    
     const data = res.data.data || res.data;
-
+    
     return {
       users: data.users || 0,
       vendors: data.vendors || 0,
@@ -363,131 +405,5 @@ export async function getDashboardStats(vendorId?: string | { id: string }): Pro
   }
 }
 
-// Vendor Management Functions  
-export async function listVendors(params: { 
-  page?: number; 
-  limit?: number; 
-  search?: string; 
-  filter?: string 
-} = {}): Promise<ApiResponse> {
-  const queryParams = new URLSearchParams();
-  Object.entries(params).forEach(([key, value]) => {
-    if (value !== undefined) queryParams.append(key, String(value));
-  });
-  
-  const url = `/v1/admin/vendors${queryParams.toString() ? '?' + queryParams.toString() : ''}`;
-  console.log('🏪 Fetching vendors from:', url);
-  
-  const res = await api.get(url);
-  console.log('🏪 Vendors response:', res.data);
-  return res.data;
-}
-
-export async function approveVendor(vendorId: string): Promise<ApiResponse> {
-  const res = await api.put(`/v1/admin/vendors/${vendorId}/approve`);
-  return res.data;
-}
-
-export async function updateVendorStatus(vendorId: string, status: string): Promise<ApiResponse> {
-  const res = await api.put(`/v1/admin/vendors/${vendorId}/status`, { status });
-  return res.data;
-}
-
-// User Management Functions
-export async function listUsers(params: { 
-  page?: number; 
-  limit?: number; 
-  search?: string; 
-  filter?: string 
-} = {}): Promise<ApiResponse> {
-  const queryParams = new URLSearchParams();
-  Object.entries(params).forEach(([key, value]) => {
-    if (value !== undefined) queryParams.append(key, String(value));
-  });
-  
-  const res = await api.get(`/v1/admin/users?${queryParams}`);
-  return res.data;
-}
-
-export async function getUserDetails(userId: string): Promise<ApiResponse> {
-  const res = await api.get(`/v1/admin/users/${userId}`);
-  return res.data;
-}
-
-export async function updateUserStatus(userId: string, status: string): Promise<ApiResponse> {
-  const res = await api.put(`/v1/admin/users/${userId}/status`, { status });
-  return res.data;
-}
-
-// Rider Management Functions
-export async function listRiders(params: { 
-  page?: number; 
-  limit?: number; 
-  search?: string; 
-  filter?: string 
-} = {}): Promise<ApiResponse> {
-  const queryParams = new URLSearchParams();
-  Object.entries(params).forEach(([key, value]) => {
-    if (value !== undefined) queryParams.append(key, String(value));
-  });
-  
-  const res = await api.get(`/v1/admin/riders?${queryParams}`);
-  return res.data;
-}
-
-export async function updateRiderStatus(riderId: string, status: string): Promise<ApiResponse> {
-  const res = await api.put(`/v1/admin/riders/${riderId}/status`, { status });
-  return res.data;
-}
-
-// Order Management Functions
-export async function listOrders(params: { 
-  page?: number; 
-  limit?: number; 
-  search?: string; 
-  status?: string 
-} = {}): Promise<ApiResponse> {
-  const queryParams = new URLSearchParams();
-  Object.entries(params).forEach(([key, value]) => {
-    if (value !== undefined) queryParams.append(key, String(value));
-  });
-  
-  const res = await api.get(`/v1/admin/orders?${queryParams}`);
-  return res.data;
-}
-
-export async function getOrderDetails(orderId: string): Promise<ApiResponse> {
-  const res = await api.get(`/v1/admin/orders/${orderId}`);
-  return res.data;
-}
-
-export async function updateOrderStatus(orderId: string, status: string): Promise<ApiResponse> {
-  const res = await api.put(`/v1/admin/orders/${orderId}/status`, { status });
-  return res.data;
-}
-
-// Create new user
-export async function createUser(data: any): Promise<ApiResponse> {
-  const res = await api.post(`/v1/admin/users`, data);
-  return res.data;
-}
-
-// Update existing user
-export async function updateUser(userId: string, data: any): Promise<ApiResponse> {
-  const res = await api.put(`/v1/admin/users/${userId}`, data);
-  return res.data;
-}
-
-// Delete user
-export async function deleteUser(userId: string): Promise<ApiResponse> {
-  const res = await api.delete(`/v1/admin/users/${userId}`);
-  return res.data;
-}
-
-// Toggle user status (active/inactive)
-export async function toggleUserStatus(userId: string): Promise<ApiResponse> {
-  const res = await api.put(`/v1/admin/users/${userId}/toggle-status`);
-  return res.data;
-}
-
+// Export the axios instance as default
 export default api;

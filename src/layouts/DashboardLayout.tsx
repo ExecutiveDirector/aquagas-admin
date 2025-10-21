@@ -21,9 +21,8 @@ import UsersPage from "../pages/users/UsersPage";
 import RidersPage from "../pages/riders/RidersPage";
 import VendorsPage from "../pages/vendors/VendorsPage";
 import NotificationsPage from "../pages/notifications/NotificationsPage";
-
-import { listUsers, getAccount, logout, isAuthenticated } from "../services/api";
-//import Support from "../pages/support/SupportPage";
+import { listUsers } from "../services/userService";
+import { isAuthenticated, getAccount, logout } from "../services/authService";
 import Finance from "../pages/transactions/finance";
 import ProductPage from "../pages/products/ProductPage";
 import OrdersPage from "../pages/orders/OrderPage";
@@ -100,54 +99,6 @@ function DashboardLayout() {
           return <SettingPage />;
         case "/analytics":
           return<AdminAnalytics/>
-    //   default:
-    //     const path = location.pathname;
-    //     if (
-    //       // path.startsWith("/orders") ||
-    //       // path.startsWith("/products") ||
-    //       //path.startsWith("/transactions") ||
-    //       // path.startsWith("/support") ||
-    //       //path.startsWith("/analytics") 
-    //       // path.startsWith("/settings")
-    //     ) {
-    //       return (
-    //         <div className="text-center py-12">
-    //           <div className="w-16 h-16 mx-auto mb-4 bg-gray-100 dark:bg-gray-700 rounded-lg flex items-center justify-center">
-    //             <Package className="w-8 h-8 text-gray-400" />
-    //           </div>
-    //           <h2 className="text-2xl font-semibold text-gray-900 dark:text-white mb-4">
-    //             {path.slice(1).charAt(0).toUpperCase() + path.slice(2)} Management
-    //           </h2>
-    //           <p className="text-gray-600 dark:text-gray-400 mb-6">
-    //             This section is ready for implementation. Connect to your backend API to
-    //             manage {path.slice(1)}.
-    //           </p>
-    //           <div className="space-y-2 text-sm text-gray-500 dark:text-gray-400">
-    //             <p>Expected API endpoints:</p>
-    //             <code className="block bg-gray-100 dark:bg-gray-700 p-2 rounded">
-    //               GET /v1/admin{path} - List {path.slice(1)}
-    //             </code>
-    //             <code className="block bg-gray-100 dark:bg-gray-700 p-2 rounded">
-    //               GET /v1/admin{path}/:id - Get details
-    //             </code>
-    //             <code className="block bg-gray-100 dark:bg-gray-700 p-2 rounded">
-    //               PUT /v1/admin{path}/:id/status - Update status
-    //             </code>
-    //           </div>
-    //         </div>
-    //       );
-    //     }
-
-    //     return (
-    //       <div className="text-center py-12">
-    //         <h2 className="text-2xl font-semibold text-gray-900 dark:text-white mb-4">
-    //           Page Not Found
-    //         </h2>
-    //         <p className="text-gray-600 dark:text-gray-400">
-    //           The requested page could not be found.
-    //         </p>
-    //       </div>
-    //     );
      }
   };
 

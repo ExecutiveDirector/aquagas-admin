@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import type { User } from "./types";
+import type { UpdateUserData, User } from "../../types";
 import UserTable from "./components/UserTable";
 import UserModal from "./components/UserModal";
 import UserDetailsModal from "./components/UserDetailsModal";
@@ -15,7 +15,7 @@ import {
   updateUser,
   deleteUser,
   toggleUserStatus,
-} from "../../services/adminService";
+} from "../../services/userService";
 
 const UsersPage: React.FC = () => {
   const [users, setUsers] = useState<User[]>([]);
@@ -58,8 +58,8 @@ const UsersPage: React.FC = () => {
       filtered = filtered.filter(
         (u) =>
           u.fullName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          u.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          u.phone_number.toLowerCase().includes(searchTerm.toLowerCase())
+          (u.email?.toLowerCase() || "").includes(searchTerm.toLowerCase()) ||
+          (u.phone_number?.toLowerCase() || "").includes(searchTerm.toLowerCase())
       );
     }
     if (statusFilter) {
@@ -68,23 +68,39 @@ const UsersPage: React.FC = () => {
     setFilteredUsers(filtered);
   }, [users, searchTerm, statusFilter]);
 
-  const handleSaveUser = async (data: Partial<User>) => {
+  const handleSaveUser = async (data: Partial<User> & { password?: string }) => {
     try {
       setLoading(true);
       setError(null);
 
       if (selectedUser) {
         // Update existing user
-        const updateData: Partial<User> = {
+        const updateData: Partial<UpdateUserData> = {
           fullName: data.fullName,
           email: data.email,
           phone_number: data.phone_number,
-          role: data.role ? data.role.toLowerCase() : undefined,
-          status: data.status,
         };
+        
+        // Handle role with proper type casting
+        if (data.role) {
+          const roleLower = data.role.toLowerCase();
+          if (roleLower === 'admin' || roleLower === 'vendor' || roleLower === 'rider' || roleLower === 'customer') {
+            updateData.role = roleLower as 'admin' | 'vendor' | 'rider' | 'customer';
+          }
+        }
+        
+        // Handle status with proper type casting
+        if (data.status) {
+          const statusLower = data.status.toLowerCase();
+          if (statusLower === 'active' || statusLower === 'inactive') {
+            updateData.status = statusLower as 'active' | 'inactive';
+          }
+        }
+        
         if (data.password) {
           updateData.password = data.password;
         }
+        
         await updateUser(selectedUser.id, updateData);
         toast.success("User updated successfully");
       } else {
@@ -95,13 +111,25 @@ const UsersPage: React.FC = () => {
             "Missing required fields: fullName, email or phone_number, password, and role are required"
           );
         }
+        
+        const roleLower = role.toLowerCase();
+        const statusLower = (status || "active").toLowerCase();
+        
+        if (roleLower !== 'admin' && roleLower !== 'vendor' && roleLower !== 'rider' && roleLower !== 'customer') {
+          throw new Error("Invalid role specified");
+        }
+        
+        if (statusLower !== 'active' && statusLower !== 'inactive') {
+          throw new Error("Invalid status specified");
+        }
+        
         await createUser({
           fullName,
           email,
           phone_number,
           password,
-          role: role.toLowerCase(),
-          status: status || "Active",
+          role: roleLower as 'admin' | 'vendor' | 'rider' | 'customer',
+          status: statusLower as 'active' | 'inactive',
         });
         toast.success("User created successfully");
       }
@@ -143,10 +171,8 @@ const UsersPage: React.FC = () => {
   const handleToggleStatus = async (user: User) => {
     try {
       setError(null);
-      await toggleUserStatus(
-        user.id,
-        user.status === "Active" ? "Inactive" : "Active"
-      );
+      const newStatus = user.status === "active" || user.status === "Active" ? "inactive" : "active";
+      await toggleUserStatus(user.id, newStatus as 'active' | 'inactive');
       await fetchUsers();
       toast.success("User status updated");
     } catch (err: any) {
@@ -202,6 +228,7 @@ const UsersPage: React.FC = () => {
       ) : (
         <UserTable
           users={filteredUsers}
+          isLoading={loading}
           onEdit={(user) => {
             setSelectedUser(user);
             setShowUserModal(true);

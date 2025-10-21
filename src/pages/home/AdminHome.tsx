@@ -1,6 +1,7 @@
 // src/pages/AdminHome.tsx
 import { useCallback, useEffect, useRef, useState } from "react";
-import { getDashboardStats, listOrders, getOrderDetails } from "../../services/api";
+import { getDashboardStats} from "../../services/api";
+import { listOrders, getOrderDetails} from "../../services/orderService";
 
 interface DashboardStats {
   users: number;
@@ -82,7 +83,7 @@ export default function AdminHome() {
   const fetchOrders = useCallback(async () => {
     setOrderLoading(true);
     try {
-      const res = await listOrders({ limit: 5 }); // fetch 5 latest
+      const res = await listOrders(1, 5, { status: 'pending' });
       if (!mountedRef.current) return;
       setOrders(res?.data || res || []);
     } catch (err: any) {

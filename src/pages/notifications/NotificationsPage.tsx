@@ -6,7 +6,7 @@ import {
   deleteNotification,
   updateNotification,
   listNotificationTemplates,
-} from '../../services/adminService';
+} from '../../services/notificationService';
 import { Bell } from 'lucide-react';
 
 interface Notification {

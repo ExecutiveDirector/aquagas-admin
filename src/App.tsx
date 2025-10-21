@@ -2,7 +2,7 @@
 import React from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { useEffect, useState } from 'react';
-import { getToken, getAccount, isAuthenticated } from './services/auth';
+import { getToken, getAccount, isAuthenticated } from './services/authService';
 import { Toaster } from 'react-hot-toast';
 import Login from './pages/auth/Login';
 import AdminDashboard from './layouts/DashboardLayout'; // Import your complete AdminDashboard component

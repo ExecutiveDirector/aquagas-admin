@@ -1,6 +1,6 @@
 import React, { useState, useCallback, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
-import { login } from "../../services/auth";
+import { login } from "../../services/authService";
 import { AxiosError } from "axios";
 import {
   Eye,

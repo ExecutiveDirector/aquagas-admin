@@ -5,7 +5,7 @@ import OrdersList from './OrdersList';
 import OrderDetails from './OrderDetails';
 import VendorDashboard from '../vendors/VendorDashboard';  // Reuse for order-focused dashboard
 import { listOrders, getOrderDetails, updateOrderStatus, assignRiderToOrder, refundOrder, getDashboardStats, testApiConnection } from '../../services/adminService';
-import { isAuthenticated, logout, isAdmin, getToken } from '../../services/auth';
+import { isAuthenticated, logout, isAdmin, getToken } from '../../services/authService';
 
 interface Order {
   order_id: string;
