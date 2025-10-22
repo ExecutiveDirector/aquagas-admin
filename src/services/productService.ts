@@ -106,8 +106,17 @@ export async function listProducts(
   try {
     const params: any = { page, limit, ...filters };
     const res = await api.get('/v1/admin/products', { params });
-    console.log('📦 Fetched products:', res.data);
-    return res.data;
+    console.log('📦 Raw API response:', res.data);
+    
+    // Backend returns { products: [...] }
+    const products = res.data.products || res.data.data || res.data || [];
+    console.log('📦 Fetched products:', products);
+    
+    return {
+      success: true,
+      data: products,
+      message: 'Products fetched successfully'
+    };
   } catch (error: any) {
     console.error('📦 List products error:', error);
     throw new Error(error.response?.data?.error || 'Failed to fetch products');
@@ -118,7 +127,11 @@ export async function getProductDetails(productId: string): Promise<ApiResponse<
   try {
     const res = await api.get(`/v1/admin/products/${productId}`);
     console.log(`📦 Fetched product ${productId}:`, res.data);
-    return res.data;
+    return {
+      success: true,
+      data: res.data,
+      message: 'Product details fetched successfully'
+    };
   } catch (error: any) {
     console.error(`📦 Get product ${productId} error:`, error);
     throw new Error(error.response?.data?.error || 'Failed to fetch product details');
@@ -129,7 +142,15 @@ export async function createProduct(data: Partial<Product>): Promise<ApiResponse
   try {
     const res = await api.post('/v1/admin/products', data);
     console.log('📦 Created product:', res.data);
-    return res.data;
+    
+    // Backend may return { data: product } or { message: ..., data: product }
+    const product = res.data.data || res.data;
+    
+    return {
+      success: true,
+      data: product,
+      message: 'Product created successfully'
+    };
   } catch (error: any) {
     console.error('📦 Create product error:', error);
     throw new Error(error.response?.data?.error || 'Failed to create product');
@@ -143,7 +164,14 @@ export async function updateProduct(
   try {
     const res = await api.put(`/v1/admin/products/${productId}`, data);
     console.log(`📦 Updated product ${productId}:`, res.data);
-    return res.data;
+    
+    const product = res.data.data || res.data;
+    
+    return {
+      success: true,
+      data: product,
+      message: 'Product updated successfully'
+    };
   } catch (error: any) {
     console.error(`📦 Update product ${productId} error:`, error);
     throw new Error(error.response?.data?.error || 'Failed to update product');
@@ -154,7 +182,10 @@ export async function deleteProduct(productId: string): Promise<ApiResponse> {
   try {
     const res = await api.delete(`/v1/admin/products/${productId}`);
     console.log(`📦 Deleted product ${productId}:`, res.data);
-    return res.data;
+    return {
+      success: true,
+      message: 'Product deleted successfully'
+    };
   } catch (error: any) {
     console.error(`📦 Delete product ${productId} error:`, error);
     throw new Error(error.response?.data?.error || 'Failed to delete product');
@@ -165,7 +196,11 @@ export async function toggleProductStatus(productId: string): Promise<ApiRespons
   try {
     const res = await api.put(`/v1/admin/products/${productId}/toggle-status`);
     console.log(`📦 Toggled product ${productId} status:`, res.data);
-    return res.data;
+    return {
+      success: true,
+      data: res.data.data || res.data,
+      message: 'Product status toggled successfully'
+    };
   } catch (error: any) {
     console.error(`📦 Toggle product ${productId} status error:`, error);
     throw new Error(error.response?.data?.error || 'Failed to toggle product status');
@@ -176,7 +211,11 @@ export async function toggleProductFeatured(productId: string): Promise<ApiRespo
   try {
     const res = await api.put(`/v1/admin/products/${productId}/toggle-featured`);
     console.log(`📦 Toggled product ${productId} featured:`, res.data);
-    return res.data;
+    return {
+      success: true,
+      data: res.data.data || res.data,
+      message: 'Product featured status toggled successfully'
+    };
   } catch (error: any) {
     console.error(`📦 Toggle product ${productId} featured error:`, error);
     throw new Error(error.response?.data?.error || 'Failed to toggle product featured status');
@@ -197,8 +236,17 @@ export async function listCategories(
     if (search) params.search = search;
     
     const res = await api.get('/v1/admin/categories', { params });
-    console.log('📁 Fetched categories:', res.data);
-    return res.data;
+    console.log('📁 Raw API response:', res.data);
+    
+    // Backend returns { success: true, data: [...] }
+    const categories = res.data.data || res.data || [];
+    console.log('📁 Fetched categories:', categories);
+    
+    return {
+      success: true,
+      data: categories,
+      message: 'Categories fetched successfully'
+    };
   } catch (error: any) {
     console.error('📁 List categories error:', error);
     throw new Error(error.response?.data?.error || 'Failed to fetch categories');
@@ -209,7 +257,11 @@ export async function getCategoryDetails(categoryId: string): Promise<ApiRespons
   try {
     const res = await api.get(`/v1/admin/categories/${categoryId}`);
     console.log(`📁 Fetched category ${categoryId}:`, res.data);
-    return res.data;
+    return {
+      success: true,
+      data: res.data.data || res.data,
+      message: 'Category details fetched successfully'
+    };
   } catch (error: any) {
     console.error(`📁 Get category ${categoryId} error:`, error);
     throw new Error(error.response?.data?.error || 'Failed to fetch category details');
@@ -220,7 +272,14 @@ export async function createCategory(data: Partial<ProductCategory>): Promise<Ap
   try {
     const res = await api.post('/v1/admin/categories', data);
     console.log('📁 Created category:', res.data);
-    return res.data;
+    
+    const category = res.data.data || res.data;
+    
+    return {
+      success: true,
+      data: category,
+      message: 'Category created successfully'
+    };
   } catch (error: any) {
     console.error('📁 Create category error:', error);
     throw new Error(error.response?.data?.error || 'Failed to create category');
@@ -234,7 +293,14 @@ export async function updateCategory(
   try {
     const res = await api.put(`/v1/admin/categories/${categoryId}`, data);
     console.log(`📁 Updated category ${categoryId}:`, res.data);
-    return res.data;
+    
+    const category = res.data.data || res.data;
+    
+    return {
+      success: true,
+      data: category,
+      message: 'Category updated successfully'
+    };
   } catch (error: any) {
     console.error(`📁 Update category ${categoryId} error:`, error);
     throw new Error(error.response?.data?.error || 'Failed to update category');
@@ -245,7 +311,10 @@ export async function deleteCategory(categoryId: string): Promise<ApiResponse> {
   try {
     const res = await api.delete(`/v1/admin/categories/${categoryId}`);
     console.log(`📁 Deleted category ${categoryId}:`, res.data);
-    return res.data;
+    return {
+      success: true,
+      message: 'Category deleted successfully'
+    };
   } catch (error: any) {
     console.error(`📁 Delete category ${categoryId} error:`, error);
     throw new Error(error.response?.data?.error || 'Failed to delete category');
@@ -256,7 +325,10 @@ export async function reorderCategories(categoryOrders: { category_id: number; s
   try {
     const res = await api.put('/v1/admin/categories/reorder', { categories: categoryOrders });
     console.log('📁 Reordered categories:', res.data);
-    return res.data;
+    return {
+      success: true,
+      message: 'Categories reordered successfully'
+    };
   } catch (error: any) {
     console.error('📁 Reorder categories error:', error);
     throw new Error(error.response?.data?.error || 'Failed to reorder categories');
@@ -280,7 +352,14 @@ export async function searchProducts(
     const params: any = { q: query, ...filters };
     const res = await api.get('/v1/products/search', { params });
     console.log('🔍 Search results:', res.data);
-    return res.data;
+    
+    const products = res.data.products || res.data.data || res.data || [];
+    
+    return {
+      success: true,
+      data: products,
+      message: 'Search completed successfully'
+    };
   } catch (error: any) {
     console.error('🔍 Search products error:', error);
     throw new Error(error.response?.data?.error || 'Failed to search products');
@@ -291,7 +370,14 @@ export async function getFeaturedProducts(limit: number = 10): Promise<ApiRespon
   try {
     const res = await api.get('/v1/products/featured', { params: { limit } });
     console.log('⭐ Fetched featured products:', res.data);
-    return res.data;
+    
+    const products = res.data.products || res.data.data || res.data || [];
+    
+    return {
+      success: true,
+      data: products,
+      message: 'Featured products fetched successfully'
+    };
   } catch (error: any) {
     console.error('⭐ Get featured products error:', error);
     throw new Error(error.response?.data?.error || 'Failed to fetch featured products');
@@ -318,7 +404,14 @@ export async function getNearbyProducts(
       params: { lat: latitude, lng: longitude, radius }
     });
     console.log('📍 Fetched nearby products:', res.data);
-    return res.data;
+    
+    const data = res.data.data || res.data;
+    
+    return {
+      success: true,
+      data: data,
+      message: 'Nearby products fetched successfully'
+    };
   } catch (error: any) {
     console.error('📍 Get nearby products error:', error);
     throw new Error(error.response?.data?.error || 'Failed to fetch nearby products');
@@ -345,7 +438,14 @@ export async function checkProductAvailability(
     
     const res = await api.get(`/v1/products/${productId}/availability`, { params });
     console.log(`📦 Product ${productId} availability:`, res.data);
-    return res.data;
+    
+    const data = res.data.data || res.data;
+    
+    return {
+      success: true,
+      data: data,
+      message: 'Availability checked successfully'
+    };
   } catch (error: any) {
     console.error(`📦 Check availability for ${productId} error:`, error);
     throw new Error(error.response?.data?.error || 'Failed to check product availability');
@@ -356,7 +456,14 @@ export async function getProductVendors(productId: string): Promise<ApiResponse<
   try {
     const res = await api.get(`/v1/products/${productId}/vendors`);
     console.log(`🏪 Product ${productId} vendors:`, res.data);
-    return res.data;
+    
+    const vendors = res.data.vendors || res.data.data || res.data || [];
+    
+    return {
+      success: true,
+      data: vendors,
+      message: 'Product vendors fetched successfully'
+    };
   } catch (error: any) {
     console.error(`🏪 Get vendors for ${productId} error:`, error);
     throw new Error(error.response?.data?.error || 'Failed to fetch product vendors');
@@ -377,7 +484,14 @@ export async function getProductReviews(
       params: { page, limit }
     });
     console.log(`⭐ Product ${productId} reviews:`, res.data);
-    return res.data;
+    
+    const reviews = res.data.reviews || res.data.data || res.data || [];
+    
+    return {
+      success: true,
+      data: reviews,
+      message: 'Reviews fetched successfully'
+    };
   } catch (error: any) {
     console.error(`⭐ Get reviews for ${productId} error:`, error);
     throw new Error(error.response?.data?.error || 'Failed to fetch product reviews');
@@ -402,7 +516,14 @@ export async function addProductReview(
   try {
     const res = await api.post(`/v1/products/${productId}/reviews`, data);
     console.log(`⭐ Added review for product ${productId}:`, res.data);
-    return res.data;
+    
+    const review = res.data.data || res.data;
+    
+    return {
+      success: true,
+      data: review,
+      message: 'Review added successfully'
+    };
   } catch (error: any) {
     console.error(`⭐ Add review for ${productId} error:`, error);
     throw new Error(error.response?.data?.error || 'Failed to add product review');
@@ -423,7 +544,11 @@ export async function bulkUpdateProducts(
       updates
     });
     console.log('📦 Bulk updated products:', res.data);
-    return res.data;
+    return {
+      success: true,
+      data: res.data.data || res.data,
+      message: 'Products updated successfully'
+    };
   } catch (error: any) {
     console.error('📦 Bulk update products error:', error);
     throw new Error(error.response?.data?.error || 'Failed to bulk update products');
@@ -436,7 +561,11 @@ export async function bulkDeleteProducts(productIds: string[]): Promise<ApiRespo
       product_ids: productIds
     });
     console.log('📦 Bulk deleted products:', res.data);
-    return res.data;
+    return {
+      success: true,
+      data: res.data.data || res.data,
+      message: 'Products deleted successfully'
+    };
   } catch (error: any) {
     console.error('📦 Bulk delete products error:', error);
     throw new Error(error.response?.data?.error || 'Failed to bulk delete products');
@@ -465,7 +594,11 @@ export async function importProducts(
       headers: { 'Content-Type': 'multipart/form-data' }
     });
     console.log('📦 Imported products:', res.data);
-    return res.data;
+    return {
+      success: true,
+      data: res.data.data || res.data,
+      message: 'Products imported successfully'
+    };
   } catch (error: any) {
     console.error('📦 Import products error:', error);
     throw new Error(error.response?.data?.error || 'Failed to import products');
@@ -519,7 +652,11 @@ export async function getProductAnalytics(
       params: { time_range: timeRange }
     });
     console.log(`📊 Product ${productId} analytics:`, res.data);
-    return res.data;
+    return {
+      success: true,
+      data: res.data.data || res.data,
+      message: 'Analytics fetched successfully'
+    };
   } catch (error: any) {
     console.error(`📊 Get analytics for ${productId} error:`, error);
     throw new Error(error.response?.data?.error || 'Failed to fetch product analytics');
@@ -536,7 +673,14 @@ export async function getTopProducts(
       params: { metric, limit, time_range: timeRange }
     });
     console.log(`📊 Top products by ${metric}:`, res.data);
-    return res.data;
+    
+    const products = res.data.products || res.data.data || res.data || [];
+    
+    return {
+      success: true,
+      data: products,
+      message: 'Top products fetched successfully'
+    };
   } catch (error: any) {
     console.error('📊 Get top products error:', error);
     throw new Error(error.response?.data?.error || 'Failed to fetch top products');
@@ -553,7 +697,14 @@ export async function getLowStockProducts(
       params: { threshold, page, limit }
     });
     console.log('📦 Low stock products:', res.data);
-    return res.data;
+    
+    const products = res.data.products || res.data.data || res.data || [];
+    
+    return {
+      success: true,
+      data: products,
+      message: 'Low stock products fetched successfully'
+    };
   } catch (error: any) {
     console.error('📦 Get low stock products error:', error);
     throw new Error(error.response?.data?.error || 'Failed to fetch low stock products');

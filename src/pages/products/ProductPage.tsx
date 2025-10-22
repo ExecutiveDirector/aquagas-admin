@@ -58,7 +58,9 @@ const api = {
     });
     if (!response.ok) throw new Error(`Failed to fetch products: ${response.statusText}`);
     const data = await response.json();
-    return Array.isArray(data) ? data : data.data || data.products || [];
+    console.log('📦 Raw products response:', data);
+    // Backend returns { products: [...] }
+    return data.products || data.data || (Array.isArray(data) ? data : []);
   },
 
   createProduct: async (productData: Partial<Product>) => {
