@@ -38,9 +38,9 @@ interface Category {
 }
 
 // ============================================
-// API SERVICE
+// API SERVICE - FIXED VERSION
 // ============================================
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://aquagas-backend.onrender.com/api';
+const API_BASE_URL = 'https://aquagas-backend.onrender.com/api';
 
 const getAuthHeaders = () => {
   const token = localStorage.getItem('token') || sessionStorage.getItem('token');
@@ -51,7 +51,7 @@ const getAuthHeaders = () => {
 };
 
 const api = {
-  // Products
+  // Products - FIXED to handle multiple response formats
   getProducts: async (page = 1, limit = 100) => {
     const response = await fetch(`${API_BASE_URL}/v1/admin/products?page=${page}&limit=${limit}`, {
       headers: getAuthHeaders()
@@ -59,8 +59,21 @@ const api = {
     if (!response.ok) throw new Error(`Failed to fetch products: ${response.statusText}`);
     const data = await response.json();
     console.log('📦 Raw products response:', data);
-    // Backend returns { products: [...] }
-    return data.products || data.data || (Array.isArray(data) ? data : []);
+    
+    // Handle multiple possible response formats
+    let products = [];
+    if (Array.isArray(data)) {
+      products = data;
+    } else if (data.products && Array.isArray(data.products)) {
+      products = data.products;
+    } else if (data.data && Array.isArray(data.data)) {
+      products = data.data;
+    } else if (data.data && data.data.products) {
+      products = data.data.products;
+    }
+    
+    console.log('📦 Extracted products:', products.length);
+    return products;
   },
 
   createProduct: async (productData: Partial<Product>) => {
@@ -71,9 +84,10 @@ const api = {
     });
     if (!response.ok) {
       const error = await response.json();
-      throw new Error(error.error || 'Failed to create product');
+      throw new Error(error.error || error.message || 'Failed to create product');
     }
     const result = await response.json();
+    // Handle nested data
     return result.data || result;
   },
 
@@ -85,7 +99,7 @@ const api = {
     });
     if (!response.ok) {
       const error = await response.json();
-      throw new Error(error.error || 'Failed to update product');
+      throw new Error(error.error || error.message || 'Failed to update product');
     }
     const result = await response.json();
     return result.data || result;
@@ -96,18 +110,34 @@ const api = {
       method: 'DELETE',
       headers: getAuthHeaders()
     });
-    if (!response.ok) throw new Error('Failed to delete product');
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.error || error.message || 'Failed to delete product');
+    }
     return response.json();
   },
 
-  // Categories
+  // Categories - FIXED to handle array and object responses
   getCategories: async (page = 1, limit = 100) => {
     const response = await fetch(`${API_BASE_URL}/v1/admin/categories?page=${page}&limit=${limit}`, {
       headers: getAuthHeaders()
     });
     if (!response.ok) throw new Error(`Failed to fetch categories: ${response.statusText}`);
     const data = await response.json();
-    return Array.isArray(data) ? data : data.data || data.categories || [];
+    console.log('📁 Raw categories response:', data);
+    
+    // Handle multiple possible response formats
+    let categories = [];
+    if (Array.isArray(data)) {
+      categories = data;
+    } else if (data.data && Array.isArray(data.data)) {
+      categories = data.data;
+    } else if (data.categories && Array.isArray(data.categories)) {
+      categories = data.categories;
+    }
+    
+    console.log('📁 Extracted categories:', categories.length);
+    return categories;
   },
 
   createCategory: async (categoryData: Partial<Category>) => {
@@ -118,7 +148,7 @@ const api = {
     });
     if (!response.ok) {
       const error = await response.json();
-      throw new Error(error.error || 'Failed to create category');
+      throw new Error(error.error || error.message || 'Failed to create category');
     }
     const result = await response.json();
     return result.data || result;
@@ -132,7 +162,7 @@ const api = {
     });
     if (!response.ok) {
       const error = await response.json();
-      throw new Error(error.error || 'Failed to update category');
+      throw new Error(error.error || error.message || 'Failed to update category');
     }
     const result = await response.json();
     return result.data || result;
@@ -143,7 +173,10 @@ const api = {
       method: 'DELETE',
       headers: getAuthHeaders()
     });
-    if (!response.ok) throw new Error('Failed to delete category');
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.error || error.message || 'Failed to delete category');
+    }
     return response.json();
   }
 };
@@ -166,12 +199,10 @@ const checkAdminAccess = (): { hasAccess: boolean; role: string; adminRole: stri
   try {
     const parsed = JSON.parse(userInfo);
     
-    // Check if user has admin role
     if (parsed.role !== 'admin') {
       return { hasAccess: false, role: parsed.role, adminRole: null, error: 'Access denied. Admin privileges required.' };
     }
 
-    // All admin roles have access - no restrictions
     console.log('✅ Admin access granted:', { role: parsed.role, admin_role: parsed.admin_role });
     return { hasAccess: true, role: parsed.role, adminRole: parsed.admin_role || 'admin' };
   } catch (e) {
@@ -727,7 +758,6 @@ const ProductManagement: React.FC = () => {
   const [authError, setAuthError] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
-  // Check authentication and fetch data
   useEffect(() => {
     const authCheck = checkAdminAccess();
     
@@ -740,7 +770,6 @@ const ProductManagement: React.FC = () => {
     fetchData();
   }, []);
 
-  // Auto-dismiss success messages
   useEffect(() => {
     if (successMessage) {
       const timer = setTimeout(() => setSuccessMessage(null), 5000);
@@ -755,7 +784,6 @@ const ProductManagement: React.FC = () => {
     try {
       console.log('🔄 Fetching data from database...');
       
-      // Fetch products and categories in parallel
       const [productsData, categoriesData] = await Promise.all([
         api.getProducts(),
         api.getCategories()
@@ -914,7 +942,6 @@ const ProductManagement: React.FC = () => {
     }
   };
 
-  // Auth error screen
   if (authError) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
@@ -938,13 +965,11 @@ const ProductManagement: React.FC = () => {
   return (
     <div className="min-h-screen bg-gray-50 py-8">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        {/* Header */}
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-900 mb-2">Product Management</h1>
           <p className="text-gray-600">Manage your products and categories from the database</p>
         </div>
 
-        {/* Success Message */}
         {successMessage && (
           <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-lg flex items-center justify-between">
             <div className="flex items-center">
@@ -955,16 +980,12 @@ const ProductManagement: React.FC = () => {
               </div>
               <p className="text-green-800 font-medium">{successMessage}</p>
             </div>
-            <button
-              onClick={() => setSuccessMessage(null)}
-              className="text-green-600 hover:text-green-800"
-            >
+            <button onClick={() => setSuccessMessage(null)} className="text-green-600 hover:text-green-800">
               <X className="w-5 h-5" />
             </button>
           </div>
         )}
 
-        {/* Error Message */}
         {error && (
           <div className="mb-6 p-4 bg-yellow-50 border border-yellow-200 rounded-lg flex items-center justify-between">
             <div className="flex items-start">
@@ -974,16 +995,12 @@ const ProductManagement: React.FC = () => {
                 <p className="text-yellow-700 text-sm mt-1">{error}</p>
               </div>
             </div>
-            <button
-              onClick={() => setError(null)}
-              className="text-yellow-600 hover:text-yellow-800"
-            >
+            <button onClick={() => setError(null)} className="text-yellow-600 hover:text-yellow-800">
               <X className="w-5 h-5" />
             </button>
           </div>
         )}
 
-        {/* Action Bar */}
         {(activeTab === 'products' || activeTab === 'categories') && (
           <div className="mb-6 flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
             <div className="relative flex-1 max-w-md">
@@ -1034,7 +1051,6 @@ const ProductManagement: React.FC = () => {
           </div>
         )}
 
-        {/* Tabs */}
         {(activeTab === 'products' || activeTab === 'categories') && (
           <div className="flex border-b border-gray-200 mb-6">
             <button
@@ -1066,7 +1082,6 @@ const ProductManagement: React.FC = () => {
           </div>
         )}
 
-        {/* Loading State */}
         {isLoading && (activeTab === 'products' || activeTab === 'categories') && (
           <div className="flex items-center justify-center py-16 bg-white rounded-lg shadow">
             <div className="text-center">
@@ -1076,7 +1091,6 @@ const ProductManagement: React.FC = () => {
           </div>
         )}
 
-        {/* Content */}
         {!isLoading && activeTab === 'products' && (
           <ProductsTable
             products={products}
