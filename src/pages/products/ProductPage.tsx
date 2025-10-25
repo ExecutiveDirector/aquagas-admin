@@ -53,27 +53,46 @@ const getAuthHeaders = () => {
 const api = {
   // Products - FIXED to handle multiple response formats
   getProducts: async (page = 1, limit = 100) => {
-    const response = await fetch(`${API_BASE_URL}/v1/admin/products?page=${page}&limit=${limit}`, {
-      headers: getAuthHeaders()
-    });
-    if (!response.ok) throw new Error(`Failed to fetch products: ${response.statusText}`);
-    const data = await response.json();
-    console.log('📦 Raw products response:', data);
-    
-    // Handle multiple possible response formats
-    let products = [];
-    if (Array.isArray(data)) {
-      products = data;
-    } else if (data.products && Array.isArray(data.products)) {
-      products = data.products;
-    } else if (data.data && Array.isArray(data.data)) {
-      products = data.data;
-    } else if (data.data && data.data.products) {
-      products = data.data.products;
+    try {
+      const response = await fetch(`${API_BASE_URL}/v1/admin/products?page=${page}&limit=${limit}`, {
+        headers: getAuthHeaders()
+      });
+      
+      console.log('📦 Products response status:', response.status);
+      
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('📦 Products error response:', errorText);
+        throw new Error(`Failed to fetch products: ${response.status} ${response.statusText}`);
+      }
+      
+      const data = await response.json();
+      console.log('📦 Raw products response:', data);
+      
+      // Handle multiple possible response formats
+      let products = [];
+      if (Array.isArray(data)) {
+        products = data;
+      } else if (data.products && Array.isArray(data.products)) {
+        products = data.products;
+      } else if (data.data && Array.isArray(data.data)) {
+        products = data.data;
+      } else if (data.data && data.data.products) {
+        products = data.data.products;
+      } else if (data.success && data.data) {
+        products = Array.isArray(data.data) ? data.data : [];
+      } else {
+        console.warn('📦 Unexpected products response format:', data);
+        products = [];
+      }
+      
+      console.log('📦 Extracted products:', products.length);
+      return products;
+    } catch (error) {
+      console.error('📦 Products fetch error:', error);
+      // Return empty array instead of throwing to prevent app crash
+      return [];
     }
-    
-    console.log('📦 Extracted products:', products.length);
-    return products;
   },
 
   createProduct: async (productData: Partial<Product>) => {
@@ -789,16 +808,20 @@ const ProductManagement: React.FC = () => {
         api.getCategories()
       ]);
 
-      setProducts(productsData);
-      setCategories(categoriesData);
-      
-      console.log('✅ Data loaded:', {
+      console.log('📊 Fetched data:', {
         products: productsData.length,
         categories: categoriesData.length
       });
 
+      setProducts(productsData);
+      setCategories(categoriesData);
+      
+      console.log('✅ Data loaded successfully');
+
       if (productsData.length === 0 && categoriesData.length === 0) {
         setError('No data found. The database may be empty. Start by adding categories and products.');
+      } else if (productsData.length === 0 && categoriesData.length > 0) {
+        setError('No products found. You have categories but no products yet. Click "Add Product" to create your first product.');
       }
     } catch (err: any) {
       console.error('❌ Fetch error:', err);
