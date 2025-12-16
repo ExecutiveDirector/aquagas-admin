@@ -2,12 +2,26 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { getDashboardStats } from "../../services/api";
 import { listOrders } from "../../services/orderService";
+import {
+  LineChart,
+  Line,
+  BarChart,
+  Bar,
+  PieChart,
+  Pie,
+  Cell,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  Legend,
+  ResponsiveContainer,
+} from "recharts";
 
 interface DashboardStats {
   users: number;
   vendors: number;
   riders: number;
-  orders: number;
   todayRevenue: number;
   totalRevenue?: number;
   pendingOrders?: number;
@@ -16,7 +30,6 @@ interface DashboardStats {
     users?: number[];
     vendors?: number[];
     riders?: number[];
-    orders?: number[];
     todayRevenue?: number[];
   };
 }
@@ -26,19 +39,29 @@ interface Order {
   customerName: string;
   vendorName: string;
   totalAmount: number;
-  status: string;
+  status: "pending" | "assigned" | "completed" | "cancelled";
   createdAt: string;
 }
 
+const ORDER_TABS = ["new", "pending", "assigned", "completed", "cancelled"] as const;
+type OrderTab = typeof ORDER_TABS[number];
+
 export default function AdminHome() {
   const [stats, setStats] = useState<DashboardStats | null>(null);
-  const [orders, setOrders] = useState<Order[]>([]);
+  const [ordersByStatus, setOrdersByStatus] = useState<Record<OrderTab, Order[]>>({
+    new: [],
+    pending: [],
+    assigned: [],
+    completed: [],
+    cancelled: [],
+  });
+  const [activeTab, setActiveTab] = useState<OrderTab>("new");
   const [loading, setLoading] = useState(true);
+  const [orderLoading, setOrderLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [lastUpdated, setLastUpdated] = useState<string | null>(null);
   const [autoRefresh, setAutoRefresh] = useState<boolean>(true);
   const [isPolling, setIsPolling] = useState<boolean>(false);
-  const [orderLoading, setOrderLoading] = useState<boolean>(false);
 
   const abortRef = useRef<AbortController | null>(null);
   const mountedRef = useRef(true);
@@ -51,7 +74,7 @@ export default function AdminHome() {
     };
   }, []);
 
-  // ========================= Fetch Stats =========================
+  // ========================= Fetch Dashboard Stats =========================
   const fetchStats = useCallback(async () => {
     abortRef.current?.abort();
     const controller = new AbortController();
@@ -61,13 +84,13 @@ export default function AdminHome() {
     setError(null);
 
     try {
-      const data = await getDashboardStats({ signal: controller.signal } as any);
+      const data = await getDashboardStats({ signal: controller.signal });
       if (!mountedRef.current) return;
       setStats(data);
       setLastUpdated(new Date().toISOString());
     } catch (err: any) {
       if (err?.name === "AbortError") return;
-      console.error("AdminHome fetch error:", err);
+      console.error("Fetch stats error:", err);
       const message =
         err?.response?.data?.error ||
         err?.response?.data?.message ||
@@ -79,39 +102,78 @@ export default function AdminHome() {
     }
   }, []);
 
-  // ========================= Fetch Orders =========================
-  const fetchOrders = useCallback(async () => {
+  // ========================= Fetch All Orders by Status =========================
+  const fetchAllOrders = useCallback(async () => {
     setOrderLoading(true);
     try {
-      const res = await listOrders(1, 5, { status: "pending" });
-      if (!mountedRef.current) return;
-      setOrders(res?.data || res || []);
+      // Fetch multiple pages/statuses in parallel – adjust based on your actual API capabilities
+      const [pendingRes, assignedRes, completedRes, cancelledRes] = await Promise.all([
+        listOrders(1, 30, { status: "pending" }),
+        listOrders(1, 30, { status: "assigned" }),
+        listOrders(1, 30, { status: "completed" }),
+        listOrders(1, 30, { status: "cancelled" }),
+      ]);
+
+      const allOrders: Order[] = [
+        ...(pendingRes?.data || []),
+        ...(assignedRes?.data || []),
+        ...(completedRes?.data || []),
+        ...(cancelledRes?.data || []),
+      ];
+
+      const now = Date.now();
+      const fiveMinutesAgo = now - 5 * 60 * 1000;
+
+      const categorized: Record<OrderTab, Order[]> = {
+        new: [],
+        pending: [],
+        assigned: [],
+        completed: [],
+        cancelled: [],
+      };
+
+      allOrders.forEach((order) => {
+        const createdTime = new Date(order.createdAt).getTime();
+
+        if (createdTime > fiveMinutesAgo) {
+          categorized.new.push(order);
+        }
+
+        if (order.status === "pending") categorized.pending.push(order);
+        else if (order.status === "assigned") categorized.assigned.push(order);
+        else if (order.status === "completed") categorized.completed.push(order);
+        else if (order.status === "cancelled") categorized.cancelled.push(order);
+      });
+
+      if (mountedRef.current) {
+        setOrdersByStatus(categorized);
+      }
     } catch (err: any) {
       console.error("Failed to load orders:", err);
     } finally {
-      setOrderLoading(false);
+      if (mountedRef.current) setOrderLoading(false);
     }
   }, []);
 
   // Initial load
   useEffect(() => {
     fetchStats();
-    fetchOrders();
-  }, [fetchStats, fetchOrders]);
+    fetchAllOrders();
+  }, [fetchStats, fetchAllOrders]);
 
-  // Auto-refresh polling
+  // Auto-refresh
   useEffect(() => {
     if (!autoRefresh) return;
     setIsPolling(true);
-    const interval = window.setInterval(() => {
+    const interval = setInterval(() => {
       fetchStats();
-      fetchOrders();
+      fetchAllOrders();
     }, 60_000);
     return () => {
       clearInterval(interval);
       setIsPolling(false);
     };
-  }, [autoRefresh, fetchStats, fetchOrders]);
+  }, [autoRefresh, fetchStats, fetchAllOrders]);
 
   // ========================= Count Up Animation =========================
   const useCountUp = (value?: number, duration = 600) => {
@@ -135,10 +197,7 @@ export default function AdminHome() {
         const pct = Math.min(1, elapsed / duration);
         const next = Math.round((fromRef.current + (value - fromRef.current) * pct) * 100) / 100;
         setDisplay(next);
-
-        if (pct < 1) {
-          rafRef.current = requestAnimationFrame(step);
-        }
+        if (pct < 1) rafRef.current = requestAnimationFrame(step);
       };
 
       rafRef.current = requestAnimationFrame(step);
@@ -152,7 +211,7 @@ export default function AdminHome() {
     return display;
   };
 
-  // ========================= Sparkline Component =========================
+  // ========================= Sparkline =========================
   const Sparkline = ({ points, color = "blue" }: { points?: number[]; color?: string }) => {
     if (!points || points.length === 0) return <div className="text-xs opacity-50">No data</div>;
 
@@ -172,7 +231,7 @@ export default function AdminHome() {
 
     const fillPath = `\( {path} L \){w} \( {h} L 0 \){h} Z`;
 
-    const colorMap = {
+    const colorMap: Record<string, string> = {
       blue: "text-blue-500",
       green: "text-green-500",
       purple: "text-purple-500",
@@ -196,7 +255,7 @@ export default function AdminHome() {
     );
   };
 
-  // ========================= StatCard Component =========================
+  // ========================= StatCard =========================
   const StatCard = ({
     title,
     value,
@@ -213,7 +272,7 @@ export default function AdminHome() {
     icon: string;
   }) => {
     const animated = useCountUp(value);
-    const accentMap = {
+    const accentMap: Record<string, string> = {
       blue: "bg-blue-500/10 text-blue-600 dark:bg-blue-500/20",
       green: "bg-green-500/10 text-green-600 dark:bg-green-500/20",
       purple: "bg-purple-500/10 text-purple-600 dark:bg-purple-500/20",
@@ -247,7 +306,6 @@ export default function AdminHome() {
     );
   };
 
-  // ========================= Skeleton =========================
   const StatSkeleton = () => (
     <div className="rounded-2xl bg-white dark:bg-gray-800 p-6 shadow-sm border border-gray-200 dark:border-gray-700 animate-pulse">
       <div className="h-4 w-32 bg-gray-200 dark:bg-gray-700 rounded mb-3" />
@@ -259,10 +317,12 @@ export default function AdminHome() {
   // ========================= Status Badge =========================
   const StatusBadge = ({ status }: { status: string }) => {
     const colorMap: Record<string, string> = {
-      pending: "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400",
-      completed: "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400",
-      cancelled: "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400",
+      pending: "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300",
+      assigned: "bg-indigo-100 text-indigo-800 dark:bg-indigo-900/30 dark:text-indigo-300",
+      completed: "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300",
+      cancelled: "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300",
     };
+
     return (
       <span
         className={`px-3 py-1 text-xs font-medium rounded-full ${
@@ -274,50 +334,73 @@ export default function AdminHome() {
     );
   };
 
-  // ========================= Error Banner =========================
-  const ErrorBanner = ({ message }: { message: string }) => (
-    <div className="bg-red-50 dark:bg-red-900/20 border-l-4 border-red-500 p-4 rounded-lg" role="alert">
-      <div className="flex items-start gap-3">
-        <svg className="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth="2"
-            d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-          />
-        </svg>
-        <div>
-          <div className="font-semibold text-red-800 dark:text-red-300">Unable to load dashboard</div>
-          <div className="text-sm text-red-700 dark:text-red-400">{message}</div>
-          <div className="mt-3 flex gap-3">
-            <button
-              onClick={() => {
-                fetchStats();
-                fetchOrders();
-              }}
-              className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 text-sm"
-            >
-              Retry
-            </button>
-            <button
-              onClick={() => setAutoRefresh((s) => !s)}
-              className="px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 text-sm"
-            >
-              {autoRefresh ? "Stop auto-refresh" : "Enable auto-refresh"}
-            </button>
+  // ========================= Order Card =========================
+  const OrderCard = ({ order }: { order: Order }) => {
+    const minsAgo = Math.floor((Date.now() - new Date(order.createdAt).getTime()) / 60000);
+    const timeAgo = minsAgo < 60 ? `\( {minsAgo}m ago` : ` \){Math.floor(minsAgo / 60)}h ago`;
+
+    return (
+      <div className="flex-shrink-0 w-80 bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-5 hover:shadow-md transition">
+        <div className="flex items-start justify-between mb-4">
+          <div className="flex items-center gap-4">
+            <div className="w-12 h-12 rounded-full bg-gradient-to-br from-indigo-400 to-purple-400 flex items-center justify-center text-white text-lg font-bold shadow">
+              {order.customerName.charAt(0).toUpperCase()}
+            </div>
+            <div>
+              <p className="font-semibold text-gray-900 dark:text-white">{order.customerName}</p>
+              <p className="text-sm text-gray-500 dark:text-gray-400">{order.vendorName}</p>
+            </div>
+          </div>
+          <StatusBadge status={order.status} />
+        </div>
+
+        <div className="flex items-end justify-between">
+          <div>
+            <p className="text-2xl font-bold text-gray-900 dark:text-white">
+              ${order.totalAmount.toFixed(2)}
+            </p>
+            <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">{timeAgo}</p>
+          </div>
+          <div className="text-right">
+            <p className="text-xs text-gray-500">Order ID</p>
+            <p className="font-mono text-xs text-gray-600 dark:text-gray-300">
+              {order.id.slice(0, 10)}...
+            </p>
           </div>
         </div>
       </div>
-    </div>
-  );
-
-  // ========================= Manual Refresh =========================
-  const onManualRefresh = () => {
-    fetchStats();
-    fetchOrders();
+    );
   };
 
-  // ========================= Render =========================
+  // ========================= Chart Data (Real from API) =========================
+  const weeklyRevenueData = stats?.sparklines?.todayRevenue?.map((rev, i) => ({
+    day: ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"][i] || `Day ${i + 1}`,
+    revenue: rev,
+  })) || [];
+
+  const ordersByStatusData = [
+    { status: "Pending", count: ordersByStatus.pending.length },
+    { status: "Assigned", count: ordersByStatus.assigned.length },
+    { status: "Completed", count: ordersByStatus.completed.length },
+    { status: "Cancelled", count: ordersByStatus.cancelled.length },
+  ];
+
+  const revenuePieData = [
+    { name: "Today", value: stats?.todayRevenue || 0, fill: "#f97316" },
+    {
+      name: "Previous",
+      value: stats?.totalRevenue ? stats.totalRevenue - (stats.todayRevenue || 0) : 0,
+      fill: "#e2e8f0",
+    },
+  ];
+
+  const onManualRefresh = () => {
+    fetchStats();
+    fetchAllOrders();
+  };
+
+  const newOrdersCount = ordersByStatus.new.length;
+
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 py-8 px-4 sm:px-6 lg:px-8">
       <div className="max-w-7xl mx-auto space-y-8">
@@ -325,7 +408,9 @@ export default function AdminHome() {
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
             <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Admin Dashboard</h1>
-            <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">Platform overview • Real-time insights</p>
+            <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">
+              Platform overview • Real-time insights
+            </p>
           </div>
           <div className="flex items-center gap-4">
             <div className="text-right text-sm">
@@ -336,7 +421,9 @@ export default function AdminHome() {
                     : "bg-gray-100 text-gray-700 dark:bg-gray-800"
                 }`}
               >
-                <span className={`w-2 h-2 rounded-full ${autoRefresh ? "bg-green-500 animate-pulse" : "bg-gray-400"}`} />
+                <span
+                  className={`w-2 h-2 rounded-full ${autoRefresh ? "bg-green-500 animate-pulse" : "bg-gray-400"}`}
+                />
                 {isPolling ? "Auto-refresh on" : "Auto-refresh off"}
               </div>
               {lastUpdated && (
@@ -361,9 +448,26 @@ export default function AdminHome() {
           </div>
         </div>
 
-        {error && <ErrorBanner message={error} />}
+        {error && (
+          <div className="bg-red-50 dark:bg-red-900/20 border-l-4 border-red-500 p-4 rounded-lg">
+            <div className="flex items-start gap-3">
+              <svg className="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth="2"
+                  d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                />
+              </svg>
+              <div>
+                <div className="font-semibold text-red-800 dark:text-red-300">Unable to load data</div>
+                <div className="text-sm text-red-700 dark:text-red-400">{error}</div>
+              </div>
+            </div>
+          </div>
+        )}
 
-        {/* Primary Stats Grid */}
+        {/* Primary Stats */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           {loading && !stats ? (
             Array.from({ length: 4 }).map((_, i) => <StatSkeleton key={i} />)
@@ -412,78 +516,165 @@ export default function AdminHome() {
           ) : (
             <>
               {stats?.totalRevenue !== undefined && (
-                <StatCard title="Total Revenue" value={stats.totalRevenue} subtitle="All time • USD" accent="teal" icon="📈" />
-              )}
-              {stats?.pendingOrders !== undefined && (
-                <StatCard title="Pending Orders" value={stats.pendingOrders} subtitle="Awaiting action" accent="yellow" icon="⏳" />
-              )}
-              {stats?.completedOrders !== undefined && (
                 <StatCard
-                  title="Completed Orders"
-                  value={stats.completedOrders}
-                  subtitle="Delivered today"
-                  accent="green"
-                  icon="✅"
+                  title="Total Revenue"
+                  value={stats.totalRevenue}
+                  subtitle="All time • USD"
+                  accent="teal"
+                  icon="📈"
                 />
               )}
+              <StatCard
+                title="Pending Orders"
+                value={ordersByStatus.pending.length}
+                subtitle="Awaiting action"
+                accent="yellow"
+                icon="⏳"
+              />
+              <StatCard
+                title="Completed Today"
+                value={ordersByStatus.completed.length}
+                subtitle="Delivered"
+                accent="green"
+                icon="✅"
+              />
             </>
           )}
         </div>
 
-        {/* Recent Orders Table */}
+        {/* Performance Charts */}
+        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
+          <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-6">
+            Performance Overview
+          </h2>
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <div className="lg:col-span-2">
+              <h3 className="text-sm font-medium text-gray-600 dark:text-gray-400 mb-4">
+                Revenue Trend (Last 7 Days)
+              </h3>
+              <ResponsiveContainer width="100%" height={300}>
+                <LineChart data={weeklyRevenueData}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                  <XAxis dataKey="day" />
+                  <YAxis />
+                  <Tooltip formatter={(value) => `\[ {Number(value).toFixed(2)}`} />
+                  <Line
+                    type="monotone"
+                    dataKey="revenue"
+                    stroke="#f97316"
+                    strokeWidth={3}
+                    dot={{ fill: "#f97316" }}
+                  />
+                </LineChart>
+              </ResponsiveContainer>
+            </div>
+
+            <div>
+              <h3 className="text-sm font-medium text-gray-600 dark:text-gray-400 mb-4">
+                Orders by Status
+              </h3>
+              <ResponsiveContainer width="100%" height={300}>
+                <BarChart data={ordersByStatusData}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                  <XAxis dataKey="status" />
+                  <YAxis />
+                  <Tooltip />
+                  <Bar dataKey="count" fill="#6366f1" radius={[8, 8, 0, 0]} />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+
+            <div className="lg:col-span-3 flex justify-center">
+              <div className="w-full max-w-xs">
+                <h3 className="text-sm font-medium text-gray-600 dark:text-gray-400 mb-4 text-center">
+                  Revenue Share
+                </h3>
+                <ResponsiveContainer width="100%" height={260}>
+                  <PieChart>
+                    <Pie
+                      data={revenuePieData}
+                      cx="50%"
+                      cy="50%"
+                      innerRadius={60}
+                      outerRadius={100}
+                      paddingAngle={5}
+                      dataKey="value"
+                    >
+                      {revenuePieData.map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={entry.fill} />
+                      ))}
+                    </Pie>
+                    <Tooltip formatter={(value) => ` \]{Number(value).toFixed(2)}`} />
+                    <Legend />
+                  </PieChart>
+                </ResponsiveContainer>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Live Orders - Swipeable Tabs & Horizontal Cards */}
         <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
-          <div className="p-6 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between">
-            <h2 className="text-xl font-semibold text-gray-900 dark:text-white">Recent Pending Orders</h2>
-            <button onClick={fetchOrders} className="text-sm text-indigo-600 hover:text-indigo-700 font-medium">
-              Refresh {orderLoading && "• Loading..."}
-            </button>
+          <div className="p-6 border-b border-gray-200 dark:border-gray-700">
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-xl font-semibold text-gray-900 dark:text-white">Live Orders</h2>
+              <button
+                onClick={fetchAllOrders}
+                className="text-sm text-indigo-600 hover:text-indigo-700 font-medium"
+              >
+                Refresh {orderLoading && "• Loading..."}
+              </button>
+            </div>
+
+            {/* Tabs */}
+            <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
+              {ORDER_TABS.map((tab) => {
+                const count = ordersByStatus[tab].length;
+                const isActive = activeTab === tab;
+                const hasNew = tab === "new" && count > 0;
+
+                return (
+                  <button
+                    key={tab}
+                    onClick={() => setActiveTab(tab)}
+                    className={`relative px-5 py-2.5 rounded-lg font-medium capitalize transition-all flex items-center gap-2 whitespace-nowrap ${
+                      isActive
+                        ? "bg-indigo-600 text-white shadow-md"
+                        : "text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700"
+                    }`}
+                  >
+                    {tab === "new" ? "New Orders" : tab}
+                    {count > 0 && (
+                      <span
+                        className={`px-2 py-0.5 text-xs rounded-full ${
+                          isActive ? "bg-white/20" : "bg-gray-200 dark:bg-gray-600"
+                        }`}
+                      >
+                        {count}
+                      </span>
+                    )}
+                    {hasNew && (
+                      <span className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full animate-pulse ring-4 ring-red-500/30" />
+                    )}
+                  </button>
+                );
+              })}
+            </div>
           </div>
 
-          <div className="overflow-x-auto">
+          <div className="p-6">
             {orderLoading ? (
-              <div className="p-12 text-center text-gray-500 dark:text-gray-400">Loading orders...</div>
-            ) : orders.length === 0 ? (
-              <div className="p-12 text-center text-gray-500 dark:text-gray-400">No pending orders.</div>
+              <div className="text-center py-12 text-gray-500 dark:text-gray-400">Loading orders...</div>
+            ) : ordersByStatus[activeTab].length === 0 ? (
+              <div className="text-center py-12 text-gray-500 dark:text-gray-400">
+                {activeTab === "new" ? "No new orders right now" : `No ${activeTab} orders`}
+              </div>
             ) : (
-              <table className="w-full text-sm">
-                <thead className="bg-gray-50 dark:bg-gray-900/50">
-                  <tr>
-                    <th className="py-4 px-6 text-left font-medium text-gray-700 dark:text-gray-300">Order ID</th>
-                    <th className="py-4 px-6 text-left font-medium text-gray-700 dark:text-gray-300">Customer</th>
-                    <th className="py-4 px-6 text-left font-medium text-gray-700 dark:text-gray-300">Vendor</th>
-                    <th className="py-4 px-6 text-left font-medium text-gray-700 dark:text-gray-300">Amount</th>
-                    <th className="py-4 px-6 text-left font-medium text-gray-700 dark:text-gray-300">Status</th>
-                    <th className="py-4 px-6 text-left font-medium text-gray-700 dark:text-gray-300">Date</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
-                  {orders.map((o) => (
-                    <tr key={o.id} className="hover:bg-gray-50 dark:hover:bg-gray-700/50 transition">
-                      <td className="py-4 px-6 font-mono text-gray-900 dark:text-white">
-                        {o.id.slice(0, 10)}...
-                      </td>
-                      <td className="py-4 px-6">
-                        <div className="flex items-center gap-3">
-                          <div className="w-9 h-9 rounded-full bg-gradient-to-br from-indigo-400 to-purple-400 flex items-center justify-center text-white text-sm font-bold shadow-sm">
-                            {o.customerName.charAt(0).toUpperCase()}
-                          </div>
-                          <span className="font-medium text-gray-900 dark:text-white">{o.customerName}</span>
-                        </div>
-                      </td>
-                      <td className="py-4 px-6 text-gray-700 dark:text-gray-300">{o.vendorName}</td>
-                      <td className="py-4 px-6 font-semibold text-gray-900 dark:text-white">
-                        ${o.totalAmount.toFixed(2)}
-                      </td>
-                      <td className="py-4 px-6">
-                        <StatusBadge status={o.status.toLowerCase()} />
-                      </td>
-                      <td className="py-4 px-6 text-xs text-gray-500 dark:text-gray-400">
-                        {new Date(o.createdAt).toLocaleString()}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+              <div className="flex gap-6 overflow-x-auto pb-4 snap-x snap-mandatory scrollbar-hide">
+                {ordersByStatus[activeTab].map((order) => (
+                  <OrderCard key={order.id} order={order} />
+                ))}
+              </div>
             )}
           </div>
         </div>
