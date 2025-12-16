@@ -301,6 +301,28 @@ export default function AdminHome() {
     return matchesSearch && matchesFilter;
   });
 
+  // Show loading skeleton on initial load
+  if (loading && !stats && !error) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-50 p-6">
+        <div className="max-w-7xl mx-auto space-y-6">
+          <div className="flex items-center justify-between">
+            <div className="space-y-2">
+              <div className="h-10 w-64 bg-gray-200 rounded-lg animate-pulse" />
+              <div className="h-4 w-96 bg-gray-200 rounded animate-pulse" />
+            </div>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            <StatSkeleton /> <StatSkeleton /> <StatSkeleton /> <StatSkeleton />
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <StatSkeleton /> <StatSkeleton /> <StatSkeleton />
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-50 p-6">
       <div className="max-w-7xl mx-auto space-y-6">
@@ -355,42 +377,46 @@ export default function AdminHome() {
             <>
               <StatSkeleton /> <StatSkeleton /> <StatSkeleton /> <StatSkeleton />
             </>
-          ) : (
+          ) : stats ? (
             <>
               <StatCard 
                 icon={Users} 
                 title="Total Users" 
-                value={stats?.users} 
-                spark={stats?.sparklines?.users} 
+                value={stats.users} 
+                spark={stats.sparklines?.users} 
                 accent="blue" 
-                trend={stats?.sparklines?.users && stats.sparklines.users[stats.sparklines.users.length - 1] > stats.sparklines.users[0] ? "up" : "down"} 
+                trend={stats.sparklines?.users && stats.sparklines.users.length >= 2 && stats.sparklines.users[stats.sparklines.users.length - 1] > stats.sparklines.users[0] ? "up" : "down"} 
               />
               <StatCard 
                 icon={Store} 
                 title="Active Vendors" 
-                value={stats?.vendors} 
-                spark={stats?.sparklines?.vendors} 
+                value={stats.vendors} 
+                spark={stats.sparklines?.vendors} 
                 accent="green" 
-                trend={stats?.sparklines?.vendors && stats.sparklines.vendors[stats.sparklines.vendors.length - 1] > stats.sparklines.vendors[0] ? "up" : "down"} 
+                trend={stats.sparklines?.vendors && stats.sparklines.vendors.length >= 2 && stats.sparklines.vendors[stats.sparklines.vendors.length - 1] > stats.sparklines.vendors[0] ? "up" : "down"} 
               />
               <StatCard 
                 icon={Bike} 
                 title="Delivery Riders" 
-                value={stats?.riders} 
-                spark={stats?.sparklines?.riders} 
+                value={stats.riders} 
+                spark={stats.sparklines?.riders} 
                 accent="purple" 
-                trend={stats?.sparklines?.riders && stats.sparklines.riders[stats.sparklines.riders.length - 1] > stats.sparklines.riders[0] ? "up" : "down"} 
+                trend={stats.sparklines?.riders && stats.sparklines.riders.length >= 2 && stats.sparklines.riders[stats.sparklines.riders.length - 1] > stats.sparklines.riders[0] ? "up" : "down"} 
               />
               <StatCard 
                 icon={DollarSign} 
                 title="Today's Revenue" 
-                value={stats?.todayRevenue} 
+                value={stats.todayRevenue} 
                 subtitle="USD" 
-                spark={stats?.sparklines?.todayRevenue} 
+                spark={stats.sparklines?.todayRevenue} 
                 accent="orange" 
-                trend={stats?.sparklines?.todayRevenue && stats.sparklines.todayRevenue[stats.sparklines.todayRevenue.length - 1] > stats.sparklines.todayRevenue[0] ? "up" : "down"} 
+                trend={stats.sparklines?.todayRevenue && stats.sparklines.todayRevenue.length >= 2 && stats.sparklines.todayRevenue[stats.sparklines.todayRevenue.length - 1] > stats.sparklines.todayRevenue[0] ? "up" : "down"} 
               />
             </>
+          ) : (
+            <div className="col-span-4 text-center py-12">
+              <p className="text-gray-500">No data available</p>
+            </div>
           )}
         </div>
 
@@ -400,9 +426,9 @@ export default function AdminHome() {
             <>
               <StatSkeleton /> <StatSkeleton /> <StatSkeleton />
             </>
-          ) : (
+          ) : stats ? (
             <>
-              {stats?.totalRevenue !== undefined && (
+              {stats.totalRevenue !== undefined && (
                 <div className="bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-2xl p-6 text-white shadow-xl">
                   <div className="flex items-center justify-between mb-4">
                     <DollarSign size={32} className="opacity-80" />
@@ -414,7 +440,7 @@ export default function AdminHome() {
                 </div>
               )}
 
-              {stats?.pendingOrders !== undefined && (
+              {stats.pendingOrders !== undefined && (
                 <div className="bg-gradient-to-br from-amber-500 to-amber-600 rounded-2xl p-6 text-white shadow-xl">
                   <div className="flex items-center justify-between mb-4">
                     <Clock size={32} className="opacity-80" />
@@ -426,7 +452,7 @@ export default function AdminHome() {
                 </div>
               )}
 
-              {stats?.completedOrders !== undefined && (
+              {stats.completedOrders !== undefined && (
                 <div className="bg-gradient-to-br from-green-500 to-green-600 rounded-2xl p-6 text-white shadow-xl">
                   <div className="flex items-center justify-between mb-4">
                     <CheckCircle size={32} className="opacity-80" />
@@ -438,7 +464,7 @@ export default function AdminHome() {
                 </div>
               )}
             </>
-          )}
+          ) : null}
         </div>
 
         {/* Quick Actions */}
