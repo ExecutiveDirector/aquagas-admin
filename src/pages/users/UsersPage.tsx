@@ -8,7 +8,6 @@ import FilterBar from "./components/FilterBar";
 import ExportButton from "./components/ExportButton";
 import toast from "react-hot-toast";
 
-// ✅ Import services directly (no props needed)
 import {
   listUsers,
   createUser,
@@ -74,55 +73,37 @@ const UsersPage: React.FC = () => {
       setError(null);
 
       if (selectedUser) {
-        // Update existing user
         const updateData: Partial<UpdateUserData> = {
           fullName: data.fullName,
           email: data.email,
           phone_number: data.phone_number,
         };
-        
-        // Handle role with proper type casting
         if (data.role) {
           const roleLower = data.role.toLowerCase();
-          if (roleLower === 'admin' || roleLower === 'vendor' || roleLower === 'rider' || roleLower === 'customer') {
+          if (["admin", "vendor", "rider", "customer"].includes(roleLower)) {
             updateData.role = roleLower as 'admin' | 'vendor' | 'rider' | 'customer';
           }
         }
-        
-        // Handle status with proper type casting
         if (data.status) {
           const statusLower = data.status.toLowerCase();
-          if (statusLower === 'active' || statusLower === 'inactive') {
+          if (["active", "inactive"].includes(statusLower)) {
             updateData.status = statusLower as 'active' | 'inactive';
           }
         }
-        
-        if (data.password) {
-          updateData.password = data.password;
-        }
-        
+        if (data.password) updateData.password = data.password;
         await updateUser(selectedUser.id, updateData);
         toast.success("User updated successfully");
       } else {
-        // Create new user
         const { fullName, email, phone_number, password, role, status } = data;
         if (!fullName || (!email && !phone_number) || !password || !role) {
           throw new Error(
             "Missing required fields: fullName, email or phone_number, password, and role are required"
           );
         }
-        
         const roleLower = role.toLowerCase();
         const statusLower = (status || "active").toLowerCase();
-        
-        if (roleLower !== 'admin' && roleLower !== 'vendor' && roleLower !== 'rider' && roleLower !== 'customer') {
-          throw new Error("Invalid role specified");
-        }
-        
-        if (statusLower !== 'active' && statusLower !== 'inactive') {
-          throw new Error("Invalid status specified");
-        }
-        
+        if (!["admin","vendor","rider","customer"].includes(roleLower)) throw new Error("Invalid role");
+        if (!["active","inactive"].includes(statusLower)) throw new Error("Invalid status");
         await createUser({
           fullName,
           email,
@@ -171,7 +152,7 @@ const UsersPage: React.FC = () => {
   const handleToggleStatus = async (user: User) => {
     try {
       setError(null);
-      const newStatus = user.status === "active" || user.status === "Active" ? "inactive" : "active";
+      const newStatus = user.status.toLowerCase() === "active" ? "inactive" : "active";
       await toggleUserStatus(user.id, newStatus as 'active' | 'inactive');
       await fetchUsers();
       toast.success("User status updated");
@@ -183,8 +164,8 @@ const UsersPage: React.FC = () => {
   };
 
   return (
-    <div className="container mx-auto p-6 min-h-screen bg-gray-100 dark:bg-gray-900">
-      <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-6">
+    <div className="container mx-auto p-6 min-h-screen bg-gray-50 dark:bg-gray-900 transition-colors">
+      <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-6 tracking-tight">
         User Management
       </h1>
 
@@ -195,15 +176,15 @@ const UsersPage: React.FC = () => {
 
       <button
         onClick={() => setShowUserModal(true)}
-        className="mb-6 bg-green-500 hover:bg-green-600 text-white font-medium py-2 px-4 rounded-xl shadow-md transition-colors"
+        className="mb-6 inline-flex items-center gap-2 bg-green-500 hover:bg-green-600 focus:ring-2 focus:ring-green-300 text-white font-medium py-2 px-4 rounded-xl shadow transition-all duration-200"
       >
         Add User
       </button>
 
       {error && (
-        <p className="text-red-500 mb-4 flex items-center">
+        <div className="bg-red-100 text-red-700 px-4 py-2 rounded-lg mb-4 flex items-center gap-2">
           <svg
-            className="w-5 h-5 mr-2"
+            className="w-5 h-5 flex-shrink-0"
             fill="none"
             stroke="currentColor"
             viewBox="0 0 24 24"
@@ -215,15 +196,15 @@ const UsersPage: React.FC = () => {
               d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
             />
           </svg>
-          {error}
-        </p>
+          <span>{error}</span>
+        </div>
       )}
 
       {loading ? (
         <div className="flex items-center justify-center h-64">
-          <div className="text-gray-600 dark:text-gray-400">
+          <span className="text-gray-600 dark:text-gray-400 text-lg animate-pulse">
             Loading users...
-          </div>
+          </span>
         </div>
       ) : (
         <UserTable
