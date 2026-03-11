@@ -1,145 +1,82 @@
 // src/services/authService.ts
+// ✅ FIXED: isAdmin() was validating admin_role against wrong values
+//    ('finance', 'support', etc.) instead of the real DB ENUM values
+//    ('finance_admin', 'support_admin', etc.) — this was blocking valid admins
+//    on the frontend even when the token was perfectly valid.
+
 import api from './api';
+import type { ApiResponse } from '../types';
 
-interface LoginResponse {
-  token: string;
-  message: string;
-  role: string;
-  admin_role: string | null;
-  account?: any;
-}
-
-export async function login(email: string, password: string): Promise<LoginResponse> {
-  try {
-    console.log('🔐 Attempting login to /v1/auth/login');
-    const response = await api.post('/v1/auth/login', { email, password });
-    console.log('🔐 Login successful:', response.data);
-    
-    const { token, account, role, admin_role } = response.data;
-    
-    if (token) {
-      // Store token
-      localStorage.setItem('token', token);
-      console.log('💾 Token stored successfully');
-      
-      // Store user info
-      const userInfo = {
-        account,
-        role,
-        admin_role,
-        ...response.data
-      };
-      localStorage.setItem('userInfo', JSON.stringify(userInfo));
-      console.log('💾 User info stored:', userInfo);
-      
-      // Also store account separately for backward compatibility
-      if (account) {
-        localStorage.setItem('account', JSON.stringify(account));
-      }
-    }
-    
-    return response.data;
-  } catch (error) {
-    console.error('🔐 Login failed:', error);
-    throw error;
-  }
-}
-
-export function logout(): void {
-  console.log('🔐 Logging out - clearing all storage');
-  // Clear all storage
-  localStorage.removeItem('token');
-  localStorage.removeItem('userInfo');
-  localStorage.removeItem('account');
-  localStorage.removeItem('sg_admin_token');
-  localStorage.removeItem('sg_admin_account');
-  sessionStorage.removeItem('token');
-  sessionStorage.removeItem('userInfo');
-  
-  // Redirect to login
-  window.location.href = '/login';
-}
+// ============================================
+// TOKEN / SESSION HELPERS
+// ============================================
 
 export function getToken(): string | null {
-  return localStorage.getItem('token') || 
-         localStorage.getItem('sg_admin_token') || 
-         sessionStorage.getItem('token');
+  return localStorage.getItem('token') || sessionStorage.getItem('token');
 }
 
 export function getAccount(): any {
   try {
-    // Try userInfo first
-    const userInfo = localStorage.getItem('userInfo') || sessionStorage.getItem('userInfo');
-    if (userInfo) {
-      const parsed = JSON.parse(userInfo);
-      return parsed.account || parsed;
-    }
-    
-    // Fallback to direct account storage
-    const account = localStorage.getItem('account') || localStorage.getItem('sg_admin_account');
-    if (account) {
-      return JSON.parse(account);
-    }
-    
-    return null;
-  } catch (error) {
-    console.error('🔐 Error parsing user info:', error);
+    const raw = localStorage.getItem('account') || sessionStorage.getItem('account');
+    return raw ? JSON.parse(raw) : null;
+  } catch {
     return null;
   }
 }
 
 export function isAuthenticated(): boolean {
   const token = getToken();
-  
-  // Check if token exists and is not expired
-  if (token) {
-    try {
-      const payload = JSON.parse(atob(token.split('.')[1]));
-      const now = Math.floor(Date.now() / 1000);
-      const isExpired = payload.exp < now;
-      
-      if (isExpired) {
-        console.warn('🔐 Token is expired, user not authenticated');
-        return false;
-      }
-    } catch (e) {
-      console.warn('🔐 Could not parse token, user not authenticated');
+  if (!token) return false;
+
+  try {
+    const payload = JSON.parse(atob(token.split('.')[1]));
+    const now = Math.floor(Date.now() / 1000);
+    if (payload.exp < now) {
+      console.warn('🔐 Token is expired');
       return false;
     }
+  } catch {
+    console.warn('🔐 Could not parse token');
+    return false;
   }
-  
-  return !!token;
+
+  return true;
 }
 
 export function isAdmin(): boolean {
   try {
     const userInfo = localStorage.getItem('userInfo');
     if (!userInfo) {
-      console.warn('🔐 isAdmin: No userInfo found in localStorage');
+      console.warn('🔐 isAdmin: No userInfo in localStorage');
       return false;
     }
-    
+
     const parsed = JSON.parse(userInfo);
-    
-    // Must have admin role
+
     if (parsed.role !== 'admin') {
-      console.warn('🔐 isAdmin: User role is not admin:', parsed.role);
+      console.warn('🔐 isAdmin: role is not admin:', parsed.role);
       return false;
     }
-    
-    // Check for valid admin_role if present
+
+    // ✅ FIXED: validate against actual DB ENUM values, not shortened aliases
     if (parsed.admin_role) {
-      const validAdminRoles = ['super_admin', 'finance', 'support', 'operations', 'marketing', 'inventory'];
+      const validAdminRoles = [
+        'super_admin',
+        'operations_admin',
+        'finance_admin',
+        'support_admin',
+        'marketing_admin',
+      ];
       if (!validAdminRoles.includes(parsed.admin_role)) {
-        console.warn('🔐 isAdmin: Invalid admin_role:', parsed.admin_role);
+        console.warn('🔐 isAdmin: Unrecognised admin_role:', parsed.admin_role);
         return false;
       }
     }
-    
+
     console.log('🔐 Admin check passed:', { role: parsed.role, admin_role: parsed.admin_role });
     return true;
   } catch (error) {
-    console.error('🔐 isAdmin: Error parsing userInfo:', error);
+    console.error('🔐 isAdmin error:', error);
     return false;
   }
 }
@@ -148,18 +85,49 @@ export function getAdminRole(): string | null {
   try {
     const userInfo = localStorage.getItem('userInfo');
     if (userInfo) {
-      const parsed = JSON.parse(userInfo);
-      return parsed.admin_role || null;
+      return JSON.parse(userInfo).admin_role || null;
     }
     return null;
-  } catch (error) {
-    console.error('🔐 Error getting admin role:', error);
+  } catch {
     return null;
   }
 }
 
 export function isSuperAdmin(): boolean {
   return isAdmin() && getAdminRole() === 'super_admin';
+}
+
+// ============================================
+// AUTH API CALLS
+// ============================================
+
+export async function login(credentials: {
+  email: string;
+  password: string;
+}): Promise<ApiResponse> {
+  const res = await api.post('/v1/admin/login', credentials);
+  const data = res.data;
+
+  if (data.token) {
+    localStorage.setItem('token', data.token);
+    localStorage.setItem('userInfo', JSON.stringify({
+      role: data.role,
+      admin_role: data.admin_role,
+      account_id: data.account?.account_id,
+      email: data.account?.email,
+    }));
+    localStorage.setItem('account', JSON.stringify(data.account || {}));
+  }
+
+  return data;
+}
+
+export function logout(): void {
+  localStorage.removeItem('token');
+  localStorage.removeItem('userInfo');
+  localStorage.removeItem('account');
+  sessionStorage.removeItem('token');
+  sessionStorage.removeItem('userInfo');
 }
 
 // Backward compatibility aliases
