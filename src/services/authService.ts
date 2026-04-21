@@ -6,7 +6,7 @@
 
 import api from './api';
 import type { ApiResponse } from '../types';
-
+import axios from 'axios';
 // ============================================
 // TOKEN / SESSION HELPERS
 // ============================================
@@ -42,7 +42,10 @@ export function isAuthenticated(): boolean {
 
   return true;
 }
-
+export const forgotPassword = async (email: string) => {
+  const res = await axios.post('/api/auth/forgot-password', { email });
+  return res.data;
+};
 export function isAdmin(): boolean {
   try {
     const userInfo = localStorage.getItem('userInfo');
