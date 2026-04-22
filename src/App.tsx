@@ -1,11 +1,11 @@
-// App.tsx
 import React from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 import { getToken, getAccount, isAuthenticated } from './services/authService';
 import { Toaster } from 'react-hot-toast';
 import Login from './pages/auth/Login';
-import AdminDashboard from './layouts/DashboardLayout'; // Import your complete AdminDashboard component
+import ForgotPassword from './pages/auth/ForgotPassword';
+import AdminDashboard from './layouts/DashboardLayout';
 
 // Protected Route wrapper
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
@@ -18,18 +18,11 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
         const token = getToken();
         const account = getAccount();
         const isAuth = isAuthenticated();
-
-        console.log('Auth check:', {
-          token: !!token,
-          account: !!account,
-          isAuth
-        });
-
+        console.log('Auth check:', { token: !!token, account: !!account, isAuth });
         if (isAuth && token && account) {
           setAuthenticated(true);
         } else {
           setAuthenticated(false);
-          // Clear any partial auth data
           localStorage.removeItem('token');
           localStorage.removeItem('userInfo');
           localStorage.removeItem('account');
@@ -43,7 +36,6 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
         setIsLoading(false);
       }
     };
-
     checkAuth();
   }, []);
 
@@ -65,14 +57,12 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
   return <>{children}</>;
 }
 
-// Public Route wrapper (redirect if already authenticated)
+// Public Route wrapper (redirect to dashboard if already authenticated)
 function PublicRoute({ children }: { children: React.ReactNode }) {
   const isAuth = isAuthenticated();
-
   if (isAuth) {
     return <Navigate to="/" replace />;
   }
-
   return <>{children}</>;
 }
 
@@ -81,27 +71,22 @@ export default function App() {
     <>
       <Routes>
         {/* Public routes */}
-        <Route 
-          path="/login" 
-          element={
-            <PublicRoute>
-              <Login />
-            </PublicRoute>
-          } 
+        <Route
+          path="/login"
+          element={<PublicRoute><Login /></PublicRoute>}
+        />
+        <Route
+          path="/forgot-password"
+          element={<PublicRoute><ForgotPassword /></PublicRoute>}
         />
 
         {/* Protected routes - AdminDashboard handles internal routing */}
-        <Route 
-          path="/*" 
-          element={
-            <ProtectedRoute>
-              <AdminDashboard />
-            </ProtectedRoute>
-          } 
+        <Route
+          path="/*"
+          element={<ProtectedRoute><AdminDashboard /></ProtectedRoute>}
         />
       </Routes>
 
-      {/* Toast notifications */}
       <Toaster
         position="top-right"
         toastOptions={{
