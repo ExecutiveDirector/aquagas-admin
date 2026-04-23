@@ -76,7 +76,7 @@ export default function Login() {
     setLoading(true);
 
     try {
-      const res: LoginResponse = await login(email, password);
+      const res: LoginResponse = await login({ email, password });
 
       if (res.role !== "admin") {
         setError("Only admin accounts are allowed");
