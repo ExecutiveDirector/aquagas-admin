@@ -42,8 +42,9 @@ export function isAuthenticated(): boolean {
 
   return true;
 }
+//  — use the same api instance as everything else
 export const forgotPassword = async (email: string) => {
-  const res = await axios.post('/api/auth/forgot-password', { email });
+  const res = await api.post('/v1/admin/forgot-password', { email });
   return res.data;
 };
 export function isAdmin(): boolean {
