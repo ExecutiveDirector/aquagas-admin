@@ -131,10 +131,11 @@ const OrdersPage: React.FC = () => {
     setError(null);
 
     try {
-      if (retryAttempt === 0) {
-        const apiTest = await testApiConnection();
-        if (!apiTest.success) throw new Error(`API test failed: ${apiTest.error}`);
-      }
+    // ❌ REMOVE THIS BLOCK — /v1/admin/test doesn't exist
+    // if (retryAttempt === 0) {
+    //   const apiTest = await testApiConnection();
+    //   if (!apiTest.success) throw new Error(`API test failed: ${apiTest.error}`);
+    // }
 
       await Promise.all([
         fetchDashboard(),
