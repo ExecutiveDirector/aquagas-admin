@@ -1,11 +1,9 @@
 import React, { useEffect, useMemo, useState } from "react";
 import type { UpdateUserData, User } from "../../types";
 
-import UserTable from "./components/UserTable";
 import UserModal from "./components/UserModal";
 import UserDetailsModal from "./components/UserDetailsModal";
 import ConfirmDeleteModal from "./components/ConfirmDeleteModal";
-import FilterBar from "./components/FilterBar";
 import ExportButton from "./components/ExportButton";
 
 import toast from "react-hot-toast";
@@ -25,7 +23,7 @@ const UsersPage: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
 
   const [showUserModal, setShowUserModal] = useState(false);
-  const [selectedUser, setSelectedUser] = useState<User | undefined>(undefined);
+  const [selectedUser, setSelectedUser] = useState<User | undefined>();
 
   const [showDetailsModal, setShowDetailsModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
@@ -34,7 +32,7 @@ const UsersPage: React.FC = () => {
   const [statusFilter, setStatusFilter] = useState("");
 
   // =========================
-  // Fetch Users
+  // FETCH USERS
   // =========================
   const fetchUsers = async () => {
     try {
@@ -45,10 +43,9 @@ const UsersPage: React.FC = () => {
 
       setUsers(response.data || []);
       setFilteredUsers(response.data || []);
-
-      toast.success("Users loaded successfully");
     } catch (err: any) {
-      const message = err?.response?.data?.error || "Failed to load users";
+      const message =
+        err?.response?.data?.error || "Failed to load users";
 
       setError(message);
       toast.error(message);
@@ -62,7 +59,7 @@ const UsersPage: React.FC = () => {
   }, []);
 
   // =========================
-  // Filter Users
+  // FILTER USERS
   // =========================
   useEffect(() => {
     let filtered = [...users];
@@ -70,42 +67,41 @@ const UsersPage: React.FC = () => {
     if (searchTerm) {
       filtered = filtered.filter(
         (u) =>
-          u.fullName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          (u.email?.toLowerCase() || "").includes(searchTerm.toLowerCase()) ||
-          (u.phone_number?.toLowerCase() || "").includes(searchTerm.toLowerCase())
+          u.fullName
+            ?.toLowerCase()
+            .includes(searchTerm.toLowerCase()) ||
+          (u.email || "")
+            .toLowerCase()
+            .includes(searchTerm.toLowerCase()) ||
+          (u.phone_number || "")
+            .toLowerCase()
+            .includes(searchTerm.toLowerCase())
       );
     }
 
     if (statusFilter) {
-      filtered = filtered.filter((u) => u.status === statusFilter);
+      filtered = filtered.filter(
+        (u) => u.status?.toLowerCase() === statusFilter
+      );
     }
 
     setFilteredUsers(filtered);
   }, [users, searchTerm, statusFilter]);
 
   // =========================
-  // Statistics
+  // STATS
   // =========================
   const stats = useMemo(() => {
-    const total = users.length;
-
-    const active = users.filter(
-      (u) => u.status?.toLowerCase() === "active"
-    ).length;
-
-    const inactive = users.filter(
-      (u) => u.status?.toLowerCase() === "inactive"
-    ).length;
-
-    const admins = users.filter(
-      (u) => u.role?.toLowerCase() === "admin"
-    ).length;
-
-    return { total, active, inactive, admins };
+    return {
+      total: users.length,
+      active: users.filter((u) => u.status === "active").length,
+      inactive: users.filter((u) => u.status === "inactive").length,
+      admins: users.filter((u) => u.role === "admin").length,
+    };
   }, [users]);
 
   // =========================
-  // Save User
+  // SAVE USER
   // =========================
   const handleSaveUser = async (
     data: Partial<User> & { password?: string }
@@ -128,7 +124,11 @@ const UsersPage: React.FC = () => {
             ["admin", "vendor", "rider", "customer"].includes(roleLower)
           ) {
             updateData.role =
-              roleLower as "admin" | "vendor" | "rider" | "customer";
+              roleLower as
+                | "admin"
+                | "vendor"
+                | "rider"
+                | "customer";
           }
         }
 
@@ -165,22 +165,12 @@ const UsersPage: React.FC = () => {
           !role
         ) {
           throw new Error(
-            "Missing required fields: fullName, email or phone_number, password, and role are required"
+            "Missing required fields"
           );
         }
 
         const roleLower = role.toLowerCase();
         const statusLower = (status || "active").toLowerCase();
-
-        if (
-          !["admin", "vendor", "rider", "customer"].includes(roleLower)
-        ) {
-          throw new Error("Invalid role");
-        }
-
-        if (!["active", "inactive"].includes(statusLower)) {
-          throw new Error("Invalid status");
-        }
 
         await createUser({
           fullName,
@@ -207,7 +197,7 @@ const UsersPage: React.FC = () => {
       const message =
         err?.response?.data?.error ||
         err.message ||
-        "Failed to save user. Please check the form and try again.";
+        "Failed to save user";
 
       setError(message);
       toast.error(message);
@@ -217,7 +207,7 @@ const UsersPage: React.FC = () => {
   };
 
   // =========================
-  // Delete User
+  // DELETE USER
   // =========================
   const handleDeleteUser = async () => {
     if (!selectedUser) return;
@@ -246,16 +236,12 @@ const UsersPage: React.FC = () => {
   };
 
   // =========================
-  // Toggle Status
+  // TOGGLE STATUS
   // =========================
   const handleToggleStatus = async (user: User) => {
     try {
-      setError(null);
-
       const newStatus =
-        user.status.toLowerCase() === "active"
-          ? "inactive"
-          : "active";
+        user.status === "active" ? "inactive" : "active";
 
       await toggleUserStatus(
         user.id,
@@ -264,10 +250,11 @@ const UsersPage: React.FC = () => {
 
       await fetchUsers();
 
-      toast.success("User status updated");
+      toast.success("Status updated");
     } catch (err: any) {
       const message =
-        err?.response?.data?.error || "Failed to update status";
+        err?.response?.data?.error ||
+        "Failed to update status";
 
       setError(message);
       toast.error(message);
@@ -275,16 +262,16 @@ const UsersPage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-100 via-white to-gray-100 dark:from-gray-950 dark:via-gray-900 dark:to-gray-950 p-4 sm:p-6 transition-all">
+    <div className="min-h-screen bg-gray-100 dark:bg-gray-950 p-4 sm:p-6">
       {/* HEADER */}
-      <div className="mb-8 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
+      <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-5 mb-8">
         <div>
-          <h1 className="text-4xl font-black tracking-tight text-gray-900 dark:text-white">
+          <h1 className="text-4xl font-black text-gray-900 dark:text-white tracking-tight">
             User Management
           </h1>
 
-          <p className="mt-2 text-gray-500 dark:text-gray-400 text-sm">
-            Manage administrators, vendors, riders, and customers.
+          <p className="text-gray-500 dark:text-gray-400 mt-2">
+            Manage customers, vendors, riders and administrators.
           </p>
         </div>
 
@@ -296,163 +283,378 @@ const UsersPage: React.FC = () => {
               setSelectedUser(undefined);
               setShowUserModal(true);
             }}
-            className="group inline-flex items-center gap-2 rounded-2xl bg-green-500 px-5 py-3 font-semibold text-white shadow-lg shadow-green-500/20 transition-all duration-300 hover:-translate-y-0.5 hover:bg-green-600 hover:shadow-green-500/30 active:scale-95"
+            className="
+              h-12 px-5 rounded-2xl
+              bg-gradient-to-r from-green-500 to-emerald-600
+              text-white font-semibold
+              shadow-lg shadow-green-500/20
+              hover:scale-[1.02]
+              transition-all
+            "
           >
-            <span className="text-lg transition-transform group-hover:rotate-90">
-              +
-            </span>
-            Add User
+            + Add User
           </button>
         </div>
       </div>
 
       {/* STATS */}
       <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-5 mb-8">
-        <div className="rounded-3xl border border-white/30 bg-white/70 dark:bg-gray-900/70 backdrop-blur-xl p-5 shadow-sm">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-gray-500 dark:text-gray-400">
-                Total Users
-              </p>
-
-              <h2 className="mt-2 text-3xl font-black text-gray-900 dark:text-white">
-                {stats.total}
-              </h2>
-            </div>
-
-            <div className="h-14 w-14 rounded-2xl bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center">
-              👥
-            </div>
-          </div>
+        <div className="bg-white dark:bg-gray-900 rounded-3xl p-5 shadow-sm border border-gray-100 dark:border-gray-800">
+          <p className="text-sm text-gray-500">Total Users</p>
+          <h2 className="text-3xl font-black mt-2 text-gray-900 dark:text-white">
+            {stats.total}
+          </h2>
         </div>
 
-        <div className="rounded-3xl border border-white/30 bg-white/70 dark:bg-gray-900/70 backdrop-blur-xl p-5 shadow-sm">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-gray-500 dark:text-gray-400">
-                Active Users
-              </p>
-
-              <h2 className="mt-2 text-3xl font-black text-green-500">
-                {stats.active}
-              </h2>
-            </div>
-
-            <div className="h-14 w-14 rounded-2xl bg-green-100 dark:bg-green-900/30 flex items-center justify-center">
-              ✅
-            </div>
-          </div>
+        <div className="bg-white dark:bg-gray-900 rounded-3xl p-5 shadow-sm border border-gray-100 dark:border-gray-800">
+          <p className="text-sm text-gray-500">Active Users</p>
+          <h2 className="text-3xl font-black mt-2 text-green-500">
+            {stats.active}
+          </h2>
         </div>
 
-        <div className="rounded-3xl border border-white/30 bg-white/70 dark:bg-gray-900/70 backdrop-blur-xl p-5 shadow-sm">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-gray-500 dark:text-gray-400">
-                Inactive Users
-              </p>
-
-              <h2 className="mt-2 text-3xl font-black text-red-500">
-                {stats.inactive}
-              </h2>
-            </div>
-
-            <div className="h-14 w-14 rounded-2xl bg-red-100 dark:bg-red-900/30 flex items-center justify-center">
-              ⛔
-            </div>
-          </div>
+        <div className="bg-white dark:bg-gray-900 rounded-3xl p-5 shadow-sm border border-gray-100 dark:border-gray-800">
+          <p className="text-sm text-gray-500">Inactive Users</p>
+          <h2 className="text-3xl font-black mt-2 text-red-500">
+            {stats.inactive}
+          </h2>
         </div>
 
-        <div className="rounded-3xl border border-white/30 bg-white/70 dark:bg-gray-900/70 backdrop-blur-xl p-5 shadow-sm">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-gray-500 dark:text-gray-400">
-                Admins
-              </p>
-
-              <h2 className="mt-2 text-3xl font-black text-purple-500">
-                {stats.admins}
-              </h2>
-            </div>
-
-            <div className="h-14 w-14 rounded-2xl bg-purple-100 dark:bg-purple-900/30 flex items-center justify-center">
-              🛡️
-            </div>
-          </div>
+        <div className="bg-white dark:bg-gray-900 rounded-3xl p-5 shadow-sm border border-gray-100 dark:border-gray-800">
+          <p className="text-sm text-gray-500">Admins</p>
+          <h2 className="text-3xl font-black mt-2 text-blue-500">
+            {stats.admins}
+          </h2>
         </div>
       </div>
 
       {/* FILTERS */}
-      <div className="mb-6 rounded-3xl border border-white/20 bg-white/70 dark:bg-gray-900/70 backdrop-blur-xl p-4 shadow-sm">
-        <FilterBar
-          onSearch={setSearchTerm}
-          onFilter={setStatusFilter}
-        />
+      <div className="bg-white dark:bg-gray-900 rounded-3xl p-5 shadow-sm border border-gray-100 dark:border-gray-800 mb-6">
+        <div className="flex flex-col lg:flex-row gap-4">
+          
+          {/* SEARCH */}
+          <div className="relative flex-1">
+            <div className="absolute inset-y-0 left-0 flex items-center pl-4 pointer-events-none">
+              <svg
+                className="w-5 h-5 text-gray-400"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M21 21l-4.35-4.35m1.85-5.15a7 7 0 11-14 0 7 7 0 0114 0z"
+                />
+              </svg>
+            </div>
+
+            <input
+              type="text"
+              placeholder="Search customer, email or phone..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="
+                w-full h-14 rounded-2xl
+                border border-gray-200 dark:border-gray-700
+                bg-gray-50 dark:bg-gray-800
+                pl-12 pr-4
+                text-gray-800 dark:text-white
+                placeholder-gray-400
+                focus:ring-4 focus:ring-green-100 dark:focus:ring-green-900/20
+                focus:border-green-500
+                outline-none transition-all
+              "
+            />
+          </div>
+
+          {/* FILTER */}
+          <div className="relative min-w-[220px]">
+            <select
+              value={statusFilter}
+              onChange={(e) => setStatusFilter(e.target.value)}
+              className="
+                w-full h-14 rounded-2xl
+                border border-gray-200 dark:border-gray-700
+                bg-gray-50 dark:bg-gray-800
+                px-4
+                text-gray-700 dark:text-white
+                appearance-none
+                focus:ring-4 focus:ring-blue-100 dark:focus:ring-blue-900/20
+                focus:border-blue-500
+                outline-none transition-all
+              "
+            >
+              <option value="">Filter By Status</option>
+              <option value="active">🟢 Active Users</option>
+              <option value="inactive">🔴 Inactive Users</option>
+            </select>
+
+            <div className="absolute inset-y-0 right-4 flex items-center pointer-events-none">
+              <svg
+                className="w-5 h-5 text-gray-400"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M19 9l-7 7-7-7"
+                />
+              </svg>
+            </div>
+          </div>
+        </div>
       </div>
 
       {/* ERROR */}
       {error && (
-        <div className="mb-6 flex items-start gap-3 rounded-2xl border border-red-200 bg-red-50 px-4 py-4 text-red-700 dark:border-red-900 dark:bg-red-950/40 dark:text-red-300">
-          <div className="mt-0.5 text-lg">⚠️</div>
-
-          <div>
-            <p className="font-semibold">Something went wrong</p>
-            <p className="text-sm opacity-90">{error}</p>
-          </div>
+        <div className="mb-6 rounded-2xl bg-red-100 border border-red-200 text-red-700 px-4 py-3">
+          {error}
         </div>
       )}
 
-      {/* TABLE CARD */}
-      <div className="overflow-hidden rounded-3xl border border-white/20 bg-white/80 dark:bg-gray-900/70 backdrop-blur-xl shadow-xl">
-        {/* TOP BAR */}
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-b border-gray-200 dark:border-gray-800 px-6 py-5">
+      {/* TABLE */}
+      <div className="bg-white dark:bg-gray-900 rounded-3xl shadow-sm border border-gray-100 dark:border-gray-800 overflow-hidden">
+        
+        {/* TABLE HEADER */}
+        <div className="px-6 py-5 border-b border-gray-100 dark:border-gray-800 flex items-center justify-between">
           <div>
             <h2 className="text-xl font-bold text-gray-900 dark:text-white">
-              Users Directory
+              Customers Directory
             </h2>
 
-            <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+            <p className="text-sm text-gray-500 mt-1">
               Showing {filteredUsers.length} users
             </p>
           </div>
 
           <button
             onClick={fetchUsers}
-            className="inline-flex items-center justify-center rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-200 transition hover:scale-[1.02] hover:shadow-md"
+            className="
+              px-4 py-2 rounded-xl
+              border border-gray-200 dark:border-gray-700
+              bg-white dark:bg-gray-800
+              text-sm font-medium
+              text-gray-700 dark:text-gray-200
+              hover:shadow-md
+              transition-all
+            "
           >
             Refresh
           </button>
         </div>
 
-        {/* TABLE */}
-        <div className="relative">
-          {loading ? (
-            <div className="flex h-80 flex-col items-center justify-center gap-4">
-              <div className="h-14 w-14 animate-spin rounded-full border-4 border-green-200 border-t-green-500"></div>
+        {/* TABLE CONTENT */}
+        {loading ? (
+          <div className="h-80 flex flex-col items-center justify-center">
+            <div className="h-12 w-12 rounded-full border-4 border-green-200 border-t-green-500 animate-spin"></div>
 
-              <p className="text-gray-500 dark:text-gray-400 font-medium">
-                Loading users...
-              </p>
-            </div>
-          ) : (
-            <UserTable
-              users={filteredUsers}
-              isLoading={loading}
-              onEdit={(user) => {
-                setSelectedUser(user);
-                setShowUserModal(true);
-              }}
-              onDelete={(user) => {
-                setSelectedUser(user);
-                setShowDeleteModal(true);
-              }}
-              onToggleStatus={handleToggleStatus}
-              onViewDetails={(user) => {
-                setSelectedUser(user);
-                setShowDetailsModal(true);
-              }}
-            />
-          )}
-        </div>
+            <p className="mt-4 text-gray-500">
+              Loading users...
+            </p>
+          </div>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              
+              <thead className="bg-gray-50 dark:bg-gray-800/50">
+                <tr>
+                  <th className="px-6 py-4 text-left text-xs font-bold uppercase text-gray-500">
+                    Customer
+                  </th>
+
+                  <th className="px-6 py-4 text-left text-xs font-bold uppercase text-gray-500">
+                    Contact
+                  </th>
+
+                  <th className="px-6 py-4 text-left text-xs font-bold uppercase text-gray-500">
+                    Role
+                  </th>
+
+                  <th className="px-6 py-4 text-left text-xs font-bold uppercase text-gray-500">
+                    Status
+                  </th>
+
+                  <th className="px-6 py-4 text-right text-xs font-bold uppercase text-gray-500">
+                    Actions
+                  </th>
+                </tr>
+              </thead>
+
+              <tbody className="divide-y divide-gray-100 dark:divide-gray-800">
+                {filteredUsers.map((user) => (
+                  <tr
+                    key={user.id}
+                    className="
+                      hover:bg-green-50/50
+                      dark:hover:bg-gray-800/40
+                      transition-all
+                    "
+                  >
+                    {/* CUSTOMER */}
+                    <td className="px-6 py-5">
+                      <div className="flex items-center gap-4">
+                        
+                        <div className="
+                          h-12 w-12 rounded-2xl
+                          bg-gradient-to-br from-green-500 to-emerald-600
+                          text-white font-bold
+                          flex items-center justify-center
+                        ">
+                          {user.fullName?.charAt(0).toUpperCase()}
+                        </div>
+
+                        <div>
+                          <h3 className="font-semibold text-gray-900 dark:text-white">
+                            {user.fullName}
+                          </h3>
+
+                          <p className="text-sm text-gray-500">
+                            User ID #{user.id}
+                          </p>
+                        </div>
+                      </div>
+                    </td>
+
+                    {/* CONTACT */}
+                    <td className="px-6 py-5">
+                      <div className="space-y-1">
+                        <p className="text-sm font-medium text-gray-800 dark:text-gray-200">
+                          {user.email || "No email"}
+                        </p>
+
+                        <p className="text-sm text-gray-500">
+                          {user.phone_number || "No phone"}
+                        </p>
+                      </div>
+                    </td>
+
+                    {/* ROLE */}
+                    <td className="px-6 py-5">
+                      <span className="
+                        inline-flex items-center
+                        px-3 py-1 rounded-full
+                        text-xs font-bold
+                        bg-blue-100 text-blue-700
+                        dark:bg-blue-900/20 dark:text-blue-300
+                      ">
+                        {user.role}
+                      </span>
+                    </td>
+
+                    {/* STATUS */}
+                    <td className="px-6 py-5">
+                      <span
+                        className={`
+                          inline-flex items-center gap-2
+                          px-3 py-1 rounded-full
+                          text-xs font-bold
+                          ${
+                            user.status === "active"
+                              ? "bg-green-100 text-green-700 dark:bg-green-900/20 dark:text-green-300"
+                              : "bg-red-100 text-red-700 dark:bg-red-900/20 dark:text-red-300"
+                          }
+                        `}
+                      >
+                        <span className="h-2 w-2 rounded-full bg-current"></span>
+
+                        {user.status}
+                      </span>
+                    </td>
+
+                    {/* ACTIONS */}
+                    <td className="px-6 py-5">
+                      <div className="flex justify-end gap-2">
+                        
+                        <button
+                          onClick={() => {
+                            setSelectedUser(user);
+                            setShowDetailsModal(true);
+                          }}
+                          className="
+                            px-3 py-2 rounded-xl
+                            bg-gray-100 dark:bg-gray-800
+                            text-sm font-medium
+                            hover:bg-gray-200 dark:hover:bg-gray-700
+                            transition-all
+                          "
+                        >
+                          View
+                        </button>
+
+                        <button
+                          onClick={() => {
+                            setSelectedUser(user);
+                            setShowUserModal(true);
+                          }}
+                          className="
+                            px-3 py-2 rounded-xl
+                            bg-green-100 text-green-700
+                            dark:bg-green-900/20 dark:text-green-300
+                            text-sm font-medium
+                            hover:scale-105
+                            transition-all
+                          "
+                        >
+                          Edit
+                        </button>
+
+                        <button
+                          onClick={() => handleToggleStatus(user)}
+                          className="
+                            px-3 py-2 rounded-xl
+                            bg-yellow-100 text-yellow-700
+                            dark:bg-yellow-900/20 dark:text-yellow-300
+                            text-sm font-medium
+                            hover:scale-105
+                            transition-all
+                          "
+                        >
+                          Toggle
+                        </button>
+
+                        <button
+                          onClick={() => {
+                            setSelectedUser(user);
+                            setShowDeleteModal(true);
+                          }}
+                          className="
+                            px-3 py-2 rounded-xl
+                            bg-red-100 text-red-700
+                            dark:bg-red-900/20 dark:text-red-300
+                            text-sm font-medium
+                            hover:scale-105
+                            transition-all
+                          "
+                        >
+                          Delete
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+
+            {!filteredUsers.length && (
+              <div className="h-60 flex flex-col items-center justify-center text-center">
+                <div className="text-5xl mb-4">👥</div>
+
+                <h3 className="text-xl font-bold text-gray-900 dark:text-white">
+                  No users found
+                </h3>
+
+                <p className="text-gray-500 mt-2">
+                  Try adjusting your search or filters.
+                </p>
+              </div>
+            )}
+          </div>
+        )}
       </div>
 
       {/* USER MODAL */}
