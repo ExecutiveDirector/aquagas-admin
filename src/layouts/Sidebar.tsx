@@ -1,4 +1,3 @@
-// components/Sidebar.tsx
 import React from "react";
 import { X, LogOut } from "lucide-react";
 import { getAccount } from "../services/authService";
@@ -12,6 +11,41 @@ interface SidebarProps {
   handleLogout: () => void;
 }
 
+function NavItem({
+  name, icon: Icon, active, onClick,
+}: {
+  name: string;
+  icon: React.ElementType;
+  active: boolean;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      onClick={onClick}
+      className={`
+        w-full flex items-center gap-3 px-3 py-2.5 rounded-xl
+        text-[13.5px] font-medium transition-all duration-150 group
+        ${active
+          ? "bg-indigo-50 text-indigo-700"
+          : "text-slate-500 hover:bg-slate-50 hover:text-slate-800"
+        }
+      `}
+    >
+      <span className={`
+        flex items-center justify-center w-[30px] h-[30px] rounded-lg
+        transition-all duration-150 shrink-0
+        ${active
+          ? "bg-indigo-600 text-white shadow-md shadow-indigo-200"
+          : "bg-slate-100 text-slate-400 group-hover:bg-slate-200 group-hover:text-slate-600"
+        }
+      `}>
+        <Icon className="w-[14px] h-[14px]" />
+      </span>
+      {name}
+    </button>
+  );
+}
+
 export default function Sidebar({
   sidebarOpen,
   setSidebarOpen,
@@ -23,31 +57,33 @@ export default function Sidebar({
   const account  = getAccount();
   const initials = account?.email?.[0]?.toUpperCase() ?? "A";
 
+  // Split nav into Main (first 7) and System (rest)
   const mainNav   = navigation.slice(0, 7);
   const systemNav = navigation.slice(7);
 
   return (
-    <aside
-      className={`
-        fixed inset-y-0 left-0 z-50 flex flex-col
-        w-64 bg-[#13151e] border-r border-white/5
-        transition-transform duration-300 ease-in-out
-        lg:static lg:translate-x-0
-        ${sidebarOpen ? "translate-x-0" : "-translate-x-full"}
-      `}
-    >
-      {/* Brand header */}
-      <div className="flex items-center gap-3 h-16 px-5 border-b border-white/5 shrink-0">
-        <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-indigo-500 to-violet-600 flex items-center justify-center shadow-lg shadow-indigo-500/30">
-          <span className="text-white font-black text-sm tracking-tight">AG</span>
+    <aside className={`
+      fixed inset-y-0 left-0 z-50 flex flex-col w-[232px]
+      bg-white border-r border-slate-200/70 shadow-sm
+      transition-transform duration-300 ease-in-out
+      lg:static lg:translate-x-0
+      ${sidebarOpen ? "translate-x-0" : "-translate-x-full"}
+    `}>
+
+      {/* Brand */}
+      <div className="shrink-0 flex items-center gap-3 h-16 px-5 border-b border-slate-100">
+        <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-indigo-500 to-violet-600
+                        flex items-center justify-center shadow-lg shadow-indigo-200/60">
+          <span className="text-white font-black text-sm">AG</span>
         </div>
-        <div className="flex flex-col leading-none">
-          <span className="text-white font-bold text-[15px] tracking-tight">AquaGas</span>
-          <span className="text-slate-500 text-[10px] uppercase tracking-widest">Admin</span>
+        <div className="leading-none">
+          <p className="text-[14.5px] font-bold text-slate-800">AquaGas</p>
+          <p className="text-[10px] text-slate-400 uppercase tracking-widest mt-0.5">Admin</p>
         </div>
         <button
           onClick={() => setSidebarOpen(false)}
-          className="lg:hidden ml-auto p-1.5 text-slate-400 hover:text-white rounded-md transition"
+          className="lg:hidden ml-auto p-1.5 text-slate-400 hover:text-slate-600
+                     hover:bg-slate-100 rounded-lg transition"
           aria-label="Close sidebar"
         >
           <X className="w-4 h-4" />
@@ -55,51 +91,37 @@ export default function Sidebar({
       </div>
 
       {/* Nav */}
-      <nav className="flex-1 overflow-y-auto py-4 px-3 space-y-0.5">
-        <p className="px-3 mb-2 text-[10px] font-semibold uppercase tracking-widest text-slate-600">
-          Main Menu
+      <nav className="flex-1 overflow-y-auto px-3 pt-5 pb-4 space-y-0.5">
+        <p className="px-3 mb-2 text-[10px] font-bold uppercase tracking-widest text-slate-400">
+          Main
         </p>
-        {mainNav.map(({ name, href, icon: Icon }) => {
-          const active = isActive(href);
-          return (
-            <NavItem
-              key={name}
-              label={name}
-              Icon={Icon}
-              active={active}
-              onClick={() => handleNavClick(href)}
-            />
-          );
-        })}
+        {mainNav.map(({ name, href, icon }) => (
+          <NavItem key={href} name={name} icon={icon}
+            active={isActive(href)} onClick={() => handleNavClick(href)} />
+        ))}
 
-        <p className="px-3 mt-5 mb-2 text-[10px] font-semibold uppercase tracking-widest text-slate-600">
+        <p className="px-3 pt-5 mb-2 text-[10px] font-bold uppercase tracking-widest text-slate-400">
           System
         </p>
-        {systemNav.map(({ name, href, icon: Icon }) => {
-          const active = isActive(href);
-          return (
-            <NavItem
-              key={name}
-              label={name}
-              Icon={Icon}
-              active={active}
-              onClick={() => handleNavClick(href)}
-            />
-          );
-        })}
+        {systemNav.map(({ name, href, icon }) => (
+          <NavItem key={href} name={name} icon={icon}
+            active={isActive(href)} onClick={() => handleNavClick(href)} />
+        ))}
       </nav>
 
       {/* User footer */}
-      <div className="shrink-0 px-3 py-4 border-t border-white/5">
-        <div className="flex items-center gap-3 px-2 py-2 rounded-lg hover:bg-white/5 transition group">
-          <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-violet-500 to-indigo-600 flex items-center justify-center text-white font-bold text-sm shrink-0">
+      <div className="shrink-0 p-3 border-t border-slate-100">
+        <div className="flex items-center gap-3 px-2 py-2.5 rounded-xl hover:bg-slate-50 transition group">
+          <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-indigo-400 to-violet-500
+                          flex items-center justify-center text-white font-bold text-[13px]
+                          shrink-0 shadow-sm shadow-indigo-200">
             {initials}
           </div>
-          <div className="flex-1 min-w-0">
-            <p className="text-[13px] font-medium text-slate-200 truncate">
+          <div className="flex-1 min-w-0 leading-tight">
+            <p className="text-[12.5px] font-semibold text-slate-700 truncate">
               {account?.email ?? "admin@aquagas.com"}
             </p>
-            <p className="text-[11px] text-slate-500 capitalize">
+            <p className="text-[11px] text-slate-400 capitalize">
               {account?.role ?? "administrator"}
             </p>
           </div>
@@ -107,47 +129,12 @@ export default function Sidebar({
             onClick={handleLogout}
             title="Logout"
             aria-label="Logout"
-            className="p-1.5 text-slate-500 hover:text-red-400 rounded-md transition"
+            className="p-1.5 text-slate-300 hover:text-red-500 rounded-lg transition"
           >
-            <LogOut className="w-4 h-4" />
+            <LogOut className="w-[15px] h-[15px]" />
           </button>
         </div>
       </div>
     </aside>
-  );
-}
-
-/* ─── Reusable nav item ─────────────────── */
-function NavItem({
-  label,
-  Icon,
-  active,
-  onClick,
-}: {
-  label: string;
-  Icon: React.ElementType;
-  active: boolean;
-  onClick: () => void;
-}) {
-  return (
-    <button
-      onClick={onClick}
-      className={`
-        w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium
-        transition-all duration-150 group relative
-        ${active
-          ? "bg-indigo-500/10 text-indigo-400"
-          : "text-slate-400 hover:bg-white/5 hover:text-slate-200"
-        }
-      `}
-    >
-      {active && (
-        <span className="absolute left-0 top-1/2 -translate-y-1/2 w-0.5 h-5 bg-indigo-500 rounded-r-full" />
-      )}
-      <Icon className={`w-[18px] h-[18px] shrink-0 ${
-        active ? "text-indigo-400" : "text-slate-500 group-hover:text-slate-300"
-      }`} />
-      <span>{label}</span>
-    </button>
   );
 }
