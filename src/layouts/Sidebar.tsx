@@ -1,7 +1,7 @@
 // components/Sidebar.tsx
 import React from "react";
 import { X, LogOut } from "lucide-react";
-import { getAccount } from "../services/authService"; // Real account data
+import { getAccount } from "../services/authService";
 
 interface SidebarProps {
   sidebarOpen: boolean;
@@ -20,102 +20,134 @@ export default function Sidebar({
   handleNavClick,
   handleLogout,
 }: SidebarProps) {
-  const account = getAccount(); // Real authenticated user data
+  const account  = getAccount();
+  const initials = account?.email?.[0]?.toUpperCase() ?? "A";
+
+  const mainNav   = navigation.slice(0, 7);
+  const systemNav = navigation.slice(7);
 
   return (
     <aside
-      className={`fixed inset-y-0 left-0 z-50 w-72 bg-white dark:bg-gray-800 shadow-2xl transform transition-transform duration-300 ease-in-out lg:translate-x-0 lg:static lg:inset-0 ${
-        sidebarOpen ? "translate-x-0" : "-translate-x-full"
-      }`}
+      className={`
+        fixed inset-y-0 left-0 z-50 flex flex-col
+        w-64 bg-[#13151e] border-r border-white/5
+        transition-transform duration-300 ease-in-out
+        lg:static lg:translate-x-0
+        ${sidebarOpen ? "translate-x-0" : "-translate-x-full"}
+      `}
     >
-      {/* Mobile Backdrop */}
-      {sidebarOpen && (
-        <div
-          className="fixed inset-0 bg-black/50 z-40 lg:hidden"
-          onClick={() => setSidebarOpen(false)}
-        />
-      )}
-
-      {/* Logo Header */}
-      <div className="relative flex items-center justify-between h-16 px-6 bg-gradient-to-r from-indigo-600 to-purple-600">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 bg-white/20 backdrop-blur rounded-xl flex items-center justify-center">
-            <span className="text-white font-bold text-xl">AG</span>
-          </div>
-          <span className="text-white font-bold text-lg">AquaGas Admin</span>
+      {/* Brand header */}
+      <div className="flex items-center gap-3 h-16 px-5 border-b border-white/5 shrink-0">
+        <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-indigo-500 to-violet-600 flex items-center justify-center shadow-lg shadow-indigo-500/30">
+          <span className="text-white font-black text-sm tracking-tight">AG</span>
         </div>
-
+        <div className="flex flex-col leading-none">
+          <span className="text-white font-bold text-[15px] tracking-tight">AquaGas</span>
+          <span className="text-slate-500 text-[10px] uppercase tracking-widest">Admin</span>
+        </div>
         <button
           onClick={() => setSidebarOpen(false)}
-          className="lg:hidden p-2 text-white hover:bg-white/10 rounded-lg transition"
+          className="lg:hidden ml-auto p-1.5 text-slate-400 hover:text-white rounded-md transition"
           aria-label="Close sidebar"
         >
-          <X className="w-5 h-5" />
+          <X className="w-4 h-4" />
         </button>
       </div>
 
-      {/* Navigation Links */}
-      <nav className="mt-8 px-4">
-        <div className="space-y-1">
-          {navigation.map((item) => {
-            const Icon = item.icon;
-            const active = isActive(item.href);
+      {/* Nav */}
+      <nav className="flex-1 overflow-y-auto py-4 px-3 space-y-0.5">
+        <p className="px-3 mb-2 text-[10px] font-semibold uppercase tracking-widest text-slate-600">
+          Main Menu
+        </p>
+        {mainNav.map(({ name, href, icon: Icon }) => {
+          const active = isActive(href);
+          return (
+            <NavItem
+              key={name}
+              label={name}
+              Icon={Icon}
+              active={active}
+              onClick={() => handleNavClick(href)}
+            />
+          );
+        })}
 
-            return (
-              <button
-                key={item.name}
-                onClick={() => handleNavClick(item.href)}
-                className={`w-full flex items-center gap-4 px-4 py-3.5 rounded-xl text-sm font-medium transition-all duration-200 group relative ${
-                  active
-                    ? "bg-gradient-to-r from-indigo-500 to-purple-500 text-white shadow-lg"
-                    : "text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-gray-900 dark:hover:text-white"
-                }`}
-              >
-                <Icon
-                  className={`w-5 h-5 transition-colors ${
-                    active ? "text-white" : "text-gray-400 group-hover:text-gray-600 dark:group-hover:text-gray-300"
-                  }`}
-                />
-                <span>{item.name}</span>
-
-                {/* Active Indicator Pill */}
-                {active && (
-                  <div className="absolute right-0 w-1.5 h-10 bg-white/30 rounded-l-full" />
-                )}
-              </button>
-            );
-          })}
-        </div>
+        <p className="px-3 mt-5 mb-2 text-[10px] font-semibold uppercase tracking-widest text-slate-600">
+          System
+        </p>
+        {systemNav.map(({ name, href, icon: Icon }) => {
+          const active = isActive(href);
+          return (
+            <NavItem
+              key={name}
+              label={name}
+              Icon={Icon}
+              active={active}
+              onClick={() => handleNavClick(href)}
+            />
+          );
+        })}
       </nav>
 
-      {/* User Info Footer */}
-      <div className="absolute bottom-0 left-0 right-0 p-6 bg-gradient-to-t from-gray-50 via-gray-50 to-transparent dark:from-gray-900">
-        <div className="flex items-center gap-4">
-          {/* Avatar with Gradient */}
-          <div className="w-12 h-12 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-xl flex items-center justify-center text-white font-bold text-lg shadow-lg">
-            {account?.email?.[0]?.toUpperCase() || "A"}
+      {/* User footer */}
+      <div className="shrink-0 px-3 py-4 border-t border-white/5">
+        <div className="flex items-center gap-3 px-2 py-2 rounded-lg hover:bg-white/5 transition group">
+          <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-violet-500 to-indigo-600 flex items-center justify-center text-white font-bold text-sm shrink-0">
+            {initials}
           </div>
-
           <div className="flex-1 min-w-0">
-            <p className="text-sm font-medium text-gray-900 dark:text-white truncate">
-              {account?.email || "admin@aquagas.com"}
+            <p className="text-[13px] font-medium text-slate-200 truncate">
+              {account?.email ?? "admin@aquagas.com"}
             </p>
-            <p className="text-xs text-gray-500 dark:text-gray-400 capitalize">
-              {account?.role || "administrator"}
+            <p className="text-[11px] text-slate-500 capitalize">
+              {account?.role ?? "administrator"}
             </p>
           </div>
-
-          {/* Logout Button */}
           <button
             onClick={handleLogout}
-            className="p-2.5 text-gray-500 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/30 rounded-lg transition"
             title="Logout"
             aria-label="Logout"
+            className="p-1.5 text-slate-500 hover:text-red-400 rounded-md transition"
           >
-            <LogOut className="w-5 h-5" />
+            <LogOut className="w-4 h-4" />
           </button>
         </div>
       </div>
     </aside>
+  );
+}
+
+/* ─── Reusable nav item ─────────────────── */
+function NavItem({
+  label,
+  Icon,
+  active,
+  onClick,
+}: {
+  label: string;
+  Icon: React.ElementType;
+  active: boolean;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      onClick={onClick}
+      className={`
+        w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium
+        transition-all duration-150 group relative
+        ${active
+          ? "bg-indigo-500/10 text-indigo-400"
+          : "text-slate-400 hover:bg-white/5 hover:text-slate-200"
+        }
+      `}
+    >
+      {active && (
+        <span className="absolute left-0 top-1/2 -translate-y-1/2 w-0.5 h-5 bg-indigo-500 rounded-r-full" />
+      )}
+      <Icon className={`w-[18px] h-[18px] shrink-0 ${
+        active ? "text-indigo-400" : "text-slate-500 group-hover:text-slate-300"
+      }`} />
+      <span>{label}</span>
+    </button>
   );
 }
