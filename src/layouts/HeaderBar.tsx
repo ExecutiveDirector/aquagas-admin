@@ -6,8 +6,8 @@ interface HeaderBarProps {
   handleLogout: () => void;
 }
 
-const pathTitles: Record<string, string> = {
-  "/":             "Dashboard Overview",
+const PATH_TITLES: Record<string, string> = {
+  "/":             "Overview",
   "/users":        "Users",
   "/vendors":      "Vendors",
   "/riders":       "Riders",
@@ -21,48 +21,53 @@ const pathTitles: Record<string, string> = {
 };
 
 export default function HeaderBar({ setSidebarOpen, handleLogout }: HeaderBarProps) {
-  const location  = useLocation();
-  const pageTitle = pathTitles[location.pathname] ?? "Admin Dashboard";
+  const { pathname } = useLocation();
+  const title = PATH_TITLES[pathname] ?? "Admin Dashboard";
 
   return (
-    <header className="shrink-0 h-16 bg-[#13151e]/80 backdrop-blur border-b border-white/5 flex items-center px-5 gap-4 z-30">
+    <header className="
+      shrink-0 h-16 bg-white border-b border-slate-200/70
+      flex items-center px-6 gap-4
+      shadow-[0_1px_3px_rgba(0,0,0,0.04)] z-30
+    ">
       {/* Mobile hamburger */}
       <button
         onClick={() => setSidebarOpen(true)}
-        className="lg:hidden p-2 text-slate-400 hover:text-white hover:bg-white/5 rounded-lg transition"
+        className="lg:hidden p-2 text-slate-400 hover:text-slate-700
+                   hover:bg-slate-100 rounded-lg transition"
         aria-label="Open sidebar"
       >
         <Menu className="w-5 h-5" />
       </button>
 
-      {/* Breadcrumb title */}
-      <div className="flex items-center gap-2">
-        <span className="hidden sm:inline text-slate-600 text-sm">AquaGas</span>
-        <span className="hidden sm:inline text-slate-600">/</span>
-        <h1 className="text-white font-semibold text-[15px]">{pageTitle}</h1>
+      {/* Page title + date */}
+      <div>
+        <h1 className="text-[16px] font-bold text-slate-800 leading-tight">{title}</h1>
+        <p className="hidden sm:block text-[11px] text-slate-400 leading-tight mt-0.5">
+          {new Date().toLocaleDateString("en-KE", {
+            weekday: "long", month: "long", day: "numeric", year: "numeric",
+          })}
+        </p>
       </div>
 
-      {/* Right actions */}
+      {/* Right */}
       <div className="ml-auto flex items-center gap-3">
-        {/* Live indicator */}
-        <div className="hidden sm:flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20">
-          <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-          <span className="text-emerald-400 text-xs font-medium">Live</span>
-        </div>
 
-        {/* Date */}
-        <span className="hidden md:block text-slate-500 text-xs">
-          {new Date().toLocaleDateString("en-KE", {
-            weekday: "short",
-            month: "short",
-            day: "numeric",
-          })}
+        {/* Live badge */}
+        <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full
+                         bg-emerald-50 border border-emerald-100 text-emerald-600
+                         text-[12px] font-semibold">
+          <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+          <span className="hidden sm:inline">System Live</span>
+          <span className="sm:hidden">Live</span>
         </span>
 
         {/* Logout */}
         <button
           onClick={handleLogout}
-          className="flex items-center gap-2 px-3 py-1.5 text-sm text-slate-400 hover:text-white hover:bg-white/5 rounded-lg transition"
+          className="flex items-center gap-2 px-3 py-1.5 rounded-lg
+                     text-[13px] font-medium text-slate-500
+                     hover:text-slate-800 hover:bg-slate-100 transition"
         >
           <LogOut className="w-4 h-4" />
           <span className="hidden sm:inline">Logout</span>
