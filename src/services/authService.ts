@@ -1,4 +1,5 @@
 // src/services/authService.ts
+// FIXES:
 //   1. Added 'admin' to validAdminRoles — backend defaults admin_role to 'admin'
 //      when no specific sub-role is set. Without this, ALL non-specialised admins
 //      were blocked and could not create vendors or access admin features.
