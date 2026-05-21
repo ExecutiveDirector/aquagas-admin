@@ -52,9 +52,12 @@ export const forgotPassword = async (email: string) => {
 
 export function isAdmin(): boolean {
   try {
-    const userInfo = localStorage.getItem('userInfo');
+    const userInfo =
+      localStorage.getItem('userInfo') ||
+      sessionStorage.getItem('userInfo');
+
     if (!userInfo) {
-      console.warn('🔐 isAdmin: No userInfo in localStorage');
+      console.warn('🔐 isAdmin: No userInfo found');
       return false;
     }
 
@@ -65,24 +68,22 @@ export function isAdmin(): boolean {
       return false;
     }
 
-    // FIX: admin_role is optional — if absent or null, role: 'admin' is sufficient.
-    // When present, validate against all known values including the default 'admin'.
     if (parsed.admin_role) {
       const validAdminRoles = [
-        'admin',               // ← default when no specific sub-role is assigned
+        'admin',
         'super_admin',
         'operations_admin',
         'finance_admin',
         'support_admin',
         'marketing_admin',
       ];
+
       if (!validAdminRoles.includes(parsed.admin_role)) {
-        console.warn('🔐 isAdmin: Unrecognised admin_role:', parsed.admin_role);
+        console.warn('🔐 isAdmin: Invalid admin_role:', parsed.admin_role);
         return false;
       }
     }
 
-    console.log('🔐 Admin check passed:', { role: parsed.role, admin_role: parsed.admin_role });
     return true;
   } catch (error) {
     console.error('🔐 isAdmin error:', error);
