@@ -1,499 +1,626 @@
-import React, { useState, useEffect } from 'react';
-import { Search, Plus, AlertCircle, RefreshCw } from 'lucide-react';
-import VendorsList from './VendorList';
-import type { UpdateVendorFormData } from './VendorDetails';
-import VendorDetails from './VendorDetails';
-import VendorDashboard from './VendorDashboard';
-import type { InventoryMovement } from './InventoryManagement';
-import InventoryManagement from './InventoryManagement';
-import type { AddVendorFormData } from './AddVendorForm';
-import AddVendorForm from './AddVendorForm';
-import { 
-  listVendors, 
+import React, { useState, useEffect, useCallback } from 'react';
+import {
+  Search, Plus, AlertCircle, RefreshCw, Store, CheckCircle2,
+  XCircle, ChevronRight, ArrowLeft, BarChart2, Package,
+  ShoppingBag, TrendingUp, Users, Eye, Edit2, Power,
+  PowerOff, X, Building2, Mail, Phone, Lock, User, Layers,
+} from 'lucide-react';
+import {
+  listVendors,
   createVendor,
-  updateVendor, 
+  updateVendor,
   getVendorInventory,
   updateVendorInventory,
   getVendorLowStockAlerts,
+  toggleVendorStatus,
+  approveVendor,
 } from '../../services/vendorService';
 import type { Vendor } from '../../services/vendorService';
 import { getDashboardStats } from '../../services/api';
-import { isAuthenticated, logout, isAdmin, getToken } from '../../services/authService';
-import type { VendorDashboardStats, DashboardStats } from '../../types';
+import { isAuthenticated, isAdmin, logout, getToken } from '../../services/authService';
 
-interface Product {
-  product_id: string;
-  name: string;
-  stock: number;
-  price: number;
-  vendor_id: string;
+// ─── types ────────────────────────────────────────────────────────────────────
+
+interface Stats { users: number; vendors: number; riders: number; orders: number; todayRevenue: number; }
+interface Product { product_id: string; name: string; stock: number; price: number; vendor_id: string; }
+
+// ─── tiny helpers ─────────────────────────────────────────────────────────────
+
+function statusBadge(active: boolean) {
+  return active
+    ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+    : 'bg-gray-100 text-gray-500 border border-gray-200';
 }
 
-interface ErrorDetails {
-  message: string;
-  status?: number;
-  endpoint?: string;
-  canRetry: boolean;
-  isAuthError: boolean;
+function verifiedBadge(verified: boolean) {
+  return verified
+    ? 'bg-blue-50 text-blue-700 border border-blue-200'
+    : 'bg-amber-50 text-amber-700 border border-amber-200';
 }
 
-const VendorsPage: React.FC = () => {
-  const [vendors, setVendors] = useState<Vendor[]>([]);
-  const [selectedVendorId, setSelectedVendorId] = useState<string | null>(null);
-  const [inventory, setInventory] = useState<Product[]>([]);
-  const [dashboardStats, setDashboardStats] = useState<DashboardStats>({
-    users: 0,
-    vendors: 0,
-    riders: 0,
-    orders: 0,
-    todayRevenue: 0,
-  });
-  const [lowStockAlerts, setLowStockAlerts] = useState<Product[]>([]);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [activeSection, setActiveSection] = useState<'dashboard' | 'list' | 'add' | 'details' | 'inventory' | 'debug'>('dashboard');
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<ErrorDetails | null>(null);
-  const [retryCount, setRetryCount] = useState(0);
+// ─── Stat card ────────────────────────────────────────────────────────────────
 
-  // Helper function to create detailed error info
-  const createErrorDetails = (err: any, endpoint?: string): ErrorDetails => {
-    const status = err.response?.status;
-    const isAuthError = status === 401 || status === 403;
-    
-    return {
-      message: err.response?.data?.error || err.response?.data?.message || err.message || 'An unknown error occurred',
-      status,
-      endpoint,
-      canRetry: !isAuthError && status !== 404,
-      isAuthError
-    };
-  };
-
-  // Enhanced data fetching with better error handling
-  const fetchData = async (retryAttempt = 0) => {
-    setIsLoading(true);
-    setError(null);
-
-    try {
-      console.log('VendorsPage: Starting data fetch attempt', retryAttempt + 1);
-
-      // Fetch dashboard stats
-      console.log('Fetching dashboard stats...');
-      const statsResponse = await getDashboardStats();
-      setDashboardStats(statsResponse);
-      console.log('✅ Dashboard stats loaded');
-
-      // Fetch vendors list
-      console.log('Fetching vendors list...');
-      const vendorsResponse = await listVendors(1, 20);
-      setVendors(vendorsResponse.data || []);
-      console.log('✅ Vendors loaded:', vendorsResponse.data?.length || 0);
-
-      // Fetch vendor-specific data if a vendor is selected
-      if (selectedVendorId) {
-        console.log('Fetching data for vendor:', selectedVendorId);
-        try {
-          // Fetch inventory
-          const inventoryResponse = await getVendorInventory(selectedVendorId);
-          setInventory(inventoryResponse.data || []);
-          console.log('✅ Inventory loaded');
-          
-          // Fetch low stock alerts
-          const lowStockResponse = await getVendorLowStockAlerts(selectedVendorId);
-          setLowStockAlerts(lowStockResponse.data || []);
-          console.log('✅ Low stock alerts loaded');
-        } catch (vendorErr: any) {
-          console.warn('⚠️ Vendor-specific data fetch failed but continuing:', vendorErr.message);
-          // Don't fail the whole page if vendor data fails
-        }
-      }
-
-      setRetryCount(0); // Reset retry count on success
-
-    } catch (err: any) {
-      console.error('❌ VendorsPage: Data fetch error:', err);
-      const errorDetails = createErrorDetails(err, 'data-fetch');
-      setError(errorDetails);
-
-      // Don't auto-retry auth errors
-      if (!errorDetails.isAuthError && retryAttempt < 2) {
-        console.log(`⏳ Retrying in 2 seconds... (attempt ${retryAttempt + 2}/3)`);
-        setTimeout(() => {
-          setRetryCount(retryAttempt + 1);
-          fetchData(retryAttempt + 1);
-        }, 2000);
-      }
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  // Authentication check on mount
-  useEffect(() => {
-    console.log('🔍 VendorsPage: Checking authentication...');
-    
-    if (!isAuthenticated()) {
-      console.warn('❌ User is not authenticated');
-      setError({
-        message: 'You are not authenticated. Please login again.',
-        isAuthError: true,
-        canRetry: false
-      });
-      return;
-    }
-
-    if (!isAdmin()) {
-      console.warn('❌ User is not an admin');
-      setError({
-        message: 'You do not have admin privileges to access this page.',
-        isAuthError: true,
-        canRetry: false
-      });
-      return;
-    }
-
-    console.log('✅ Authentication check passed');
-    fetchData();
-  }, []);
-
-  // Refetch when vendor selection changes
-  useEffect(() => {
-    if (selectedVendorId && isAuthenticated()) {
-      fetchData();
-    }
-  }, [selectedVendorId]);
-
-  // Search filter effect
-  useEffect(() => {
-    if (searchQuery && isAuthenticated()) {
-      const timer = setTimeout(() => {
-        fetchData();
-      }, 500);
-      return () => clearTimeout(timer);
-    }
-  }, [searchQuery]);
-
-  const retryFetch = () => {
-    setRetryCount(0);
-    fetchData();
-  };
-
-  const handleLogin = () => {
-    logout(); // This will clear tokens and redirect
-  };
-
-  // Test API connection manually
-  const runApiTest = async () => {
-    try {
-      setIsLoading(true);
-      const result = await getDashboardStats();
-      alert('✅ API connection successful!\n\n' + JSON.stringify(result, null, 2));
-    } catch (err: any) {
-      alert('❌ API test error: ' + (err.response?.data?.message || err.message));
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const filteredVendors = vendors.filter(vendor =>
-    vendor.business_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    vendor.business_email?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    vendor.contact_person.toLowerCase().includes(searchQuery.toLowerCase())
+function StatCard({ icon: Icon, label, value, accent }: { icon: any; label: string; value: string | number; accent?: string }) {
+  return (
+    <div className="bg-white rounded-xl border border-gray-100 p-5 flex items-start gap-4">
+      <div className={`w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0 ${accent ?? 'bg-gray-50'}`}>
+        <Icon size={18} className="text-gray-700" />
+      </div>
+      <div>
+        <p className="text-xs font-medium text-gray-400 uppercase tracking-wide mb-0.5">{label}</p>
+        <p className="text-xl font-semibold text-gray-900">{value}</p>
+      </div>
+    </div>
   );
+}
 
-  const selectedVendor = vendors.find(vendor => vendor.vendor_id === selectedVendorId);
+// ─── Loading skeleton ─────────────────────────────────────────────────────────
 
-  // Enhanced error handlers
-  const handleUpdateVendor = async (data: UpdateVendorFormData): Promise<void> => {
-    if (!selectedVendorId) return;
-    setIsLoading(true);
-    setError(null);
-    try {
-      const updated = await updateVendor(selectedVendorId, data);
-      setVendors(prev =>
-        prev.map(vendor =>
-          vendor.vendor_id === selectedVendorId ? updated : vendor
-        )
-      );
-    } catch (err: any) {
-      console.error('VendorsPage: Update vendor error:', err);
-      const errorDetails = createErrorDetails(err, 'update-vendor');
-      setError(errorDetails);
-      throw err;
-    } finally {
-      setIsLoading(false);
-    }
+function Skeleton({ className }: { className?: string }) {
+  return <div className={`animate-pulse bg-gray-100 rounded ${className}`} />;
+}
+
+// ─── AddVendorModal ───────────────────────────────────────────────────────────
+
+interface AddVendorModalProps { onClose: () => void; onSubmit: (d: any) => Promise<void>; loading: boolean; }
+
+function AddVendorModal({ onClose, onSubmit, loading }: AddVendorModalProps) {
+  const [form, setForm] = useState({
+    business_name: '', contact_person: '', business_email: '',
+    business_phone: '', password: '',
+  });
+  const [errors, setErrors] = useState<Record<string, string>>({});
+
+  const set = (k: string) => (e: React.ChangeEvent<HTMLInputElement>) => {
+    setForm(prev => ({ ...prev, [k]: e.target.value }));
+    setErrors(prev => ({ ...prev, [k]: '' }));
   };
 
-  const handleAddVendor = async (data: AddVendorFormData): Promise<void> => {
-    setIsLoading(true);
-    setError(null);
-    try {
-      const newVendor = await createVendor(data);
-      setVendors(prev => [...prev, newVendor]);
-      setActiveSection('list');
-    } catch (err: any) {
-      console.error('VendorsPage: Add vendor error:', err);
-      const errorDetails = createErrorDetails(err, 'add-vendor');
-      setError(errorDetails);
-      throw err;
-    } finally {
-      setIsLoading(false);
-    }
+  const validate = () => {
+    const errs: Record<string, string> = {};
+    if (!form.business_name.trim()) errs.business_name = 'Required';
+    if (!form.contact_person.trim()) errs.contact_person = 'Required';
+    if (!form.business_email.trim()) errs.business_email = 'Required';
+    else if (!/\S+@\S+\.\S+/.test(form.business_email)) errs.business_email = 'Invalid email';
+    if (!form.business_phone.trim()) errs.business_phone = 'Required';
+    if (!form.password.trim()) errs.password = 'Required';
+    else if (form.password.length < 6) errs.password = 'Min 6 characters';
+    setErrors(errs);
+    return Object.keys(errs).length === 0;
   };
 
-  const handleUpdateInventory = async (productId: string, updates: any): Promise<void> => {
-    if (!selectedVendorId) return;
-    setIsLoading(true);
-    setError(null);
-    try {
-      await updateVendorInventory(selectedVendorId, productId, updates);
-      setInventory(prev =>
-        prev.map(item =>
-          item.product_id === productId ? { ...item, ...updates } : item
-        )
-      );
-      const lowStockResponse = await getVendorLowStockAlerts(selectedVendorId);
-      setLowStockAlerts(lowStockResponse.data || []);
-    } catch (err: any) {
-      console.error('VendorsPage: Update inventory error:', err);
-      const errorDetails = createErrorDetails(err, 'update-inventory');
-      setError(errorDetails);
-      throw err;
-    } finally {
-      setIsLoading(false);
-    }
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!validate()) return;
+    await onSubmit(form);
   };
 
-  const handleRecordMovement = async (movement: InventoryMovement): Promise<void> => {
-    if (!selectedVendorId) return;
-    setIsLoading(true);
-    setError(null);
-    try {
-      // Note: You may need to implement recordInventoryMovement in vendorService
-      // For now, we'll just update the inventory
-      await updateVendorInventory(selectedVendorId, movement.product_id, {
-        stock: movement.type === 'in' 
-          ? inventory.find(i => i.product_id === movement.product_id)!.stock + movement.quantity
-          : inventory.find(i => i.product_id === movement.product_id)!.stock - movement.quantity
-      });
-      
-      setInventory(prev =>
-        prev.map(item =>
-          item.product_id === movement.product_id
-            ? {
-                ...item,
-                stock:
-                  movement.type === 'in'
-                    ? item.stock + movement.quantity
-                    : item.stock - movement.quantity,
-              }
-            : item
-        )
-      );
-      
-      const lowStockResponse = await getVendorLowStockAlerts(selectedVendorId);
-      setLowStockAlerts(lowStockResponse.data || []);
-    } catch (err: any) {
-      console.error('VendorsPage: Record inventory movement error:', err);
-      const errorDetails = createErrorDetails(err, 'record-movement');
-      setError(errorDetails);
-      throw err;
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  const fields = [
+    { key: 'business_name', label: 'Business name', icon: Building2, type: 'text', placeholder: 'Acme Gas Ltd' },
+    { key: 'contact_person', label: 'Contact person', icon: User, type: 'text', placeholder: 'Jane Mwangi' },
+    { key: 'business_email', label: 'Business email', icon: Mail, type: 'email', placeholder: 'info@acme.co.ke' },
+    { key: 'business_phone', label: 'Phone number', icon: Phone, type: 'tel', placeholder: '+254712345678' },
+    { key: 'password', label: 'Initial password', icon: Lock, type: 'password', placeholder: '••••••••' },
+  ];
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Vendor Management</h1>
-        <div className="flex items-center space-x-4">
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
-            <input
-              type="text"
-              placeholder="Search vendors..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              disabled={isLoading}
-            />
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
+      <div className="bg-white rounded-2xl shadow-xl w-full max-w-md">
+        <div className="flex items-center justify-between px-6 pt-5 pb-4 border-b border-gray-100">
+          <div>
+            <h2 className="text-base font-semibold text-gray-900">Add vendor</h2>
+            <p className="text-xs text-gray-400 mt-0.5">Create a new vendor account</p>
           </div>
-          <button
-            onClick={() => setActiveSection('add')}
-            className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50"
-            disabled={isLoading}
-          >
-            <Plus className="w-4 h-4 mr-2" />
-            Add Vendor
+          <button onClick={onClose} className="text-gray-400 hover:text-gray-600 transition-colors">
+            <X size={18} />
           </button>
         </div>
+
+        <form onSubmit={handleSubmit} className="p-6 space-y-4">
+          {fields.map(({ key, label, icon: Icon, type, placeholder }) => (
+            <div key={key}>
+              <label className="block text-xs font-medium text-gray-600 mb-1.5">{label}</label>
+              <div className="relative">
+                <Icon size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+                <input
+                  type={type}
+                  value={(form as any)[key]}
+                  onChange={set(key)}
+                  placeholder={placeholder}
+                  className={`w-full pl-9 pr-3 py-2.5 text-sm border rounded-lg bg-gray-50 focus:bg-white focus:outline-none focus:ring-2 transition-all ${
+                    errors[key]
+                      ? 'border-red-300 focus:ring-red-100'
+                      : 'border-gray-200 focus:ring-emerald-100 focus:border-emerald-400'
+                  }`}
+                  disabled={loading}
+                />
+              </div>
+              {errors[key] && <p className="text-xs text-red-500 mt-1">{errors[key]}</p>}
+            </div>
+          ))}
+
+          <div className="flex gap-3 pt-2">
+            <button
+              type="button"
+              onClick={onClose}
+              className="flex-1 py-2.5 text-sm font-medium text-gray-600 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              disabled={loading}
+              className="flex-1 py-2.5 text-sm font-medium text-white bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 rounded-lg transition-colors flex items-center justify-center gap-2"
+            >
+              {loading ? (
+                <><RefreshCw size={14} className="animate-spin" /> Creating…</>
+              ) : (
+                <><Plus size={14} /> Add vendor</>
+              )}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+}
+
+// ─── VendorRow ────────────────────────────────────────────────────────────────
+
+function VendorRow({ vendor, onSelect, onToggle, onApprove }: {
+  vendor: Vendor;
+  onSelect: () => void;
+  onToggle: () => void;
+  onApprove: () => void;
+}) {
+  const initials = vendor.business_name.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase();
+
+  return (
+    <tr className="border-b border-gray-50 hover:bg-gray-50/70 transition-colors group">
+      <td className="px-5 py-3.5">
+        <div className="flex items-center gap-3">
+          <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-emerald-400 to-teal-500 flex items-center justify-center text-white text-xs font-semibold flex-shrink-0">
+            {initials}
+          </div>
+          <div className="min-w-0">
+            <p className="text-sm font-medium text-gray-900 truncate">{vendor.business_name}</p>
+            {vendor.trading_name && <p className="text-xs text-gray-400 truncate">{vendor.trading_name}</p>}
+          </div>
+        </div>
+      </td>
+      <td className="px-4 py-3.5 text-sm text-gray-600">{vendor.contact_person}</td>
+      <td className="px-4 py-3.5 text-sm text-gray-500">{vendor.business_email || '—'}</td>
+      <td className="px-4 py-3.5">
+        <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium ${statusBadge(vendor.is_active)}`}>
+          {vendor.is_active ? <CheckCircle2 size={11} /> : <XCircle size={11} />}
+          {vendor.is_active ? 'Active' : 'Inactive'}
+        </span>
+      </td>
+      <td className="px-4 py-3.5">
+        <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium ${verifiedBadge(vendor.is_verified)}`}>
+          {vendor.is_verified ? 'Verified' : 'Pending'}
+        </span>
+      </td>
+      <td className="px-4 py-3.5">
+        <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+          <button
+            onClick={onSelect}
+            className="p-1.5 rounded-lg text-gray-400 hover:text-gray-700 hover:bg-gray-100 transition-colors"
+            title="View details"
+          >
+            <Eye size={14} />
+          </button>
+          {!vendor.is_verified && (
+            <button
+              onClick={onApprove}
+              className="p-1.5 rounded-lg text-blue-400 hover:text-blue-700 hover:bg-blue-50 transition-colors"
+              title="Approve vendor"
+            >
+              <CheckCircle2 size={14} />
+            </button>
+          )}
+          <button
+            onClick={onToggle}
+            className={`p-1.5 rounded-lg transition-colors ${vendor.is_active
+              ? 'text-amber-400 hover:text-amber-700 hover:bg-amber-50'
+              : 'text-emerald-400 hover:text-emerald-700 hover:bg-emerald-50'
+            }`}
+            title={vendor.is_active ? 'Deactivate' : 'Activate'}
+          >
+            {vendor.is_active ? <PowerOff size={14} /> : <Power size={14} />}
+          </button>
+        </div>
+      </td>
+    </tr>
+  );
+}
+
+// ─── VendorDetail ─────────────────────────────────────────────────────────────
+
+function VendorDetail({ vendor, onBack, onUpdate, loading }: {
+  vendor: Vendor;
+  onBack: () => void;
+  onUpdate: (d: any) => Promise<void>;
+  loading: boolean;
+}) {
+  const [editing, setEditing] = useState(false);
+  const [form, setForm] = useState({
+    business_name: vendor.business_name,
+    contact_person: vendor.contact_person,
+    business_phone: vendor.business_phone || '',
+    business_email: vendor.business_email || '',
+    trading_name: vendor.trading_name || '',
+  });
+
+  const set = (k: string) => (e: React.ChangeEvent<HTMLInputElement>) =>
+    setForm(prev => ({ ...prev, [k]: e.target.value }));
+
+  const handleSave = async (e: React.FormEvent) => {
+    e.preventDefault();
+    await onUpdate(form);
+    setEditing(false);
+  };
+
+  const infoRows = [
+    { label: 'Email', value: vendor.business_email, icon: Mail },
+    { label: 'Phone', value: vendor.business_phone, icon: Phone },
+    { label: 'Brand', value: vendor.brand || 'Independent', icon: Building2 },
+    { label: 'Commission', value: `${((vendor.commission_rate ?? 0) * 100).toFixed(1)}%`, icon: TrendingUp },
+    { label: 'Min order', value: `KES ${vendor.minimum_order_amount?.toLocaleString() ?? 0}`, icon: ShoppingBag },
+    { label: 'Delivery radius', value: `${vendor.delivery_radius_km ?? 0} km`, icon: Layers },
+  ];
+
+  return (
+    <div className="space-y-5">
+      <div className="flex items-center gap-3">
+        <button onClick={onBack} className="flex items-center gap-1.5 text-sm text-gray-500 hover:text-gray-900 transition-colors">
+          <ArrowLeft size={16} />
+          Back
+        </button>
+        <ChevronRight size={14} className="text-gray-300" />
+        <span className="text-sm font-medium text-gray-900">{vendor.business_name}</span>
       </div>
 
-      {/* Enhanced Error Display */}
-      {error && (
-        <div className={`mb-4 p-4 rounded-lg ${error.isAuthError 
-          ? 'bg-red-50 dark:bg-red-900/20 text-red-800 dark:text-red-400 border border-red-200 dark:border-red-800' 
-          : 'bg-yellow-50 dark:bg-yellow-900/20 text-yellow-800 dark:text-yellow-400 border border-yellow-200 dark:border-yellow-800'
-        }`}>
-          <div className="flex items-start">
-            <AlertCircle className="w-5 h-5 mr-3 mt-0.5 flex-shrink-0" />
-            <div className="flex-grow">
-              <h4 className="font-semibold mb-1">
-                {error.isAuthError ? 'Authentication Error' : 'Connection Error'}
-              </h4>
-              <p className="mb-2">{error.message}</p>
-              {error.status && (
-                <p className="text-sm opacity-75">HTTP Status: {error.status}</p>
-              )}
-              {error.endpoint && (
-                <p className="text-sm opacity-75">Endpoint: {error.endpoint}</p>
-              )}
-              
-              <div className="flex gap-2 mt-3">
-                {error.isAuthError ? (
-                  <button
-                    onClick={handleLogin}
-                    className="px-3 py-1 bg-red-600 text-white rounded text-sm hover:bg-red-700"
-                  >
-                    Go to Login
-                  </button>
-                ) : error.canRetry ? (
-                  <button
-                    onClick={retryFetch}
-                    disabled={isLoading}
-                    className="flex items-center px-3 py-1 bg-yellow-600 text-white rounded text-sm hover:bg-yellow-700 disabled:opacity-50"
-                  >
-                    <RefreshCw className="w-3 h-3 mr-1" />
-                    Retry
-                  </button>
-                ) : null}
-                
-                <button
-                  onClick={runApiTest}
-                  disabled={isLoading}
-                  className="px-3 py-1 bg-blue-600 text-white rounded text-sm hover:bg-blue-700 disabled:opacity-50"
-                >
-                  Test API
-                </button>
-                
-                <button
-                  onClick={() => setActiveSection('debug')}
-                  className="px-3 py-1 bg-gray-600 text-white rounded text-sm hover:bg-gray-700"
-                >
-                  Debug Info
-                </button>
+      <div className="bg-white rounded-xl border border-gray-100 p-6">
+        <div className="flex items-start justify-between mb-5">
+          <div className="flex items-center gap-4">
+            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-emerald-400 to-teal-500 flex items-center justify-center text-white text-base font-semibold">
+              {vendor.business_name.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase()}
+            </div>
+            <div>
+              <h2 className="text-lg font-semibold text-gray-900">{vendor.business_name}</h2>
+              {vendor.trading_name && <p className="text-sm text-gray-400">{vendor.trading_name}</p>}
+              <div className="flex items-center gap-2 mt-1.5">
+                <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium ${statusBadge(vendor.is_active)}`}>
+                  {vendor.is_active ? 'Active' : 'Inactive'}
+                </span>
+                <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium ${verifiedBadge(vendor.is_verified)}`}>
+                  {vendor.is_verified ? 'Verified' : 'Pending verification'}
+                </span>
               </div>
             </div>
           </div>
-        </div>
-      )}
-
-      {/* Retry indicator */}
-      {retryCount > 0 && (
-        <div className="mb-4 p-3 bg-blue-50 dark:bg-blue-900/20 text-blue-800 dark:text-blue-400 rounded-lg">
-          <div className="flex items-center">
-            <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
-            Retrying connection... (Attempt {retryCount + 1}/3)
-          </div>
-        </div>
-      )}
-
-      <div className="flex border-b border-gray-200 dark:border-gray-700 mb-6">
-        {[
-          { id: 'dashboard', label: 'Dashboard' },
-          { id: 'list', label: 'Vendors List' },
-          { id: 'inventory', label: 'Inventory', disabled: !selectedVendorId },
-          { id: 'debug', label: 'Debug' }
-        ].map(tab => (
           <button
-            key={tab.id}
-            onClick={() => {
-              setActiveSection(tab.id as any);
-              if (tab.id !== 'debug' && tab.id !== 'details' && tab.id !== 'inventory') {
-                setSelectedVendorId(null);
-              }
-            }}
-            className={`px-4 py-2 text-sm font-medium ${
-              activeSection === tab.id
-                ? 'border-b-2 border-blue-500 text-blue-600 dark:text-blue-400'
-                : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
-            } ${tab.disabled ? 'opacity-50 cursor-not-allowed' : ''}`}
-            disabled={isLoading || tab.disabled}
+            onClick={() => setEditing(!editing)}
+            className={`flex items-center gap-1.5 px-3.5 py-2 text-sm font-medium rounded-lg transition-colors ${
+              editing ? 'bg-gray-100 text-gray-600' : 'bg-emerald-50 text-emerald-700 hover:bg-emerald-100'
+            }`}
           >
-            {tab.label}
+            <Edit2 size={14} />
+            {editing ? 'Cancel' : 'Edit'}
           </button>
-        ))}
-      </div>
+        </div>
 
-      {activeSection === 'debug' && (
-        <div className="space-y-4">
-          <div className="bg-gray-50 dark:bg-gray-800 p-4 rounded-lg">
-            <h3 className="text-lg font-semibold mb-3">Debug Information</h3>
-            <div className="space-y-2 text-sm font-mono">
-              <p><strong>Token:</strong> {getToken() ? 'Present ✓' : 'Missing ✗'}</p>
-              <p><strong>Authenticated:</strong> {isAuthenticated() ? 'Yes ✓' : 'No ✗'}</p>
-              <p><strong>Admin:</strong> {isAdmin() ? 'Yes ✓' : 'No ✗'}</p>
-              <p><strong>API Base URL:</strong> {import.meta.env.VITE_API_BASE_URL || 'http://localhost:4000/api'}</p>
-              <p><strong>Current Path:</strong> {window.location.pathname}</p>
-              <p><strong>Vendors Count:</strong> {vendors.length}</p>
-              <p><strong>Selected Vendor:</strong> {selectedVendorId || 'None'}</p>
-              {error && (
-                <div className="mt-3 p-3 bg-red-100 dark:bg-red-900/20 rounded">
-                  <p><strong>Last Error:</strong></p>
-                  <pre className="text-xs mt-2 overflow-auto">{JSON.stringify(error, null, 2)}</pre>
-                </div>
-              )}
+        {editing ? (
+          <form onSubmit={handleSave} className="grid grid-cols-2 gap-4">
+            {[
+              ['business_name', 'Business name'],
+              ['trading_name', 'Trading name'],
+              ['contact_person', 'Contact person'],
+              ['business_email', 'Email'],
+              ['business_phone', 'Phone'],
+            ].map(([key, label]) => (
+              <div key={key}>
+                <label className="block text-xs font-medium text-gray-500 mb-1">{label}</label>
+                <input
+                  value={(form as any)[key]}
+                  onChange={set(key)}
+                  className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg bg-gray-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-emerald-100 focus:border-emerald-400 transition-all"
+                />
+              </div>
+            ))}
+            <div className="col-span-2 flex justify-end gap-3 pt-2">
+              <button type="button" onClick={() => setEditing(false)}
+                className="px-4 py-2 text-sm font-medium text-gray-600 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors">
+                Cancel
+              </button>
+              <button type="submit" disabled={loading}
+                className="px-4 py-2 text-sm font-medium text-white bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 rounded-lg transition-colors flex items-center gap-2">
+                {loading ? <><RefreshCw size={13} className="animate-spin" /> Saving…</> : 'Save changes'}
+              </button>
             </div>
+          </form>
+        ) : (
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+            {infoRows.map(({ label, value, icon: Icon }) => (
+              <div key={label} className="bg-gray-50 rounded-lg p-3">
+                <div className="flex items-center gap-1.5 mb-1">
+                  <Icon size={12} className="text-gray-400" />
+                  <span className="text-xs text-gray-400">{label}</span>
+                </div>
+                <p className="text-sm font-medium text-gray-800 truncate">{value || '—'}</p>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+// ─── Main ─────────────────────────────────────────────────────────────────────
+
+const VendorsPage: React.FC = () => {
+  const [vendors, setVendors] = useState<Vendor[]>([]);
+  const [stats, setStats] = useState<Stats>({ users: 0, vendors: 0, riders: 0, orders: 0, todayRevenue: 0 });
+  const [selectedVendor, setSelectedVendor] = useState<Vendor | null>(null);
+  const [search, setSearch] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [statsLoading, setStatsLoading] = useState(true);
+  const [actionLoading, setActionLoading] = useState(false);
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [toast, setToast] = useState<{ msg: string; type: 'success' | 'error' } | null>(null);
+
+  const showToast = (msg: string, type: 'success' | 'error' = 'success') => {
+    setToast({ msg, type });
+    setTimeout(() => setToast(null), 3500);
+  };
+
+  const fetchAll = useCallback(async () => {
+    if (!isAuthenticated() || !isAdmin()) {
+      setError('Session expired. Please log in again.');
+      return;
+    }
+    setLoading(true);
+    setError(null);
+    try {
+      const [statsRes, vendorsRes] = await Promise.all([
+        getDashboardStats(),
+        listVendors(1, 50),
+      ]);
+      setStats(statsRes);
+      setVendors(vendorsRes.data || []);
+    } catch (err: any) {
+      setError(err?.response?.data?.error || err?.message || 'Failed to load vendors');
+    } finally {
+      setLoading(false);
+      setStatsLoading(false);
+    }
+  }, []);
+
+  useEffect(() => { fetchAll(); }, [fetchAll]);
+
+  const handleAddVendor = async (data: any) => {
+    setActionLoading(true);
+    try {
+      const newVendor = await createVendor(data);
+      setVendors(prev => [newVendor, ...prev]);
+      setShowAddModal(false);
+      showToast(`${data.business_name} added successfully`);
+      fetchAll(); // refresh stats
+    } catch (err: any) {
+      showToast(err?.response?.data?.error || 'Failed to create vendor', 'error');
+      throw err;
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const handleUpdateVendor = async (data: any) => {
+    if (!selectedVendor) return;
+    setActionLoading(true);
+    try {
+      const updated = await updateVendor(selectedVendor.vendor_id, data);
+      setVendors(prev => prev.map(v => v.vendor_id === selectedVendor.vendor_id ? updated : v));
+      setSelectedVendor(updated);
+      showToast('Vendor updated');
+    } catch (err: any) {
+      showToast(err?.response?.data?.error || 'Update failed', 'error');
+      throw err;
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const handleToggle = async (vendor: Vendor) => {
+    try {
+      const updated = await toggleVendorStatus(vendor.vendor_id, !vendor.is_active);
+      setVendors(prev => prev.map(v => v.vendor_id === vendor.vendor_id ? updated : v));
+      if (selectedVendor?.vendor_id === vendor.vendor_id) setSelectedVendor(updated);
+      showToast(`${vendor.business_name} ${!vendor.is_active ? 'activated' : 'deactivated'}`);
+    } catch (err: any) {
+      showToast('Status update failed', 'error');
+    }
+  };
+
+  const handleApprove = async (vendor: Vendor) => {
+    try {
+      const updated = await approveVendor(vendor.vendor_id);
+      setVendors(prev => prev.map(v => v.vendor_id === vendor.vendor_id ? updated : v));
+      showToast(`${vendor.business_name} approved`);
+    } catch {
+      showToast('Approval failed', 'error');
+    }
+  };
+
+  const filtered = vendors.filter(v =>
+    v.business_name.toLowerCase().includes(search.toLowerCase()) ||
+    (v.business_email ?? '').toLowerCase().includes(search.toLowerCase()) ||
+    v.contact_person.toLowerCase().includes(search.toLowerCase())
+  );
+
+  const activeCount = vendors.filter(v => v.is_active).length;
+  const pendingCount = vendors.filter(v => !v.is_verified).length;
+
+  return (
+    <div className="min-h-screen bg-gray-50 p-6 lg:p-8">
+      {/* Toast */}
+      {toast && (
+        <div className={`fixed top-5 right-5 z-[60] flex items-center gap-3 px-4 py-3 rounded-xl shadow-lg text-sm font-medium transition-all ${
+          toast.type === 'success' ? 'bg-gray-900 text-white' : 'bg-red-600 text-white'
+        }`}>
+          {toast.type === 'success' ? <CheckCircle2 size={15} /> : <AlertCircle size={15} />}
+          {toast.msg}
+        </div>
+      )}
+
+      <div className="max-w-6xl mx-auto space-y-6">
+
+        {/* Header */}
+        <div className="flex items-start justify-between gap-4">
+          <div>
+            <h1 className="text-2xl font-semibold text-gray-900">Vendors</h1>
+            <p className="text-sm text-gray-400 mt-0.5">Manage and monitor your vendor network</p>
+          </div>
+          <div className="flex items-center gap-3">
             <button
-              onClick={runApiTest}
-              disabled={isLoading}
-              className="mt-3 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50"
+              onClick={fetchAll}
+              disabled={loading}
+              className="p-2.5 rounded-lg border border-gray-200 bg-white text-gray-500 hover:text-gray-900 hover:border-gray-300 transition-colors"
+              title="Refresh"
             >
-              Run Full API Test
+              <RefreshCw size={15} className={loading ? 'animate-spin' : ''} />
+            </button>
+            <button
+              onClick={() => setShowAddModal(true)}
+              className="flex items-center gap-2 px-4 py-2.5 bg-emerald-600 text-white text-sm font-medium rounded-lg hover:bg-emerald-700 transition-colors"
+            >
+              <Plus size={16} />
+              Add vendor
             </button>
           </div>
         </div>
-      )}
 
-      {activeSection === 'dashboard' && (
-        <VendorDashboard stats={dashboardStats} loading={isLoading} />
-      )}
+        {/* Stats */}
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+          {statsLoading ? (
+            Array.from({ length: 4 }).map((_, i) => (
+              <div key={i} className="bg-white rounded-xl border border-gray-100 p-5">
+                <Skeleton className="h-3 w-20 mb-3" />
+                <Skeleton className="h-6 w-16" />
+              </div>
+            ))
+          ) : (
+            <>
+              <StatCard icon={Store} label="Total vendors" value={stats.vendors} accent="bg-emerald-50" />
+              <StatCard icon={CheckCircle2} label="Active" value={activeCount} accent="bg-blue-50" />
+              <StatCard icon={AlertCircle} label="Pending verification" value={pendingCount} accent="bg-amber-50" />
+              <StatCard icon={Users} label="Total users" value={stats.users} accent="bg-purple-50" />
+            </>
+          )}
+        </div>
 
-      {activeSection === 'list' && (
-        <VendorsList
-          vendors={filteredVendors}
-          onSelectVendor={(vendorId) => {
-            setSelectedVendorId(vendorId);
-            setActiveSection('details');
-          }}
-          loading={isLoading}
-        />
-      )}
+        {/* Error */}
+        {error && (
+          <div className="flex items-center gap-3 px-4 py-3 bg-red-50 border border-red-200 rounded-xl text-sm text-red-700">
+            <AlertCircle size={15} className="flex-shrink-0" />
+            <span className="flex-1">{error}</span>
+            <button onClick={fetchAll} className="text-red-600 font-medium hover:underline">Retry</button>
+          </div>
+        )}
 
-      {activeSection === 'details' && selectedVendor && (
-        <VendorDetails
-          vendor={selectedVendor}
-          onUpdate={handleUpdateVendor}
-          loading={isLoading}
-        />
-      )}
+        {/* Main content */}
+        {selectedVendor ? (
+          <VendorDetail
+            vendor={selectedVendor}
+            onBack={() => setSelectedVendor(null)}
+            onUpdate={handleUpdateVendor}
+            loading={actionLoading}
+          />
+        ) : (
+          <div className="bg-white rounded-xl border border-gray-100 overflow-hidden">
+            {/* Table toolbar */}
+            <div className="flex items-center gap-3 px-5 py-4 border-b border-gray-100">
+              <div className="relative flex-1 max-w-xs">
+                <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+                <input
+                  type="text"
+                  placeholder="Search vendors…"
+                  value={search}
+                  onChange={e => setSearch(e.target.value)}
+                  className="w-full pl-9 pr-4 py-2 text-sm border border-gray-200 rounded-lg bg-gray-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-emerald-100 focus:border-emerald-400 transition-all"
+                />
+              </div>
+              <p className="text-xs text-gray-400 ml-auto">
+                {filtered.length} of {vendors.length}
+              </p>
+            </div>
 
-      {activeSection === 'inventory' && selectedVendorId && (
-        <InventoryManagement
-          inventory={inventory}
-          lowStockAlerts={lowStockAlerts}
-          onUpdateInventory={handleUpdateInventory}
-          onRecordMovement={handleRecordMovement}
-          loading={isLoading}
-        />
-      )}
+            {/* Table */}
+            {loading && vendors.length === 0 ? (
+              <div className="p-8 space-y-3">
+                {Array.from({ length: 5 }).map((_, i) => (
+                  <div key={i} className="flex items-center gap-4">
+                    <Skeleton className="w-8 h-8 rounded-lg" />
+                    <Skeleton className="h-4 flex-1" />
+                    <Skeleton className="h-4 w-24" />
+                    <Skeleton className="h-5 w-16 rounded-full" />
+                  </div>
+                ))}
+              </div>
+            ) : filtered.length === 0 ? (
+              <div className="flex flex-col items-center justify-center py-16 text-center">
+                <Store size={32} className="text-gray-200 mb-3" />
+                <p className="text-sm font-medium text-gray-500">
+                  {search ? 'No vendors match your search' : 'No vendors yet'}
+                </p>
+                {!search && (
+                  <button
+                    onClick={() => setShowAddModal(true)}
+                    className="mt-4 flex items-center gap-1.5 text-sm text-emerald-600 hover:text-emerald-700 font-medium"
+                  >
+                    <Plus size={14} /> Add your first vendor
+                  </button>
+                )}
+              </div>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="w-full">
+                  <thead>
+                    <tr className="bg-gray-50/80">
+                      <th className="px-5 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wide">Business</th>
+                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wide">Contact</th>
+                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wide">Email</th>
+                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wide">Status</th>
+                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wide">Verification</th>
+                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wide w-24">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {filtered.map(vendor => (
+                      <VendorRow
+                        key={vendor.vendor_id}
+                        vendor={vendor}
+                        onSelect={() => setSelectedVendor(vendor)}
+                        onToggle={() => handleToggle(vendor)}
+                        onApprove={() => handleApprove(vendor)}
+                      />
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
+        )}
+      </div>
 
-      {activeSection === 'add' && (
-        <AddVendorForm
+      {/* Add vendor modal */}
+      {showAddModal && (
+        <AddVendorModal
+          onClose={() => setShowAddModal(false)}
           onSubmit={handleAddVendor}
-          loading={isLoading}
+          loading={actionLoading}
         />
       )}
     </div>
