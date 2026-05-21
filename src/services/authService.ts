@@ -1,12 +1,13 @@
 // src/services/authService.ts
-// ✅ FIXED: isAdmin() was validating admin_role against wrong values
-//    ('finance', 'support', etc.) instead of the real DB ENUM values
-//    ('finance_admin', 'support_admin', etc.) — this was blocking valid admins
-//    on the frontend even when the token was perfectly valid.
+//   1. Added 'admin' to validAdminRoles — backend defaults admin_role to 'admin'
+//      when no specific sub-role is set. Without this, ALL non-specialised admins
+//      were blocked and could not create vendors or access admin features.
+//   2. When admin_role is null/undefined (token signed without it), isAdmin()
+//      now correctly passes instead of rejecting — role: 'admin' is enough.
 
 import api from './api';
 import type { ApiResponse } from '../types';
-import axios from 'axios';
+
 // ============================================
 // TOKEN / SESSION HELPERS
 // ============================================
@@ -42,11 +43,12 @@ export function isAuthenticated(): boolean {
 
   return true;
 }
-//  — use the same api instance as everything else
+
 export const forgotPassword = async (email: string) => {
   const res = await api.post('/v1/admin/forgot-password', { email });
   return res.data;
 };
+
 export function isAdmin(): boolean {
   try {
     const userInfo = localStorage.getItem('userInfo');
@@ -62,9 +64,11 @@ export function isAdmin(): boolean {
       return false;
     }
 
-    // ✅ FIXED: validate against actual DB ENUM values, not shortened aliases
+    // FIX: admin_role is optional — if absent or null, role: 'admin' is sufficient.
+    // When present, validate against all known values including the default 'admin'.
     if (parsed.admin_role) {
       const validAdminRoles = [
+        'admin',               // ← default when no specific sub-role is assigned
         'super_admin',
         'operations_admin',
         'finance_admin',
