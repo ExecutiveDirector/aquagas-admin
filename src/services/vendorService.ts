@@ -102,12 +102,15 @@ function handleAuthError(error: any) {
 
 export async function listVendors(page = 1, limit = 10): Promise<VendorListResponse> {
   try {
-    const res = await api.get<ApiResponse<VendorListResponse>>(
-      `/v1/admin/vendors?page=${page}&limit=${limit}`
-    );
-    const vendorData = res.data?.data;
-    if (!vendorData) throw new Error('Invalid API response: Missing data field');
-    return vendorData;
+    const res = await api.get(`/v1/admin/vendors?page=${page}&limit=${limit}`);
+    // Backend returns { data: Vendor[], total, page, limit } — no nested .data wrapper
+    const raw = res.data;
+    return {
+      data:  raw.data  ?? raw,        // rows array
+      total: raw.total ?? 0,
+      page:  raw.page  ?? page,
+      limit: raw.limit ?? limit,
+    };
   } catch (error: any) {
     console.error('📦 listVendors error:', error);
     handleAuthError(error);
@@ -169,11 +172,13 @@ export async function deleteVendor(id: string): Promise<void> {
   }
 }
 
+
 export async function toggleVendorStatus(id: string, active: boolean): Promise<Vendor> {
   try {
     const action = active ? 'activate' : 'suspend';
-    const res = await api.post<ApiResponse<Vendor>>(`/v1/admin/vendors/${id}/${action}`);
-    return res.data.data ?? (res.data as unknown as Vendor);
+    const res = await api.post(`/v1/admin/vendors/${id}/${action}`);
+    // Controller returns { message, data: vendor }
+    return res.data.data ?? res.data;
   } catch (error: any) {
     console.error(`📦 toggleVendorStatus(${id}) error:`, error);
     handleAuthError(error);
@@ -183,8 +188,8 @@ export async function toggleVendorStatus(id: string, active: boolean): Promise<V
 
 export async function approveVendor(id: string): Promise<Vendor> {
   try {
-    const res = await api.post<ApiResponse<Vendor>>(`/v1/admin/vendors/${id}/approve`);
-    return res.data.data ?? (res.data as unknown as Vendor);
+    const res = await api.put(`/v1/admin/vendors/${id}/approve`);
+    return res.data.data ?? res.data;
   } catch (error: any) {
     console.error(`📦 approveVendor(${id}) error:`, error);
     handleAuthError(error);
