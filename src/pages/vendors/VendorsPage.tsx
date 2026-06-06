@@ -83,30 +83,62 @@ function authHeaders() {
 }
 
 async function apiFetchOutlets(vendorId: string): Promise<Outlet[]> {
-  const res = await fetch(`${API_BASE}/v1/admin/vendors/${vendorId}/outlets`, { headers: authHeaders() });
+  const res = await fetch(`${API_BASE}/v1/admin/vendors/${vendorId}/outlets`, {
+    headers: authHeaders(),
+  });
   if (!res.ok) throw new Error('Failed to fetch outlets');
   const data = await res.json();
-  return data.data ?? data ?? [];
+  const rows: any[] = data.data ?? data ?? [];
+
+  // ✅ Normalise — backend may return location as POINT buffer,
+  // ensure latitude/longitude are always plain numbers
+  return rows.map(o => ({
+    ...o,
+    latitude:  o.latitude  != null ? String(o.latitude)  : '',
+    longitude: o.longitude != null ? String(o.longitude) : '',
+  }));
 }
 
 async function apiCreateOutlet(vendorId: string, body: OutletFormData): Promise<Outlet> {
   const res = await fetch(`${API_BASE}/v1/admin/vendors/${vendorId}/outlets`, {
-    method: 'POST', headers: authHeaders(),
-    body: JSON.stringify({ ...body, latitude: parseFloat(body.latitude), longitude: parseFloat(body.longitude) }),
+    method: 'POST',
+    headers: authHeaders(),
+    body: JSON.stringify({
+      ...body,
+      latitude:  parseFloat(body.latitude),
+      longitude: parseFloat(body.longitude),
+    }),
   });
   const data = await res.json();
   if (!res.ok) throw new Error(data.error || 'Failed to create outlet');
-  return data.data ?? data;
+  const outlet = data.data ?? data;
+  // ✅ Normalise lat/lng back to strings for the form state
+  return {
+    ...outlet,
+    latitude:  outlet.latitude  != null ? String(outlet.latitude)  : '',
+    longitude: outlet.longitude != null ? String(outlet.longitude) : '',
+  };
 }
 
 async function apiUpdateOutlet(vendorId: string, outletId: string, body: OutletFormData): Promise<Outlet> {
   const res = await fetch(`${API_BASE}/v1/admin/vendors/${vendorId}/outlets/${outletId}`, {
-    method: 'PUT', headers: authHeaders(),
-    body: JSON.stringify({ ...body, latitude: parseFloat(body.latitude), longitude: parseFloat(body.longitude) }),
+    method: 'PUT',
+    headers: authHeaders(),
+    body: JSON.stringify({
+      ...body,
+      latitude:  parseFloat(body.latitude),
+      longitude: parseFloat(body.longitude),
+    }),
   });
   const data = await res.json();
   if (!res.ok) throw new Error(data.error || 'Failed to update outlet');
-  return data.data ?? data;
+  const outlet = data.data ?? data;
+  // ✅ Normalise lat/lng back to strings for the form state
+  return {
+    ...outlet,
+    latitude:  outlet.latitude  != null ? String(outlet.latitude)  : '',
+    longitude: outlet.longitude != null ? String(outlet.longitude) : '',
+  };
 }
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
