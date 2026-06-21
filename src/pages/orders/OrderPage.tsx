@@ -1,8 +1,7 @@
 // src/pages/orders/OrdersPage.tsx
 import React, { useState, useEffect, useCallback, useRef } from "react";
 import { Search, RefreshCw, AlertCircle, ChevronDown, ChevronUp, X, CheckCircle } from "lucide-react";
-import { listOrders, updateOrderStatus, assignRiderToOrder, refundOrder } from "../../services/adminService";
-import { getAllRiders } from "../../services/adminService"; // make sure this is exported
+import { listOrders, updateOrderStatus, assignRiderToOrder, refundOrder, listRiders } from "../../services/adminService";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -93,8 +92,7 @@ function OrderDetailPanel({
     const fetchRiders = async () => {
       setRidersLoading(true);
       try {
-        const res = await getAllRiders();
-        // getAllRiders returns { data: riders[] }
+        const res = await listRiders(1, 200); // fetch up to 200 riders
         const allRiders: Rider[] = res.data ?? [];
         // Only show active+approved riders
         setRiders(allRiders.filter((r: any) => r.current_status === 'active' && r.approved));
