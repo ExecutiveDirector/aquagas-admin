@@ -24,8 +24,10 @@ interface Rider {
   first_name: string;
   last_name: string;
   phone: string;
-  current_status: string;
+  current_status: 'offline' | 'available' | 'busy' | 'on_delivery' | 'on_break' | 'pending' | 'inactive' | 'suspended';
   vehicle_type?: string;
+  is_verified: number | boolean;
+  is_active: number | boolean;
 }
 
 const STATUS_CONFIG: Record<string, { label: string; cls: string }> = {
@@ -94,8 +96,16 @@ function OrderDetailPanel({
       try {
         const res = await listRiders(1, 200); // fetch up to 200 riders
         const allRiders: Rider[] = res.data ?? [];
-        // Only show active+approved riders
-        setRiders(allRiders.filter((r: any) => r.current_status === 'active' && r.approved));
+        // Real schema: is_verified + is_active (tinyint), current_status ENUM
+        // Show riders who are verified, active, and in a normal working status
+        const ASSIGNABLE_STATUSES = ['offline', 'available', 'busy', 'on_delivery', 'on_break'];
+        setRiders(
+          allRiders.filter((r: any) =>
+            (r.is_verified === 1 || r.is_verified === true) &&
+            (r.is_active === 1 || r.is_active === true) &&
+            ASSIGNABLE_STATUSES.includes(r.current_status)
+          )
+        );
       } catch {
         // non-fatal: fall back to empty list
         setRiders([]);
@@ -323,8 +333,12 @@ function OrderDetailPanel({
                           <p className="font-medium">{rider.first_name} {rider.last_name}</p>
                           <p className="text-xs text-gray-400">{rider.phone} {rider.vehicle_type ? `· ${rider.vehicle_type}` : ""}</p>
                         </div>
-                        <span className="text-xs px-1.5 py-0.5 rounded-full bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400">
-                          active
+                        <span className={`text-xs px-1.5 py-0.5 rounded-full ${
+                          rider.current_status === 'available'
+                            ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400'
+                            : 'bg-gray-100 text-gray-500 dark:bg-gray-700 dark:text-gray-400'
+                        }`}>
+                          {rider.current_status.replace('_', ' ')}
                         </span>
                       </button>
                     ))}
