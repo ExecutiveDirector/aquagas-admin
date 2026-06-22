@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, Edit, Trash2, AlertCircle, Search, RefreshCw, Package, FolderTree, X, Save } from 'lucide-react';
+import { Plus, Edit, Trash2, AlertCircle, Search, RefreshCw, Package, FolderTree, X, Save, ImagePlus, Link, CheckCircle, AlertTriangle } from 'lucide-react';
 
 // ============================================
 // TYPE DEFINITIONS
@@ -17,7 +17,7 @@ interface Product {
   min_price?: number;
   max_price?: number;
   weight_kg?: number;
-  product_images?: string;
+  product_images?: string; // JSON string: ["url1", "url2", ...]
   is_active: boolean;
   is_featured: boolean;
   vendor_id?: number;
@@ -57,18 +57,18 @@ const api = {
       const response = await fetch(`${API_BASE_URL}/v1/admin/products?page=${page}&limit=${limit}`, {
         headers: getAuthHeaders()
       });
-      
+
       console.log('📦 Products response status:', response.status);
-      
+
       if (!response.ok) {
         const errorText = await response.text();
         console.error('📦 Products error response:', errorText);
         throw new Error(`Failed to fetch products: ${response.status} ${response.statusText}`);
       }
-      
+
       const data = await response.json();
       console.log('📦 Raw products response:', data);
-      
+
       // Handle multiple possible response formats
       let products = [];
       if (Array.isArray(data)) {
@@ -85,7 +85,7 @@ const api = {
         console.warn('📦 Unexpected products response format:', data);
         products = [];
       }
-      
+
       console.log('📦 Extracted products:', products.length);
       return products;
     } catch (error) {
@@ -144,7 +144,7 @@ const api = {
     if (!response.ok) throw new Error(`Failed to fetch categories: ${response.statusText}`);
     const data = await response.json();
     console.log('📁 Raw categories response:', data);
-    
+
     // Handle multiple possible response formats
     let categories = [];
     if (Array.isArray(data)) {
@@ -154,7 +154,7 @@ const api = {
     } else if (data.categories && Array.isArray(data.categories)) {
       categories = data.categories;
     }
-    
+
     console.log('📁 Extracted categories:', categories.length);
     return categories;
   },
@@ -206,7 +206,7 @@ const api = {
 const checkAdminAccess = (): { hasAccess: boolean; role: string; adminRole: string | null; error?: string } => {
   const token = localStorage.getItem('token') || sessionStorage.getItem('token');
   const userInfo = localStorage.getItem('userInfo') || sessionStorage.getItem('userInfo');
-  
+
   if (!token) {
     return { hasAccess: false, role: '', adminRole: null, error: 'No authentication token found' };
   }
@@ -217,7 +217,7 @@ const checkAdminAccess = (): { hasAccess: boolean; role: string; adminRole: stri
 
   try {
     const parsed = JSON.parse(userInfo);
-    
+
     if (parsed.role !== 'admin') {
       return { hasAccess: false, role: parsed.role, adminRole: null, error: 'Access denied. Admin privileges required.' };
     }
@@ -228,6 +228,178 @@ const checkAdminAccess = (): { hasAccess: boolean; role: string; adminRole: stri
     console.error('❌ Error parsing user info:', e);
     return { hasAccess: false, role: '', adminRole: null, error: 'Invalid user information' };
   }
+};
+
+// ============================================
+// IMAGE URL INPUT COMPONENT
+// ============================================
+interface ImageUrlInputProps {
+  urls: string[];
+  onChange: (urls: string[]) => void;
+}
+
+const ImageUrlInput: React.FC<ImageUrlInputProps> = ({ urls, onChange }) => {
+  const [inputValue, setInputValue] = useState('');
+  const [previewStatus, setPreviewStatus] = useState<Record<number, 'loading' | 'ok' | 'error'>>({});
+
+  const handleAdd = () => {
+    const trimmed = inputValue.trim();
+    if (!trimmed) return;
+
+    // Basic URL validation
+    try {
+      new URL(trimmed);
+    } catch {
+      return; // silently ignore invalid URLs — error shown via border
+    }
+
+    if (urls.includes(trimmed)) return; // no duplicates
+
+    onChange([...urls, trimmed]);
+    setInputValue('');
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      handleAdd();
+    }
+  };
+
+  const handleRemove = (index: number) => {
+    const updated = urls.filter((_, i) => i !== index);
+    onChange(updated);
+    // Clean up preview status
+    const newStatus = { ...previewStatus };
+    delete newStatus[index];
+    setPreviewStatus(newStatus);
+  };
+
+  const handleImageLoad = (index: number) => {
+    setPreviewStatus(prev => ({ ...prev, [index]: 'ok' }));
+  };
+
+  const handleImageError = (index: number) => {
+    setPreviewStatus(prev => ({ ...prev, [index]: 'error' }));
+  };
+
+  const isValidUrl = (val: string) => {
+    if (!val) return true; // empty is fine
+    try { new URL(val); return true; } catch { return false; }
+  };
+
+  return (
+    <div className="space-y-3">
+      {/* Input row */}
+      <div className="flex gap-2">
+        <div className="relative flex-1">
+          <Link className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
+          <input
+            type="url"
+            value={inputValue}
+            onChange={(e) => setInputValue(e.target.value)}
+            onKeyDown={handleKeyDown}
+            placeholder="Paste image URL and press Enter or click Add"
+            className={`w-full pl-10 pr-4 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors ${
+              inputValue && !isValidUrl(inputValue)
+                ? 'border-red-400 bg-red-50'
+                : 'border-gray-300'
+            }`}
+          />
+        </div>
+        <button
+          type="button"
+          onClick={handleAdd}
+          disabled={!inputValue.trim() || !isValidUrl(inputValue)}
+          className="flex items-center gap-1.5 px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+        >
+          <ImagePlus className="w-4 h-4" />
+          Add
+        </button>
+      </div>
+
+      {/* URL validation hint */}
+      {inputValue && !isValidUrl(inputValue) && (
+        <p className="text-xs text-red-500 flex items-center gap-1">
+          <AlertTriangle className="w-3 h-3" />
+          Enter a valid URL (must start with http:// or https://)
+        </p>
+      )}
+
+      {/* Image previews */}
+      {urls.length > 0 && (
+        <div className="space-y-2">
+          {urls.map((url, index) => (
+            <div
+              key={index}
+              className="flex items-center gap-3 p-2.5 border border-gray-200 rounded-lg bg-gray-50 group"
+            >
+              {/* Thumbnail */}
+              <div className="flex-shrink-0 w-14 h-14 rounded-md border border-gray-200 bg-white overflow-hidden flex items-center justify-center">
+                {previewStatus[index] === 'error' ? (
+                  <div className="flex flex-col items-center gap-1">
+                    <AlertCircle className="w-5 h-5 text-red-400" />
+                    <span className="text-[9px] text-red-400 text-center leading-tight">Load failed</span>
+                  </div>
+                ) : (
+                  <img
+                    src={url}
+                    alt={`Product image ${index + 1}`}
+                    className="w-full h-full object-cover"
+                    onLoad={() => handleImageLoad(index)}
+                    onError={() => handleImageError(index)}
+                  />
+                )}
+              </div>
+
+              {/* URL text + status */}
+              <div className="flex-1 min-w-0">
+                <p className="text-xs font-medium text-gray-700 truncate">{url}</p>
+                <div className="flex items-center gap-1 mt-0.5">
+                  {previewStatus[index] === 'ok' && (
+                    <span className="flex items-center gap-1 text-[10px] text-green-600">
+                      <CheckCircle className="w-3 h-3" /> Image loaded
+                    </span>
+                  )}
+                  {previewStatus[index] === 'error' && (
+                    <span className="flex items-center gap-1 text-[10px] text-red-500">
+                      <AlertCircle className="w-3 h-3" /> Cannot load image
+                    </span>
+                  )}
+                  {!previewStatus[index] && (
+                    <span className="text-[10px] text-gray-400">Loading preview...</span>
+                  )}
+                  <span className="text-[10px] text-gray-400 ml-1">
+                    · Image {index + 1}
+                    {index === 0 && <span className="ml-1 text-blue-500 font-medium">(primary)</span>}
+                  </span>
+                </div>
+              </div>
+
+              {/* Remove button */}
+              <button
+                type="button"
+                onClick={() => handleRemove(index)}
+                className="flex-shrink-0 p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-md transition-colors"
+                title="Remove image"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Empty state hint */}
+      {urls.length === 0 && (
+        <div className="border-2 border-dashed border-gray-200 rounded-lg p-4 text-center">
+          <ImagePlus className="w-8 h-8 text-gray-300 mx-auto mb-1.5" />
+          <p className="text-xs text-gray-400">No images added yet. Paste a URL above to add product images.</p>
+          <p className="text-[10px] text-gray-300 mt-0.5">The first URL you add becomes the primary image.</p>
+        </div>
+      )}
+    </div>
+  );
 };
 
 // ============================================
@@ -245,6 +417,20 @@ const ProductsTable: React.FC<{
     p.product_code?.toLowerCase().includes(searchQuery.toLowerCase()) ||
     p.brand?.toLowerCase().includes(searchQuery.toLowerCase())
   );
+
+  // Helper to get the primary (first) image from product_images JSON string
+  const getPrimaryImage = (raw?: string): string | null => {
+    if (!raw) return null;
+    try {
+      const parsed = JSON.parse(raw);
+      if (Array.isArray(parsed) && parsed.length > 0) return parsed[0];
+      return null;
+    } catch {
+      // Fallback: treat as comma-separated or a plain URL
+      const first = raw.split(',')[0]?.trim();
+      return first || null;
+    }
+  };
 
   if (filteredProducts.length === 0) {
     return (
@@ -274,12 +460,25 @@ const ProductsTable: React.FC<{
           <tbody className="divide-y divide-gray-200">
             {filteredProducts.map((product) => {
               const category = categories.find(c => c.category_id === product.category_id);
+              const primaryImage = getPrimaryImage(product.product_images);
               return (
                 <tr key={product.product_id} className="hover:bg-gray-50 transition-colors">
                   <td className="px-6 py-4">
                     <div className="flex items-center">
-                      <div className="flex-shrink-0 h-10 w-10 bg-gray-100 rounded-lg flex items-center justify-center">
-                        <Package className="w-5 h-5 text-gray-400" />
+                      <div className="flex-shrink-0 h-10 w-10 bg-gray-100 rounded-lg flex items-center justify-center overflow-hidden">
+                        {primaryImage ? (
+                          <img
+                            src={primaryImage}
+                            alt={product.product_name}
+                            className="w-full h-full object-cover"
+                            onError={(e) => {
+                              // Fall back to package icon if the image fails to load
+                              (e.target as HTMLImageElement).style.display = 'none';
+                            }}
+                          />
+                        ) : (
+                          <Package className="w-5 h-5 text-gray-400" />
+                        )}
                       </div>
                       <div className="ml-4">
                         <div className="text-sm font-medium text-gray-900">{product.product_name}</div>
@@ -426,7 +625,7 @@ const CategoriesTable: React.FC<{
 };
 
 // ============================================
-// PRODUCT FORM COMPONENT
+// PRODUCT FORM COMPONENT (WITH IMAGE URL SUPPORT)
 // ============================================
 const ProductForm: React.FC<{
   product?: Product | null;
@@ -435,6 +634,18 @@ const ProductForm: React.FC<{
   onCancel: () => void;
   loading?: boolean;
 }> = ({ product, categories, onSubmit, onCancel, loading }) => {
+  // Parse existing product_images (stored as JSON string or comma-separated)
+  const parseImages = (raw?: string): string[] => {
+    if (!raw) return [];
+    try {
+      const parsed = JSON.parse(raw);
+      return Array.isArray(parsed) ? parsed : [raw];
+    } catch {
+      // Fallback: treat as comma-separated
+      return raw.split(',').map(s => s.trim()).filter(Boolean);
+    }
+  };
+
   const [formData, setFormData] = useState<Partial<Product>>(
     product || {
       is_active: true,
@@ -443,9 +654,25 @@ const ProductForm: React.FC<{
     }
   );
 
+  const [imageUrls, setImageUrls] = useState<string[]>(
+    parseImages(product?.product_images)
+  );
+
+  const handleImageUrlsChange = (urls: string[]) => {
+    setImageUrls(urls);
+    // Store as JSON string (array) so backend can parse multiple images
+    setFormData(prev => ({
+      ...prev,
+      product_images: urls.length > 0 ? JSON.stringify(urls) : undefined
+    }));
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    await onSubmit(formData);
+    await onSubmit({
+      ...formData,
+      product_images: imageUrls.length > 0 ? JSON.stringify(imageUrls) : undefined
+    });
   };
 
   return (
@@ -461,8 +688,9 @@ const ProductForm: React.FC<{
           <X className="w-6 h-6" />
         </button>
       </div>
-      
+
       <form onSubmit={handleSubmit} className="space-y-6">
+        {/* ── Basic Info ── */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div className="md:col-span-2">
             <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -471,7 +699,7 @@ const ProductForm: React.FC<{
             <input
               type="text"
               value={formData.product_name || ''}
-              onChange={(e) => setFormData({...formData, product_name: e.target.value})}
+              onChange={(e) => setFormData({ ...formData, product_name: e.target.value })}
               className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               placeholder="e.g., 13kg Gas Cylinder"
               required
@@ -485,7 +713,7 @@ const ProductForm: React.FC<{
             <input
               type="text"
               value={formData.product_code || ''}
-              onChange={(e) => setFormData({...formData, product_code: e.target.value})}
+              onChange={(e) => setFormData({ ...formData, product_code: e.target.value })}
               className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               placeholder="e.g., GAS-13KG"
               required
@@ -493,15 +721,13 @@ const ProductForm: React.FC<{
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Brand
-            </label>
+            <label className="block text-sm font-medium text-gray-700 mb-2">Brand</label>
             <input
               type="text"
               value={formData.brand || ''}
-              onChange={(e) => setFormData({...formData, brand: e.target.value})}
+              onChange={(e) => setFormData({ ...formData, brand: e.target.value })}
               className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              placeholder="e.g., Total, Shell"
+              placeholder="e.g., K-Gas, ProGas, Total, Shell"
             />
           </div>
 
@@ -511,30 +737,17 @@ const ProductForm: React.FC<{
             </label>
             <select
               value={formData.category_id || ''}
-              onChange={(e) => setFormData({...formData, category_id: parseInt(e.target.value)})}
+              onChange={(e) => setFormData({ ...formData, category_id: parseInt(e.target.value) })}
               className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               required
             >
-              <option value="">Select Category</option>
-              {categories.map(cat => (
-                <option key={cat.category_id} value={cat.category_id}>{cat.category_name}</option>
+              <option value="">Select a category</option>
+              {categories.filter(c => c.is_active).map(cat => (
+                <option key={cat.category_id} value={cat.category_id}>
+                  {cat.category_name}
+                </option>
               ))}
             </select>
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Base Price (KES) <span className="text-red-500">*</span>
-            </label>
-            <input
-              type="number"
-              step="0.01"
-              value={formData.base_price || ''}
-              onChange={(e) => setFormData({...formData, base_price: parseFloat(e.target.value)})}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              placeholder="e.g., 2500"
-              required
-            />
           </div>
 
           <div>
@@ -543,7 +756,7 @@ const ProductForm: React.FC<{
             </label>
             <select
               value={formData.unit_of_measure || 'pieces'}
-              onChange={(e) => setFormData({...formData, unit_of_measure: e.target.value as any})}
+              onChange={(e) => setFormData({ ...formData, unit_of_measure: e.target.value as Product['unit_of_measure'] })}
               className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             >
               <option value="pieces">Pieces</option>
@@ -554,67 +767,129 @@ const ProductForm: React.FC<{
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Size Specification
-            </label>
+            <label className="block text-sm font-medium text-gray-700 mb-2">Size / Specification</label>
             <input
               type="text"
               value={formData.size_specification || ''}
-              onChange={(e) => setFormData({...formData, size_specification: e.target.value})}
+              onChange={(e) => setFormData({ ...formData, size_specification: e.target.value })}
               className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              placeholder="e.g., 13kg, 6kg"
+              placeholder="e.g., 13kg, 6L, 500ml"
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Weight (kg)
-            </label>
+            <label className="block text-sm font-medium text-gray-700 mb-2">Weight (kg)</label>
             <input
               type="number"
               step="0.01"
               value={formData.weight_kg || ''}
-              onChange={(e) => setFormData({...formData, weight_kg: parseFloat(e.target.value)})}
+              onChange={(e) => setFormData({ ...formData, weight_kg: parseFloat(e.target.value) })}
               className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              placeholder="e.g., 13"
+              placeholder="0.00"
             />
-          </div>
-
-          <div className="md:col-span-2">
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Description
-            </label>
-            <textarea
-              value={formData.description || ''}
-              onChange={(e) => setFormData({...formData, description: e.target.value})}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              rows={4}
-              placeholder="Enter product description..."
-            />
-          </div>
-
-          <div className="md:col-span-2 flex items-center gap-6 p-4 bg-gray-50 rounded-lg">
-            <label className="flex items-center cursor-pointer">
-              <input
-                type="checkbox"
-                checked={formData.is_active ?? true}
-                onChange={(e) => setFormData({...formData, is_active: e.target.checked})}
-                className="w-4 h-4 rounded border-gray-300 text-blue-600 focus:ring-2 focus:ring-blue-500"
-              />
-              <span className="ml-2 text-sm font-medium text-gray-700">Active</span>
-            </label>
-            <label className="flex items-center cursor-pointer">
-              <input
-                type="checkbox"
-                checked={formData.is_featured ?? false}
-                onChange={(e) => setFormData({...formData, is_featured: e.target.checked})}
-                className="w-4 h-4 rounded border-gray-300 text-blue-600 focus:ring-2 focus:ring-blue-500"
-              />
-              <span className="ml-2 text-sm font-medium text-gray-700">Featured</span>
-            </label>
           </div>
         </div>
 
+        {/* ── Pricing ── */}
+        <div>
+          <h4 className="text-sm font-semibold text-gray-700 uppercase tracking-wide mb-3 pb-1 border-b border-gray-100">
+            Pricing (KES)
+          </h4>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Base Price <span className="text-red-500">*</span>
+              </label>
+              <div className="relative">
+                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-gray-500 font-medium">KES</span>
+                <input
+                  type="number"
+                  step="0.01"
+                  value={formData.base_price || ''}
+                  onChange={(e) => setFormData({ ...formData, base_price: parseFloat(e.target.value) })}
+                  className="w-full pl-12 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  placeholder="0.00"
+                  required
+                />
+              </div>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Min Price</label>
+              <div className="relative">
+                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-gray-500 font-medium">KES</span>
+                <input
+                  type="number"
+                  step="0.01"
+                  value={formData.min_price || ''}
+                  onChange={(e) => setFormData({ ...formData, min_price: parseFloat(e.target.value) })}
+                  className="w-full pl-12 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  placeholder="0.00"
+                />
+              </div>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Max Price</label>
+              <div className="relative">
+                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-gray-500 font-medium">KES</span>
+                <input
+                  type="number"
+                  step="0.01"
+                  value={formData.max_price || ''}
+                  onChange={(e) => setFormData({ ...formData, max_price: parseFloat(e.target.value) })}
+                  className="w-full pl-12 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  placeholder="0.00"
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* ── Product Images ── */}
+        <div>
+          <h4 className="text-sm font-semibold text-gray-700 uppercase tracking-wide mb-3 pb-1 border-b border-gray-100">
+            Product Images
+          </h4>
+          <ImageUrlInput
+            urls={imageUrls}
+            onChange={handleImageUrlsChange}
+          />
+        </div>
+
+        {/* ── Description ── */}
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">Description</label>
+          <textarea
+            value={formData.description || ''}
+            onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
+            rows={4}
+            placeholder="Describe the product..."
+          />
+        </div>
+
+        {/* ── Flags ── */}
+        <div className="flex items-center gap-6 p-4 bg-gray-50 rounded-lg">
+          <label className="flex items-center cursor-pointer select-none">
+            <input
+              type="checkbox"
+              checked={formData.is_active ?? true}
+              onChange={(e) => setFormData({ ...formData, is_active: e.target.checked })}
+              className="w-4 h-4 rounded border-gray-300 text-blue-600 focus:ring-2 focus:ring-blue-500"
+            />
+            <span className="ml-2 text-sm font-medium text-gray-700">Active</span>
+          </label>
+          <label className="flex items-center cursor-pointer select-none">
+            <input
+              type="checkbox"
+              checked={formData.is_featured ?? false}
+              onChange={(e) => setFormData({ ...formData, is_featured: e.target.checked })}
+              className="w-4 h-4 rounded border-gray-300 text-blue-600 focus:ring-2 focus:ring-blue-500"
+            />
+            <span className="ml-2 text-sm font-medium text-gray-700">Featured product</span>
+          </label>
+        </div>
+
+        {/* ── Actions ── */}
         <div className="flex justify-end gap-3 pt-6 border-t border-gray-200">
           <button
             type="button"
@@ -672,7 +947,7 @@ const CategoryForm: React.FC<{
           <X className="w-6 h-6" />
         </button>
       </div>
-      
+
       <form onSubmit={handleSubmit} className="space-y-6">
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -779,7 +1054,7 @@ const ProductManagement: React.FC = () => {
 
   useEffect(() => {
     const authCheck = checkAdminAccess();
-    
+
     if (!authCheck.hasAccess) {
       setAuthError(authCheck.error || 'Access denied');
       return;
@@ -799,10 +1074,10 @@ const ProductManagement: React.FC = () => {
   const fetchData = async () => {
     setIsLoading(true);
     setError(null);
-    
+
     try {
       console.log('🔄 Fetching data from database...');
-      
+
       const [productsData, categoriesData] = await Promise.all([
         api.getProducts(),
         api.getCategories()
@@ -815,7 +1090,7 @@ const ProductManagement: React.FC = () => {
 
       setProducts(productsData);
       setCategories(categoriesData);
-      
+
       console.log('✅ Data loaded successfully');
 
       if (productsData.length === 0 && categoriesData.length === 0) {
@@ -826,7 +1101,7 @@ const ProductManagement: React.FC = () => {
     } catch (err: any) {
       console.error('❌ Fetch error:', err);
       setError(err.message || 'Failed to fetch data from database');
-      
+
       if (err.message.includes('401') || err.message.includes('403')) {
         setAuthError('Authentication failed. Please log in again.');
       }
@@ -839,14 +1114,14 @@ const ProductManagement: React.FC = () => {
     try {
       setIsLoading(true);
       console.log('📦 Creating product:', data);
-      
+
       const newProduct = await api.createProduct(data);
-      
+
       setProducts(prev => [...prev, newProduct]);
       setSuccessMessage('Product created successfully!');
       setActiveTab('products');
       setSelectedProduct(null);
-      
+
       console.log('✅ Product created:', newProduct.product_id);
     } catch (err: any) {
       console.error('❌ Create product error:', err);
@@ -860,14 +1135,14 @@ const ProductManagement: React.FC = () => {
     try {
       setIsLoading(true);
       console.log('📝 Updating product:', productId, data);
-      
+
       const updatedProduct = await api.updateProduct(productId, data);
-      
+
       setProducts(prev => prev.map(p => p.product_id === productId ? updatedProduct : p));
       setSuccessMessage('Product updated successfully!');
       setSelectedProduct(null);
       setActiveTab('products');
-      
+
       console.log('✅ Product updated:', productId);
     } catch (err: any) {
       console.error('❌ Update product error:', err);
@@ -881,16 +1156,16 @@ const ProductManagement: React.FC = () => {
     if (!confirm('Are you sure you want to delete this product? This action cannot be undone.')) {
       return;
     }
-    
+
     try {
       setIsLoading(true);
       console.log('🗑️ Deleting product:', productId);
-      
+
       await api.deleteProduct(productId);
-      
+
       setProducts(prev => prev.filter(p => p.product_id !== productId));
       setSuccessMessage('Product deleted successfully!');
-      
+
       console.log('✅ Product deleted:', productId);
     } catch (err: any) {
       console.error('❌ Delete product error:', err);
@@ -904,14 +1179,14 @@ const ProductManagement: React.FC = () => {
     try {
       setIsLoading(true);
       console.log('📁 Creating category:', data);
-      
+
       const newCategory = await api.createCategory(data);
-      
+
       setCategories(prev => [...prev, newCategory]);
       setSuccessMessage('Category created successfully!');
       setActiveTab('categories');
       setSelectedCategory(null);
-      
+
       console.log('✅ Category created:', newCategory.category_id);
     } catch (err: any) {
       console.error('❌ Create category error:', err);
@@ -925,14 +1200,14 @@ const ProductManagement: React.FC = () => {
     try {
       setIsLoading(true);
       console.log('📝 Updating category:', categoryId, data);
-      
+
       const updatedCategory = await api.updateCategory(categoryId, data);
-      
+
       setCategories(prev => prev.map(c => c.category_id.toString() === categoryId ? updatedCategory : c));
       setSuccessMessage('Category updated successfully!');
       setSelectedCategory(null);
       setActiveTab('categories');
-      
+
       console.log('✅ Category updated:', categoryId);
     } catch (err: any) {
       console.error('❌ Update category error:', err);
@@ -946,16 +1221,16 @@ const ProductManagement: React.FC = () => {
     if (!confirm('Are you sure you want to delete this category? This action cannot be undone.')) {
       return;
     }
-    
+
     try {
       setIsLoading(true);
       console.log('🗑️ Deleting category:', categoryId);
-      
+
       await api.deleteCategory(categoryId);
-      
+
       setCategories(prev => prev.filter(c => c.category_id.toString() !== categoryId));
       setSuccessMessage('Category deleted successfully!');
-      
+
       console.log('✅ Category deleted:', categoryId);
     } catch (err: any) {
       console.error('❌ Delete category error:', err);
@@ -1181,3 +1456,4 @@ const ProductManagement: React.FC = () => {
 };
 
 export default ProductManagement;
+export { ImageUrlInput };
