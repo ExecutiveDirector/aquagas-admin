@@ -300,15 +300,22 @@ export async function updateRiderProfile(
   return res.data;
 }
 
-export async function getRiderAnalytics(riderId: string): Promise<ApiResponse> {
-  const res = await api.get(`/v1/admin/riders/${riderId}/analytics`);
-  return res.data;
-}
-
-export async function getRiderOrders(riderId: string): Promise<ApiResponse> {
-  const res = await api.get(`/v1/admin/riders/${riderId}/orders`);
-  return res.data;
-}
+// GET /riders/:riderId/orders?page=1&limit=10
+export const getRiderOrders = async (
+  riderId: string,
+  params: { page?: number; limit?: number } = {}
+) => {
+  const { page = 1, limit = 10 } = params;
+  const res = await api.get(`/riders/${riderId}/orders`, { params: { page, limit } });
+  return res.data; // { data: Order[], total: number, page: number }
+};
+ 
+// GET /riders/:riderId/analytics
+// Returns the summary object from getRiderAnalyticsAdmin
+export const getRiderAnalytics = async (riderId: string) => {
+  const res = await api.get(`/riders/${riderId}/analytics`);
+  return res.data; // { data: { totalDeliveries, completedDeliveries, completionRate, avgRating, totalEarnings } }
+};
 
 // ============================================
 // ORDER MANAGEMENT
