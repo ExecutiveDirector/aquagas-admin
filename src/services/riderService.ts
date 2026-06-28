@@ -1,9 +1,17 @@
 // src/services/riderService.ts
+//
+// Functions below are grouped into two sections:
+//   1. IMPLEMENTED — these call real, working backend routes
+//      (routes/admin.js's RIDER MANAGEMENT section). Use these.
+//   2. NOT YET IMPLEMENTED — the backend has no matching route for any
+//      of these. They're kept here (rather than deleted) so the intended
+//      surface area is visible, but calling any of them will 404. None of
+//      these are currently imported anywhere in the app.
 import api from './api';
-import type { ApiResponse, Rider, RiderWithAccount } from '../types';
+import type { ApiResponse } from '../types';
 
 // ============================================
-// RIDER CRUD OPERATIONS
+// IMPLEMENTED — RIDER CRUD
 // ============================================
 
 export interface CreateRiderData {
@@ -27,9 +35,8 @@ export async function listRiders(
   try {
     const params: any = { page, limit };
     if (search) params.search = search;
-    
+
     const res = await api.get('/v1/admin/riders', { params });
-    console.log('🏍️ Fetched riders:', res.data);
     return res.data;
   } catch (error: any) {
     console.error('🏍️ List riders error:', error);
@@ -40,7 +47,6 @@ export async function listRiders(
 export async function getRiderById(riderId: string): Promise<ApiResponse> {
   try {
     const res = await api.get(`/v1/admin/riders/${riderId}`);
-    console.log('🏍️ Fetched rider details:', res.data);
     return res.data;
   } catch (error: any) {
     console.error('🏍️ Get rider error:', error);
@@ -51,7 +57,6 @@ export async function getRiderById(riderId: string): Promise<ApiResponse> {
 export async function createRider(data: CreateRiderData): Promise<ApiResponse> {
   try {
     const res = await api.post('/v1/admin/riders', data);
-    console.log('🏍️ Created rider:', res.data);
     return res.data;
   } catch (error: any) {
     console.error('🏍️ Create rider error:', error);
@@ -59,13 +64,13 @@ export async function createRider(data: CreateRiderData): Promise<ApiResponse> {
   }
 }
 
+/** Backed by PUT /v1/admin/riders/:riderId (riderController.updateRider). */
 export async function updateRider(
   riderId: string,
   updates: Partial<CreateRiderData>
 ): Promise<ApiResponse> {
   try {
     const res = await api.put(`/v1/admin/riders/${riderId}`, updates);
-    console.log('🏍️ Updated rider:', res.data);
     return res.data;
   } catch (error: any) {
     console.error('🏍️ Update rider error:', error);
@@ -73,28 +78,18 @@ export async function updateRider(
   }
 }
 
-export async function deleteRider(riderId: string): Promise<ApiResponse> {
-  try {
-    const res = await api.delete(`/v1/admin/riders/${riderId}`);
-    console.log('🏍️ Deleted rider:', res.data);
-    return res.data;
-  } catch (error: any) {
-    console.error('🏍️ Delete rider error:', error);
-    throw new Error(error?.response?.data?.error || 'Failed to delete rider');
-  }
-}
-
 // ============================================
-// RIDER STATUS MANAGEMENT
+// IMPLEMENTED — STATUS & VERIFICATION
 // ============================================
 
+/** Backed by PUT /v1/admin/riders/:riderId/status. Real ENUM values only —
+ * see riders.current_status in the schema. */
 export async function updateRiderStatus(
   riderId: string,
-  status: 'active' | 'inactive' | 'pending' | 'busy'
+  payload: { status: 'offline' | 'available' | 'busy' | 'on_delivery' | 'on_break' | 'pending' | 'inactive' | 'suspended' }
 ): Promise<ApiResponse> {
   try {
-    const res = await api.put(`/v1/admin/riders/${riderId}/status`, { status });
-    console.log('🏍️ Updated rider status:', res.data);
+    const res = await api.put(`/v1/admin/riders/${riderId}/status`, payload);
     return res.data;
   } catch (error: any) {
     console.error('🏍️ Update rider status error:', error);
@@ -105,7 +100,6 @@ export async function updateRiderStatus(
 export async function approveRider(riderId: string): Promise<ApiResponse> {
   try {
     const res = await api.put(`/v1/admin/riders/${riderId}/approve`);
-    console.log('✅ Approved rider:', res.data);
     return res.data;
   } catch (error: any) {
     console.error('✅ Approve rider error:', error);
@@ -113,92 +107,17 @@ export async function approveRider(riderId: string): Promise<ApiResponse> {
   }
 }
 
-export async function suspendRider(riderId: string, reason?: string): Promise<ApiResponse> {
-  try {
-    const res = await api.post(`/v1/admin/riders/${riderId}/suspend`, { reason });
-    console.log('🚫 Suspended rider:', res.data);
-    return res.data;
-  } catch (error: any) {
-    console.error('🚫 Suspend rider error:', error);
-    throw new Error(error?.response?.data?.error || 'Failed to suspend rider');
-  }
-}
-
-export async function activateRider(riderId: string): Promise<ApiResponse> {
-  return updateRiderStatus(riderId, 'active');
-}
-
-export async function deactivateRider(riderId: string): Promise<ApiResponse> {
-  return updateRiderStatus(riderId, 'inactive');
-}
-
 // ============================================
-// RIDER VERIFICATION & DOCUMENTS
+// IMPLEMENTED — ORDERS
 // ============================================
 
-export async function verifyRider(riderId: string, documents: {
-  driving_license_verified?: boolean;
-  vehicle_registration_verified?: boolean;
-  national_id_verified?: boolean;
-}): Promise<ApiResponse> {
-  try {
-    const res = await api.post(`/v1/admin/riders/${riderId}/verify`, documents);
-    console.log('✅ Verified rider documents:', res.data);
-    return res.data;
-  } catch (error: any) {
-    console.error('✅ Verify rider error:', error);
-    throw new Error(error?.response?.data?.error || 'Failed to verify rider');
-  }
-}
-
-export async function uploadRiderDocument(
-  riderId: string,
-  documentType: 'license' | 'registration' | 'national_id' | 'profile_photo',
-  file: File
-): Promise<ApiResponse> {
-  try {
-    const formData = new FormData();
-    formData.append('document', file);
-    formData.append('type', documentType);
-    
-    const res = await api.post(`/v1/admin/riders/${riderId}/documents`, formData, {
-      headers: { 'Content-Type': 'multipart/form-data' }
-    });
-    console.log('📄 Uploaded rider document:', res.data);
-    return res.data;
-  } catch (error: any) {
-    console.error('📄 Upload document error:', error);
-    throw new Error(error?.response?.data?.error || 'Failed to upload document');
-  }
-}
-
-export async function getRiderDocuments(riderId: string): Promise<ApiResponse> {
-  try {
-    const res = await api.get(`/v1/admin/riders/${riderId}/documents`);
-    console.log('📄 Fetched rider documents:', res.data);
-    return res.data;
-  } catch (error: any) {
-    console.error('📄 Get rider documents error:', error);
-    throw new Error(error?.response?.data?.error || 'Failed to fetch rider documents');
-  }
-}
-
-// ============================================
-// RIDER ORDERS & DELIVERIES
-// ============================================
-
+/** Backed by GET /v1/admin/riders/:riderId/orders (riderController.getRiderOrdersAdmin). */
 export async function getRiderOrders(
   riderId: string,
-  page: number = 1,
-  limit: number = 20,
-  status?: string
+  params: { page?: number; limit?: number; status?: string } = {}
 ): Promise<ApiResponse> {
   try {
-    const params: any = { page, limit };
-    if (status) params.status = status;
-    
     const res = await api.get(`/v1/admin/riders/${riderId}/orders`, { params });
-    console.log('📦 Fetched rider orders:', res.data);
     return res.data;
   } catch (error: any) {
     console.error('📦 Get rider orders error:', error);
@@ -206,42 +125,14 @@ export async function getRiderOrders(
   }
 }
 
-export async function getRiderActiveOrders(riderId: string): Promise<ApiResponse> {
-  try {
-    const res = await api.get(`/v1/admin/riders/${riderId}/orders/active`);
-    console.log('📦 Fetched active orders:', res.data);
-    return res.data;
-  } catch (error: any) {
-    console.error('📦 Get active orders error:', error);
-    throw new Error(error?.response?.data?.error || 'Failed to fetch active orders');
-  }
-}
-
-export async function getRiderOrderHistory(
-  riderId: string,
-  page: number = 1,
-  limit: number = 20
-): Promise<ApiResponse> {
-  try {
-    const res = await api.get(`/v1/admin/riders/${riderId}/orders/history`, {
-      params: { page, limit }
-    });
-    console.log('📜 Fetched order history:', res.data);
-    return res.data;
-  } catch (error: any) {
-    console.error('📜 Get order history error:', error);
-    throw new Error(error?.response?.data?.error || 'Failed to fetch order history');
-  }
-}
-
 // ============================================
-// RIDER ANALYTICS & PERFORMANCE
+// IMPLEMENTED — ANALYTICS
 // ============================================
 
+/** Backed by GET /v1/admin/riders/:riderId/analytics (riderController.getRiderAnalyticsAdmin). */
 export async function getRiderAnalytics(riderId: string): Promise<ApiResponse> {
   try {
     const res = await api.get(`/v1/admin/riders/${riderId}/analytics`);
-    console.log('📊 Fetched rider analytics:', res.data);
     return res.data;
   } catch (error: any) {
     console.error('📊 Get rider analytics error:', error);
@@ -249,162 +140,37 @@ export async function getRiderAnalytics(riderId: string): Promise<ApiResponse> {
   }
 }
 
-export async function getRiderStats(riderId: string): Promise<ApiResponse> {
-  try {
-    const res = await api.get(`/v1/admin/riders/${riderId}/stats`);
-    console.log('📈 Fetched rider stats:', res.data);
-    return res.data;
-  } catch (error: any) {
-    console.error('📈 Get rider stats error:', error);
-    throw new Error(error?.response?.data?.error || 'Failed to fetch rider stats');
-  }
-}
+// ============================================
+// IMPLEMENTED — LOCATIONS (for the map view)
+// ============================================
 
-export async function getRiderPerformance(
-  riderId: string,
-  period: 'week' | 'month' | 'year' = 'month'
-): Promise<ApiResponse> {
+/** Backed by GET /v1/admin/riders/locations (riderController.getRiderLocations).
+ * rider_locations is genuinely empty in production right now — riders only
+ * get a row once the rider app starts reporting position via its own
+ * PUT /riders/location self-service endpoint. An empty result here is
+ * accurate, not a bug. */
+export async function getAllRiderLocations(): Promise<ApiResponse> {
   try {
-    const res = await api.get(`/v1/admin/riders/${riderId}/performance`, {
-      params: { period }
-    });
-    console.log('📊 Fetched rider performance:', res.data);
+    const res = await api.get('/v1/admin/riders/locations');
     return res.data;
   } catch (error: any) {
-    console.error('📊 Get rider performance error:', error);
-    throw new Error(error?.response?.data?.error || 'Failed to fetch rider performance');
-  }
-}
-
-export async function getRiderRatings(
-  riderId: string,
-  page: number = 1,
-  limit: number = 20
-): Promise<ApiResponse> {
-  try {
-    const res = await api.get(`/v1/admin/riders/${riderId}/ratings`, {
-      params: { page, limit }
-    });
-    console.log('⭐ Fetched rider ratings:', res.data);
-    return res.data;
-  } catch (error: any) {
-    console.error('⭐ Get rider ratings error:', error);
-    throw new Error(error?.response?.data?.error || 'Failed to fetch rider ratings');
+    console.error('📍 Get rider locations error:', error);
+    throw new Error(error?.response?.data?.error || 'Failed to fetch rider locations');
   }
 }
 
 // ============================================
-// RIDER EARNINGS & PAYOUTS
+// IMPLEMENTED — PASSWORD RESET
 // ============================================
 
-export async function getRiderEarnings(
-  riderId: string,
-  startDate?: string,
-  endDate?: string
-): Promise<ApiResponse> {
-  try {
-    const params: any = {};
-    if (startDate) params.start_date = startDate;
-    if (endDate) params.end_date = endDate;
-    
-    const res = await api.get(`/v1/admin/riders/${riderId}/earnings`, { params });
-    console.log('💰 Fetched rider earnings:', res.data);
-    return res.data;
-  } catch (error: any) {
-    console.error('💰 Get rider earnings error:', error);
-    throw new Error(error?.response?.data?.error || 'Failed to fetch rider earnings');
-  }
-}
-
-export async function getRiderPayouts(
-  riderId: string,
-  page: number = 1,
-  limit: number = 20
-): Promise<ApiResponse> {
-  try {
-    const res = await api.get(`/v1/admin/riders/${riderId}/payouts`, {
-      params: { page, limit }
-    });
-    console.log('💳 Fetched rider payouts:', res.data);
-    return res.data;
-  } catch (error: any) {
-    console.error('💳 Get rider payouts error:', error);
-    throw new Error(error?.response?.data?.error || 'Failed to fetch rider payouts');
-  }
-}
-
-export async function processRiderPayout(
-  riderId: string,
-  amount: number,
-  method: 'bank_transfer' | 'mpesa'
-): Promise<ApiResponse> {
-  try {
-    const res = await api.post(`/v1/admin/riders/${riderId}/payouts`, {
-      amount,
-      method
-    });
-    console.log('💸 Processed payout:', res.data);
-    return res.data;
-  } catch (error: any) {
-    console.error('💸 Process payout error:', error);
-    throw new Error(error?.response?.data?.error || 'Failed to process payout');
-  }
-}
-
-// ============================================
-// RIDER LOCATION & AVAILABILITY
-// ============================================
-
-export async function getRiderLocation(riderId: string): Promise<ApiResponse> {
-  try {
-    const res = await api.get(`/v1/admin/riders/${riderId}/location`);
-    console.log('📍 Fetched rider location:', res.data);
-    return res.data;
-  } catch (error: any) {
-    console.error('📍 Get rider location error:', error);
-    throw new Error(error?.response?.data?.error || 'Failed to fetch rider location');
-  }
-}
-
-export async function updateRiderAvailability(
-  riderId: string,
-  available: boolean
-): Promise<ApiResponse> {
-  try {
-    const res = await api.put(`/v1/admin/riders/${riderId}/availability`, { available });
-    console.log('🟢 Updated rider availability:', res.data);
-    return res.data;
-  } catch (error: any) {
-    console.error('🟢 Update availability error:', error);
-    throw new Error(error?.response?.data?.error || 'Failed to update availability');
-  }
-}
-
-export async function getAvailableRiders(
-  latitude: number,
-  longitude: number,
-  radius: number = 5
-): Promise<ApiResponse> {
-  try {
-    const res = await api.get('/v1/admin/riders/available', {
-      params: { latitude, longitude, radius }
-    });
-    console.log('🏍️ Fetched available riders:', res.data);
-    return res.data;
-  } catch (error: any) {
-    console.error('🏍️ Get available riders error:', error);
-    throw new Error(error?.response?.data?.error || 'Failed to fetch available riders');
-  }
-}
-
-// ============================================
-// RIDER PASSWORD & SECURITY
-// ============================================
-
+/** Backed by POST /v1/admin/riders/:riderId/reset-password
+ * (riderController.resetRiderPassword). No email/SMS delivery channel is
+ * wired up on the backend yet, so the response includes the temporary
+ * password in plain text (data.temporary_password) for the admin to relay
+ * to the rider directly. */
 export async function resetRiderPassword(riderId: string): Promise<ApiResponse> {
   try {
     const res = await api.post(`/v1/admin/riders/${riderId}/reset-password`);
-    console.log('🔐 Reset rider password:', res.data);
     return res.data;
   } catch (error: any) {
     console.error('🔐 Reset password error:', error);
@@ -412,164 +178,163 @@ export async function resetRiderPassword(riderId: string): Promise<ApiResponse> 
   }
 }
 
-export async function changeRiderPassword(
-  riderId: string,
-  newPassword: string
-): Promise<ApiResponse> {
-  try {
-    const res = await api.put(`/v1/admin/riders/${riderId}/password`, {
-      password: newPassword
-    });
-    console.log('🔐 Changed rider password:', res.data);
-    return res.data;
-  } catch (error: any) {
-    console.error('🔐 Change password error:', error);
-    throw new Error(error?.response?.data?.error || 'Failed to change password');
-  }
-}
-
-// ============================================
-// BULK OPERATIONS
-// ============================================
-
-export async function bulkUpdateRiders(
-  riderIds: string[],
-  updates: Partial<{
-    status: string;
-    approved: boolean;
-  }>
-): Promise<ApiResponse> {
-  try {
-    const res = await api.put('/v1/admin/riders/bulk-update', {
-      rider_ids: riderIds,
-      ...updates
-    });
-    console.log('🏍️ Bulk updated riders:', res.data);
-    return res.data;
-  } catch (error: any) {
-    console.error('🏍️ Bulk update riders error:', error);
-    throw new Error(error?.response?.data?.error || 'Failed to bulk update riders');
-  }
-}
-
-export async function bulkApproveRiders(riderIds: string[]): Promise<ApiResponse> {
-  try {
-    const res = await api.post('/v1/admin/riders/bulk-approve', {
-      rider_ids: riderIds
-    });
-    console.log('✅ Bulk approved riders:', res.data);
-    return res.data;
-  } catch (error: any) {
-    console.error('✅ Bulk approve riders error:', error);
-    throw new Error(error?.response?.data?.error || 'Failed to bulk approve riders');
-  }
-}
-
-export async function bulkDeleteRiders(riderIds: string[]): Promise<ApiResponse> {
-  try {
-    const res = await api.post('/v1/admin/riders/bulk-delete', {
-      rider_ids: riderIds
-    });
-    console.log('🏍️ Bulk deleted riders:', res.data);
-    return res.data;
-  } catch (error: any) {
-    console.error('🏍️ Bulk delete riders error:', error);
-    throw new Error(error?.response?.data?.error || 'Failed to bulk delete riders');
-  }
-}
-
-// ============================================
-// SEARCH & FILTERS
-// ============================================
-
-export async function searchRiders(query: string): Promise<ApiResponse> {
-  try {
-    const res = await api.get('/v1/admin/riders/search', {
-      params: { q: query }
-    });
-    console.log('🔍 Search results:', res.data);
-    return res.data;
-  } catch (error: any) {
-    console.error('🔍 Search riders error:', error);
-    throw new Error(error?.response?.data?.error || 'Failed to search riders');
-  }
-}
-
-export async function filterRiders(filters: {
-  status?: string;
-  approved?: boolean;
-  vehicle_type?: string;
-  rating_min?: number;
-  available?: boolean;
-}): Promise<ApiResponse> {
-  try {
-    const res = await api.get('/v1/admin/riders/filter', {
-      params: filters
-    });
-    console.log('🔍 Filter results:', res.data);
-    return res.data;
-  } catch (error: any) {
-    console.error('🔍 Filter riders error:', error);
-    throw new Error(error?.response?.data?.error || 'Failed to filter riders');
-  }
-}
-
-// ============================================
-// EXPORT
-// ============================================
-
-export async function exportRiders(format: 'csv' | 'xlsx' | 'pdf' = 'csv'): Promise<Blob> {
-  try {
-    const res = await api.get(`/v1/admin/riders/export/${format}`, {
-      responseType: 'blob'
-    });
-    console.log('📥 Exported riders');
-    return res.data;
-  } catch (error: any) {
-    console.error('📥 Export riders error:', error);
-    throw new Error(error?.response?.data?.error || 'Failed to export riders');
-  }
-}
-
 // Backward compatibility aliases
 export const getRiderDetails = getRiderById;
 export const updateRiderProfile = updateRider;
 
+// ============================================================================
+// NOT YET IMPLEMENTED
+//
+// Everything below calls a backend route that does not exist. They were
+// never wired into any page (confirmed: zero usages outside this file),
+// so removing them from the default export below is safe — but the
+// functions stay here as a record of intended-but-unbuilt features.
+// Wire these up only after building the corresponding backend route.
+// ============================================================================
+
+export async function deleteRider(riderId: string): Promise<ApiResponse> {
+  const res = await api.delete(`/v1/admin/riders/${riderId}`); // ⚠️ no backend route
+  return res.data;
+}
+
+export async function suspendRider(riderId: string, reason?: string): Promise<ApiResponse> {
+  const res = await api.post(`/v1/admin/riders/${riderId}/suspend`, { reason }); // ⚠️ no backend route
+  return res.data;
+}
+
+export async function activateRider(riderId: string): Promise<ApiResponse> {
+  return updateRiderStatus(riderId, { status: 'available' });
+}
+
+export async function deactivateRider(riderId: string): Promise<ApiResponse> {
+  return updateRiderStatus(riderId, { status: 'offline' });
+}
+
+export async function verifyRider(riderId: string, documents: Record<string, boolean>): Promise<ApiResponse> {
+  const res = await api.post(`/v1/admin/riders/${riderId}/verify`, documents); // ⚠️ no backend route
+  return res.data;
+}
+
+export async function uploadRiderDocument(riderId: string, documentType: string, file: File): Promise<ApiResponse> {
+  const formData = new FormData();
+  formData.append('document', file);
+  formData.append('type', documentType);
+  const res = await api.post(`/v1/admin/riders/${riderId}/documents`, formData, {
+    headers: { 'Content-Type': 'multipart/form-data' },
+  }); // ⚠️ no backend route
+  return res.data;
+}
+
+export async function getRiderDocuments(riderId: string): Promise<ApiResponse> {
+  const res = await api.get(`/v1/admin/riders/${riderId}/documents`); // ⚠️ no backend route
+  return res.data;
+}
+
+export async function getRiderActiveOrders(riderId: string): Promise<ApiResponse> {
+  const res = await api.get(`/v1/admin/riders/${riderId}/orders/active`); // ⚠️ no backend route — use getRiderOrders with a status filter instead
+  return res.data;
+}
+
+export async function getRiderOrderHistory(riderId: string, page = 1, limit = 20): Promise<ApiResponse> {
+  const res = await api.get(`/v1/admin/riders/${riderId}/orders/history`, { params: { page, limit } }); // ⚠️ no backend route — use getRiderOrders instead
+  return res.data;
+}
+
+export async function getRiderStats(riderId: string): Promise<ApiResponse> {
+  const res = await api.get(`/v1/admin/riders/${riderId}/stats`); // ⚠️ no backend route — use getRiderAnalytics instead
+  return res.data;
+}
+
+export async function getRiderPerformance(riderId: string, period: 'week' | 'month' | 'year' = 'month'): Promise<ApiResponse> {
+  const res = await api.get(`/v1/admin/riders/${riderId}/performance`, { params: { period } }); // ⚠️ no backend route
+  return res.data;
+}
+
+export async function getRiderRatings(riderId: string, page = 1, limit = 20): Promise<ApiResponse> {
+  const res = await api.get(`/v1/admin/riders/${riderId}/ratings`, { params: { page, limit } }); // ⚠️ no backend route
+  return res.data;
+}
+
+export async function getRiderEarnings(riderId: string, startDate?: string, endDate?: string): Promise<ApiResponse> {
+  const params: any = {};
+  if (startDate) params.start_date = startDate;
+  if (endDate) params.end_date = endDate;
+  const res = await api.get(`/v1/admin/riders/${riderId}/earnings`, { params }); // ⚠️ no backend route
+  return res.data;
+}
+
+export async function getRiderPayouts(riderId: string, page = 1, limit = 20): Promise<ApiResponse> {
+  const res = await api.get(`/v1/admin/riders/${riderId}/payouts`, { params: { page, limit } }); // ⚠️ no backend route
+  return res.data;
+}
+
+export async function processRiderPayout(riderId: string, amount: number, method: 'bank_transfer' | 'mpesa'): Promise<ApiResponse> {
+  const res = await api.post(`/v1/admin/riders/${riderId}/payouts`, { amount, method }); // ⚠️ no backend route
+  return res.data;
+}
+
+export async function getRiderLocation(riderId: string): Promise<ApiResponse> {
+  const res = await api.get(`/v1/admin/riders/${riderId}/location`); // ⚠️ no backend route — use getAllRiderLocations and filter client-side instead
+  return res.data;
+}
+
+export async function updateRiderAvailability(riderId: string, available: boolean): Promise<ApiResponse> {
+  const res = await api.put(`/v1/admin/riders/${riderId}/availability`, { available }); // ⚠️ no backend route — use updateRiderStatus instead
+  return res.data;
+}
+
+export async function getAvailableRiders(latitude: number, longitude: number, radius = 5): Promise<ApiResponse> {
+  const res = await api.get('/v1/admin/riders/available', { params: { latitude, longitude, radius } }); // ⚠️ no backend route
+  return res.data;
+}
+
+export async function changeRiderPassword(riderId: string, newPassword: string): Promise<ApiResponse> {
+  const res = await api.put(`/v1/admin/riders/${riderId}/password`, { password: newPassword }); // ⚠️ no backend route — use resetRiderPassword instead
+  return res.data;
+}
+
+export async function bulkUpdateRiders(riderIds: string[], updates: Partial<{ status: string; approved: boolean }>): Promise<ApiResponse> {
+  const res = await api.put('/v1/admin/riders/bulk-update', { rider_ids: riderIds, ...updates }); // ⚠️ no backend route
+  return res.data;
+}
+
+export async function bulkApproveRiders(riderIds: string[]): Promise<ApiResponse> {
+  const res = await api.post('/v1/admin/riders/bulk-approve', { rider_ids: riderIds }); // ⚠️ no backend route
+  return res.data;
+}
+
+export async function bulkDeleteRiders(riderIds: string[]): Promise<ApiResponse> {
+  const res = await api.post('/v1/admin/riders/bulk-delete', { rider_ids: riderIds }); // ⚠️ no backend route
+  return res.data;
+}
+
+export async function searchRiders(query: string): Promise<ApiResponse> {
+  const res = await api.get('/v1/admin/riders/search', { params: { q: query } }); // ⚠️ no backend route — use listRiders(1, 20, query) instead
+  return res.data;
+}
+
+export async function filterRiders(filters: Record<string, unknown>): Promise<ApiResponse> {
+  const res = await api.get('/v1/admin/riders/filter', { params: filters }); // ⚠️ no backend route
+  return res.data;
+}
+
+export async function exportRiders(format: 'csv' | 'xlsx' | 'pdf' = 'csv'): Promise<Blob> {
+  const res = await api.get(`/v1/admin/riders/export/${format}`, { responseType: 'blob' }); // ⚠️ no backend route
+  return res.data;
+}
+
 export default {
+  // Implemented
   listRiders,
   getRiderById,
   getRiderDetails,
   createRider,
   updateRider,
   updateRiderProfile,
-  deleteRider,
   updateRiderStatus,
   approveRider,
-  suspendRider,
-  activateRider,
-  deactivateRider,
-  verifyRider,
-  uploadRiderDocument,
-  getRiderDocuments,
   getRiderOrders,
-  getRiderActiveOrders,
-  getRiderOrderHistory,
   getRiderAnalytics,
-  getRiderStats,
-  getRiderPerformance,
-  getRiderRatings,
-  getRiderEarnings,
-  getRiderPayouts,
-  processRiderPayout,
-  getRiderLocation,
-  updateRiderAvailability,
-  getAvailableRiders,
+  getAllRiderLocations,
   resetRiderPassword,
-  changeRiderPassword,
-  bulkUpdateRiders,
-  bulkApproveRiders,
-  bulkDeleteRiders,
-  searchRiders,
-  filterRiders,
-  exportRiders,
 };
