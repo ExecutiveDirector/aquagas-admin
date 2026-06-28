@@ -5,12 +5,13 @@ import type { User } from "../../../types";
 /* ─── helpers ─────────────────────────────────── */
 const getFullName = (u: User): string => {
   if (u.fullName) return u.fullName;
-  return `${u.first_name ?? ""} ${u.last_name ?? ""}`.trim() || "Unknown";
+  const name = `${u.first_name ?? ""} ${u.last_name ?? ""}`.trim();
+  return name || u.email?.split("@")[0] || "No Name";
 };
 
 const getInitials = (u: User): string => {
   const name = getFullName(u);
-  if (name === "Unknown") return "?";
+  if (name === "No Name" || !name) return "?";
   return name.split(" ").map(p => p[0]).join("").toUpperCase().slice(0, 2);
 };
 
@@ -220,11 +221,17 @@ const UserTable: React.FC<UserTableProps> = ({
               users.map(user => {
                 const fullName = getFullName(user);
                 const initials = getInitials(user);
-                const joined   = user.created_at
+                const joinedDate = user.created_at
                   ? new Date(user.created_at).toLocaleDateString("en-KE", {
                       day: "numeric", month: "short", year: "numeric",
                     })
-                  : "—";
+                  : null;
+                const joinedTime = user.created_at
+                  ? new Date(user.created_at).toLocaleTimeString("en-KE", {
+                      hour: "2-digit", minute: "2-digit",
+                    })
+                  : null;
+                const joined = joinedDate;
 
                 return (
                   <tr key={user.id}
@@ -271,7 +278,14 @@ const UserTable: React.FC<UserTableProps> = ({
 
                     {/* Joined */}
                     <td className="px-5 py-3.5">
-                      <p className="text-[12.5px] text-slate-500">{joined}</p>
+                      {joinedDate ? (
+                        <div>
+                          <p className="text-[12.5px] text-slate-600 font-medium">{joinedDate}</p>
+                          <p className="text-[11px] text-slate-400 mt-0.5">{joinedTime}</p>
+                        </div>
+                      ) : (
+                        <p className="text-[12.5px] text-slate-400">—</p>
+                      )}
                     </td>
 
                     {/* Actions */}

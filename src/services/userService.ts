@@ -18,16 +18,28 @@ export async function listUsers(
     const res = await api.get('/v1/admin/users', { params });
     console.log('👥 Fetched users:', res.data);
     
-    const mappedUsers = (res.data.data || []).map((user: any) => ({
-      id: user.id?.toString(),
-      fullName: user.fullName,
-      email: user.email,
-      phone_number: user.phone_number,
-      role: user.role,
-      status: user.status,
-      walletBalance: user.walletBalance ?? 0,
-      lastLogin: user.lastLogin,
-    }));
+    const mappedUsers = (res.data.data || []).map((user: any) => {
+      const first = user.first_name || '';
+      const last  = user.last_name  || '';
+      const computed = (user.fullName || `${first} ${last}`.trim()) || null;
+      return {
+        id: (user.id || user.user_id)?.toString(),
+        user_id: user.user_id?.toString(),
+        first_name: user.first_name || '',
+        last_name:  user.last_name  || '',
+        fullName:   computed,
+        email:        user.email,
+        phone_number: user.phone_number,
+        role:   user.role   || 'user',
+        status: user.status || 'inactive',
+        walletBalance: user.walletBalance ?? user.wallet_balance ?? 0,
+        wallet: { balance: user.walletBalance ?? user.wallet_balance ?? 0, pending_balance: 0, total_earned: 0, is_active: true },
+        lastLogin:    user.last_login   ?? user.last_login_at ?? null,
+        last_login_at:user.last_login_at ?? user.last_login ?? null,
+        created_at:   user.created_at   ?? null,
+        updated_at:   user.updated_at   ?? null,
+      };
+    });
     
     return {
       ...res.data,

@@ -40,6 +40,8 @@ export interface DashboardStats {
   total_revenue?: number;
   pending_orders?: number;
   completed_orders?: number;
+  weeklyRevenue?: Array<{ date: string; revenue: number }>;
+  sparklines?: { users?: number[]; vendors?: number[]; riders?: number[]; todayRevenue?: number[] };
 }
 
 // ============================================
@@ -398,6 +400,7 @@ export async function getDashboardStats(
       totalRevenue: data.totalRevenue || data.total_revenue || 0,
       pendingOrders: data.pendingOrders || data.pending_orders || 0,
       completedOrders: data.completedOrders || data.completed_orders || 0,
+      weeklyRevenue: data.weeklyRevenue || [],
     };
   } catch (error: any) {
     console.error('📊 Dashboard stats error:', error);
