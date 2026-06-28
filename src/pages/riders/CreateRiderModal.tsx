@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { XCircle } from 'lucide-react';
-import { createRider } from '../../services/adminService';
+import toast from 'react-hot-toast';
+import { createRider } from '../../services/riderService';
 
 interface NewRiderForm {
   full_name: string;
@@ -60,9 +61,11 @@ export default function CreateRiderModal({ isOpen, onClose, onRiderCreated }: Cr
       });
 
       onRiderCreated();
-      alert('Rider created successfully');
+      toast.success('Rider created successfully');
     } catch (err: any) {
-      setError(err?.response?.data?.error || 'Failed to create rider');
+      const msg = err?.response?.data?.error || 'Failed to create rider';
+      setError(msg);
+      toast.error(msg);
     } finally {
       setLoading(false);
     }
