@@ -29,7 +29,6 @@ export async function listNotifications(
     if (search) params.search = search;
     
     const res = await api.get('/v1/admin/notifications', { params });
-    console.log('🔔 Fetched notifications:', res.data);
     return res.data;
   } catch (error: any) {
     console.error('🔔 List notifications error:', error);
@@ -59,7 +58,6 @@ export async function createNotification(notificationData: {
 }): Promise<ApiResponse> {
   try {
     const res = await api.post('/v1/admin/notifications', notificationData);
-    console.log('🔔 Created notification:', res.data);
     return res.data;
   } catch (error: any) {
     console.error('🔔 Create notification error:', error);
@@ -78,7 +76,6 @@ export async function updateNotification(
 ): Promise<ApiResponse> {
   try {
     const res = await api.put(`/v1/admin/notifications/${notificationId}`, updates);
-    console.log('🔔 Updated notification:', res.data);
     return res.data;
   } catch (error: any) {
     console.error('🔔 Update notification error:', error);
@@ -89,7 +86,6 @@ export async function updateNotification(
 export async function deleteNotification(notificationId: string): Promise<ApiResponse> {
   try {
     const res = await api.delete(`/v1/admin/notifications/${notificationId}`);
-    console.log('🔔 Deleted notification:', res.data);
     return res.data;
   } catch (error: any) {
     console.error('🔔 Delete notification error:', error);
@@ -104,7 +100,6 @@ export async function deleteNotification(notificationId: string): Promise<ApiRes
 export async function sendNotification(notificationId: string): Promise<ApiResponse> {
   try {
     const res = await api.post(`/v1/admin/notifications/${notificationId}/send`);
-    console.log('📤 Sent notification:', res.data);
     return res.data;
   } catch (error: any) {
     console.error('📤 Send notification error:', error);
@@ -176,7 +171,6 @@ export interface NotificationTemplate {
 export async function listNotificationTemplates(): Promise<ApiResponse> {
   try {
     const res = await api.get('/v1/admin/notification-templates');
-    console.log('📋 Fetched notification templates:', res.data);
     return res.data;
   } catch (error: any) {
     console.error('📋 List templates error:', error);
