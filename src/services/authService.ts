@@ -86,14 +86,11 @@ class AuthService {
   /**
    * Change password
    */
-  async changePassword(currentPassword: string, newPassword: string): Promise<ApiResponse<null>> {
+  async changePassword(data: { currentPassword?: string; newPassword: string }): Promise<ApiResponse<null>> {
     if (!this.isAuthenticated()) {
       throw new Error('Not authenticated');
     }
-    return await authApi.changePassword({
-      current_password: currentPassword,
-      new_password: newPassword,
-    });
+    return await authApi.changePassword(data);
   }
 
   /**
