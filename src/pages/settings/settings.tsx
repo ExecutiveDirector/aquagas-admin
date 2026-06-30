@@ -1,834 +1,866 @@
-import React, { useState, useEffect, type FormEvent } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+// src/pages/settings/settings.tsx
+import React, { useState, useEffect, useCallback, type JSX } from 'react';
 import {
-  Settings as SettingsIcon, Plus, Search, Filter, Edit3, Trash2,
-  Save, X, Eye, EyeOff, AlertTriangle, CheckCircle2, Database, Shield, Bell, CreditCard, Truck
+  Settings as SettingsIcon,
+  Bell,
+  Shield,
+  CreditCard,
+  Truck,
+  Activity,
+  Database,
+  RefreshCw,
+  Save,
+  Edit3,
+  AlertTriangle,
+  CheckCircle2,
+  X,
+  Plus,
+  Trash2,
+  Eye,
+  EyeOff,
+  ChevronLeft,
+  ChevronRight,
+  Server,
+  Wrench,
 } from 'lucide-react';
+import toast from 'react-hot-toast';
+import {
+  getSystemSettings,
+  updateSystemSetting,
+  createSystemSetting,
+  deleteSystemSetting,
+  getSystemHealth,
+  enableMaintenanceMode,
+  disableMaintenanceMode,
+  getMaintenanceStatus,
+  clearSystemCache,
+  getAuditLogs,
+  getSystemEvents,
+  updateNotificationPreferences,
+  type SystemSetting,
+  type SystemHealth,
+} from '../../services/systemService';
 
-// Define interface for system setting (updated to match your model)
-interface SystemSetting {
-  setting_id: number;
-  setting_key: string;
-  setting_value: string;
-  setting_type: 'string' | 'number' | 'boolean' | 'json';
-  category: 'general' | 'payment' | 'delivery' | 'notification' | 'security';
-  description?: string;
-  is_public: boolean;
-  createdAt: string;
-  updatedAt: string;
+// ============================================================
+// TYPES
+// ============================================================
+
+type Tab = 'system' | 'business' | 'notifications' | 'security' | 'health' | 'audit';
+
+interface GroupedSettings {
+  [category: string]: SystemSetting[];
 }
 
-// Define interface for form data
-interface SettingFormData {
-  setting_key: string;
-  setting_value: string;
-  setting_type: 'string' | 'number' | 'boolean' | 'json';
-  category: 'general' | 'payment' | 'delivery' | 'notification' | 'security';
-  description?: string;
-  is_public: boolean;
-}
+// ============================================================
+// HELPERS
+// ============================================================
 
-const SettingPage: React.FC = () => {
-  const [settings, setSettings] = useState<SystemSetting[]>([]);
-  const [filteredSettings, setFilteredSettings] = useState<SystemSetting[]>([]);
-  const [loading, setLoading] = useState<boolean>(false);
-  const [error, setError] = useState<string | null>(null);
-  const [searchQuery, setSearchQuery] = useState<string>('');
-  const [filterCategory, setFilterCategory] = useState<string>('');
-  const [filterPublic, setFilterPublic] = useState<string>('');
-  const [showForm, setShowForm] = useState<boolean>(false);
-  const [editingSetting, setEditingSetting] = useState<SystemSetting | null>(null);
-  const [formData, setFormData] = useState<SettingFormData>({
-    setting_key: '',
-    setting_value: '',
-    setting_type: 'string',
-    category: 'general',
-    description: '',
-    is_public: false,
+const formatDate = (value?: string | null) => {
+  if (!value) return '—';
+  return new Date(value).toLocaleString('en-KE', {
+    year: 'numeric', month: 'short', day: '2-digit',
+    hour: '2-digit', minute: '2-digit',
   });
-  const [showFilters, setShowFilters] = useState<boolean>(false);
-  const [notifications, setNotifications] = useState<Array<{id: string, type: 'success' | 'error', message: string}>>([]);
+};
 
-  const categories = [
-    { value: 'general', label: 'General', icon: Database, color: 'bg-blue-500', description: 'Basic system settings' },
-    { value: 'payment', label: 'Payment', icon: CreditCard, color: 'bg-green-500', description: 'Payment gateway settings' },
-    { value: 'delivery', label: 'Delivery', icon: Truck, color: 'bg-orange-500', description: 'Delivery and logistics settings' },
-    { value: 'notification', label: 'Notifications', icon: Bell, color: 'bg-purple-500', description: 'Notification preferences' },
-    { value: 'security', label: 'Security', icon: Shield, color: 'bg-red-500', description: 'Security and authentication settings' },
-  ];
+const castValue = (setting: SystemSetting): string => {
+  if (setting.value !== undefined && setting.value !== null) return String(setting.value);
+  return setting.setting_value ?? '';
+};
 
-  const typeOptions = [
-    { value: 'string', label: 'Text', description: 'Plain text value' },
-    { value: 'number', label: 'Number', description: 'Numeric value' },
-    { value: 'boolean', label: 'Yes/No', description: 'True or false value' },
-    { value: 'json', label: 'JSON', description: 'Complex structured data' },
-  ];
+// ============================================================
+// SUB-COMPONENTS
+// ============================================================
 
-  // Mock data for development - replace with actual API calls
-  const mockSettings: SystemSetting[] = [
-    {
-      setting_id: 1,
-      setting_key: 'max_order_amount',
-      setting_value: '10000',
-      setting_type: 'number',
-      category: 'general',
-      description: 'Maximum order amount allowed',
-      is_public: true,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString()
-    },
-    {
-      setting_id: 2,
-      setting_key: 'stripe_publishable_key',
-      setting_value: 'pk_test_...',
-      setting_type: 'string',
-      category: 'payment',
-      description: 'Stripe publishable key for payments',
-      is_public: true,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString()
-    },
-    {
-      setting_id: 3,
-      setting_key: 'enable_notifications',
-      setting_value: 'true',
-      setting_type: 'boolean',
-      category: 'notification',
-      description: 'Enable push notifications',
-      is_public: false,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString()
-    }
-  ];
+const SettingRow: React.FC<{
+  setting: SystemSetting;
+  onSave: (key: string, value: string | number | boolean) => Promise<void>;
+  onDelete: (key: string) => Promise<void>;
+  saving: boolean;
+}> = ({ setting, onSave, onDelete, saving }) => {
+  const [editing, setEditing] = useState(false);
+  const [draft, setDraft] = useState(castValue(setting));
+  const [showValue, setShowValue] = useState(false);
 
-  // Notification helper
-  const showNotification = (type: 'success' | 'error', message: string) => {
-    const id = Date.now().toString();
-    setNotifications(prev => [...prev, { id, type, message }]);
-    setTimeout(() => {
-      setNotifications(prev => prev.filter(n => n.id !== id));
-    }, 5000);
-  };
+  const isSensitive = /password|secret|token|key|api/i.test(setting.key || setting.setting_key || '');
+  const displayKey = setting.key || setting.setting_key || '';
+  const displayType = setting.setting_type || setting.type || 'string';
 
-  // Fetch settings on mount
-  useEffect(() => {
-    fetchSettings();
-  }, []);
-
-  // Filter settings when search query or filters change
-  useEffect(() => {
-    let filtered = settings;
-
-    // Apply search filter
-    if (searchQuery) {
-      filtered = filtered.filter(setting =>
-        setting.setting_key.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        setting.setting_value.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        (setting.description && setting.description.toLowerCase().includes(searchQuery.toLowerCase()))
-      );
-    }
-
-    // Apply category filter
-    if (filterCategory) {
-      filtered = filtered.filter(setting => setting.category === filterCategory);
-    }
-
-    // Apply public/private filter
-    if (filterPublic) {
-      filtered = filtered.filter(setting => 
-        setting.is_public === (filterPublic === 'true')
-      );
-    }
-
-    setFilteredSettings(filtered);
-  }, [settings, searchQuery, filterCategory, filterPublic]);
-
-  const fetchSettings = async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      setSettings(mockSettings);
-      showNotification('success', 'Settings loaded successfully');
-    } catch (err: any) {
-      setError(err.message || 'Failed to fetch settings');
-      showNotification('error', err.message || 'Failed to fetch settings');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleInputChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>
-  ) => {
-    const { name, value, type } = e.target;
-    if (type === 'checkbox') {
-      setFormData({ ...formData, [name]: (e.target as HTMLInputElement).checked });
-    } else {
-      setFormData({ ...formData, [name]: value });
-    }
-  };
-
-  const validateForm = (): boolean => {
-    if (!formData.setting_key.trim()) {
-      showNotification('error', 'Key is required');
-      return false;
-    }
-    if (!formData.setting_value.trim()) {
-      showNotification('error', 'Value is required');
-      return false;
-    }
-    if (formData.setting_type === 'json') {
-      try {
-        JSON.parse(formData.setting_value);
-      } catch {
-        showNotification('error', 'Invalid JSON format');
-        return false;
-      }
-    }
-    return true;
-  };
-
-  const handleSubmit = async (e: FormEvent) => {
-    e.preventDefault();
-    
-    if (!validateForm()) return;
-
-    setError(null);
-    setLoading(true);
-
-    try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1500));
-
-      if (editingSetting) {
-        // Update existing setting
-        setSettings(prev => prev.map(setting => 
-          setting.setting_id === editingSetting.setting_id 
-            ? { 
-                ...setting, 
-                setting_key: formData.setting_key,
-                setting_value: formData.setting_value,
-                setting_type: formData.setting_type,
-                category: formData.category,
-                description: formData.description,
-                is_public: formData.is_public,
-                updatedAt: new Date().toISOString()
-              }
-            : setting
-        ));
-        showNotification('success', `Setting '${formData.setting_key}' updated successfully`);
-      } else {
-        // Create new setting
-        const newSetting: SystemSetting = {
-          setting_id: Math.max(...settings.map(s => s.setting_id)) + 1,
-          setting_key: formData.setting_key,
-          setting_value: formData.setting_value,
-          setting_type: formData.setting_type,
-          category: formData.category,
-          description: formData.description,
-          is_public: formData.is_public,
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString()
-        };
-        setSettings(prev => [...prev, newSetting]);
-        showNotification('success', `Setting '${formData.setting_key}' created successfully`);
-      }
-
-      handleCancel();
-    } catch (err: any) {
-      setError(err.message || 'Failed to save setting');
-      showNotification('error', err.message || 'Failed to save setting');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleEdit = (setting: SystemSetting) => {
-    setEditingSetting(setting);
-    setFormData({
-      setting_key: setting.setting_key,
-      setting_value: setting.setting_value,
-      setting_type: setting.setting_type,
-      category: setting.category,
-      description: setting.description || '',
-      is_public: setting.is_public,
-    });
-    setShowForm(true);
-  };
-
-  const handleDelete = async (settingId: number, key: string) => {
-    const confirmed = window.confirm(
-      `Are you sure you want to delete the setting '${key}'?\n\nThis action cannot be undone.`
-    );
-    
-    if (!confirmed) return;
-
-    setLoading(true);
-    try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      setSettings(prev => prev.filter(s => s.setting_id !== settingId));
-      showNotification('success', `Setting '${key}' deleted successfully`);
-    } catch (err: any) {
-      showNotification('error', err.message || 'Failed to delete setting');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleCancel = () => {
-    setFormData({
-      setting_key: '',
-      setting_value: '',
-      setting_type: 'string',
-      category: 'general',
-      description: '',
-      is_public: false,
-    });
-    setEditingSetting(null);
-    setShowForm(false);
-    setError(null);
-  };
-
-  const getCategoryConfig = (category: string) => {
-    return categories.find(cat => cat.value === category) || categories[0];
-  };
-
-  const formatValue = (value: string, type: string) => {
-    if (type === 'json') {
-      try {
-        return JSON.stringify(JSON.parse(value), null, 2);
-      } catch {
-        return value;
-      }
-    }
-    if (type === 'boolean') {
-      return value === 'true' ? 'Yes' : 'No';
-    }
-    return value;
-  };
-
-  const getStatsByCategory = () => {
-    const stats = categories.map(category => ({
-      ...category,
-      count: settings.filter(s => s.category === category.value).length
-    }));
-    return stats;
+  const handleSave = async () => {
+    let parsed: string | number | boolean = draft;
+    if (displayType === 'number') parsed = Number(draft);
+    if (displayType === 'boolean') parsed = draft === 'true';
+    await onSave(displayKey, parsed);
+    setEditing(false);
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
-      {/* Toast Notifications */}
-      <div className="fixed top-4 right-4 z-50 space-y-2">
-        <AnimatePresence>
-          {notifications.map((notification) => (
-            <motion.div
-              key={notification.id}
-              initial={{ opacity: 0, x: 300 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: 300 }}
-              className={`px-4 py-3 rounded-lg shadow-lg flex items-center gap-2 ${
-                notification.type === 'success' 
-                  ? 'bg-green-500 text-white' 
-                  : 'bg-red-500 text-white'
-              }`}
-            >
-              {notification.type === 'success' ? (
-                <CheckCircle2 size={16} />
-              ) : (
-                <AlertTriangle size={16} />
-              )}
-              <span className="text-sm font-medium">{notification.message}</span>
-            </motion.div>
-          ))}
-        </AnimatePresence>
+    <div className="flex items-start justify-between py-4 px-6 border-b border-gray-100 dark:border-gray-700 last:border-0 hover:bg-gray-50 dark:hover:bg-gray-700/30 group">
+      <div className="flex-1 min-w-0">
+        <div className="flex items-center gap-2">
+          <p className="text-sm font-mono font-medium text-gray-800 dark:text-gray-200 truncate">{displayKey}</p>
+          <span className="text-xs px-2 py-0.5 rounded-full bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400">{displayType}</span>
+          {!setting.is_public && <span className="text-xs px-2 py-0.5 rounded-full bg-yellow-100 dark:bg-yellow-900/40 text-yellow-700 dark:text-yellow-300">private</span>}
+        </div>
+        {setting.description && (
+          <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5 truncate">{setting.description}</p>
+        )}
+        <div className="mt-2">
+          {editing ? (
+            displayType === 'boolean' ? (
+              <select
+                value={draft}
+                onChange={(e) => setDraft(e.target.value)}
+                className="w-full max-w-xs px-3 py-1.5 text-sm border border-blue-400 rounded-md bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              >
+                <option value="true">true</option>
+                <option value="false">false</option>
+              </select>
+            ) : (
+              <input
+                type={displayType === 'number' ? 'number' : 'text'}
+                value={draft}
+                onChange={(e) => setDraft(e.target.value)}
+                onKeyDown={(e) => { if (e.key === 'Enter') handleSave(); if (e.key === 'Escape') { setEditing(false); setDraft(castValue(setting)); } }}
+                autoFocus
+                className="w-full max-w-xs px-3 py-1.5 text-sm border border-blue-400 rounded-md bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+            )
+          ) : (
+            <span className="text-sm text-gray-700 dark:text-gray-300 font-mono">
+              {isSensitive && !showValue ? '••••••••••' : castValue(setting)}
+            </span>
+          )}
+        </div>
+      </div>
+      <div className="flex items-center gap-1 ml-4 opacity-0 group-hover:opacity-100 transition-opacity">
+        {isSensitive && !editing && (
+          <button onClick={() => setShowValue((v) => !v)} className="p-1.5 rounded hover:bg-gray-100 dark:hover:bg-gray-600 text-gray-400 dark:text-gray-500">
+            {showValue ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+          </button>
+        )}
+        {editing ? (
+          <>
+            <button disabled={saving} onClick={handleSave} className="px-3 py-1.5 text-xs bg-green-500 text-white rounded hover:bg-green-600 disabled:opacity-50 flex items-center gap-1">
+              <Save className="w-3 h-3" /> Save
+            </button>
+            <button onClick={() => { setEditing(false); setDraft(castValue(setting)); }} className="px-3 py-1.5 text-xs border border-gray-300 dark:border-gray-600 rounded hover:bg-gray-100 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300">
+              <X className="w-3 h-3" />
+            </button>
+          </>
+        ) : (
+          <>
+            <button onClick={() => setEditing(true)} className="p-1.5 rounded hover:bg-gray-100 dark:hover:bg-gray-600 text-gray-400 dark:text-gray-500">
+              <Edit3 className="w-4 h-4" />
+            </button>
+            <button onClick={() => onDelete(displayKey)} className="p-1.5 rounded hover:bg-red-50 dark:hover:bg-red-900/20 text-gray-400 hover:text-red-500 dark:text-gray-500 dark:hover:text-red-400">
+              <Trash2 className="w-4 h-4" />
+            </button>
+          </>
+        )}
+      </div>
+    </div>
+  );
+};
+
+const Pagination: React.FC<{ page: number; totalPages: number; onChange: (p: number) => void }> = ({ page, totalPages, onChange }) => {
+  if (totalPages <= 1) return null;
+  return (
+    <div className="flex items-center justify-between px-6 py-3 border-t border-gray-200 dark:border-gray-700">
+      <p className="text-sm text-gray-500 dark:text-gray-400">Page {page} of {totalPages}</p>
+      <div className="flex gap-2">
+        <button onClick={() => onChange(Math.max(1, page - 1))} disabled={page <= 1} className="p-2 rounded border border-gray-300 dark:border-gray-600 disabled:opacity-40 hover:bg-gray-50 dark:hover:bg-gray-700">
+          <ChevronLeft className="w-4 h-4" />
+        </button>
+        <button onClick={() => onChange(Math.min(totalPages, page + 1))} disabled={page >= totalPages} className="p-2 rounded border border-gray-300 dark:border-gray-600 disabled:opacity-40 hover:bg-gray-50 dark:hover:bg-gray-700">
+          <ChevronRight className="w-4 h-4" />
+        </button>
+      </div>
+    </div>
+  );
+};
+
+const HealthBadge: React.FC<{ status: string }> = ({ status }) => {
+  const map: Record<string, { cls: string; label: string }> = {
+    healthy: { cls: 'bg-green-100 text-green-800 dark:bg-green-900/40 dark:text-green-300', label: 'Healthy' },
+    degraded: { cls: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/40 dark:text-yellow-300', label: 'Degraded' },
+    unhealthy: { cls: 'bg-red-100 text-red-800 dark:bg-red-900/40 dark:text-red-300', label: 'Unhealthy' },
+    unknown: { cls: 'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-300', label: 'Unknown' },
+  };
+  const conf = map[status] || map.unknown;
+  return <span className={`px-2.5 py-1 rounded-full text-xs font-medium ${conf.cls}`}>{conf.label}</span>;
+};
+
+// ============================================================
+// MAIN PAGE
+// ============================================================
+
+const SettingPage: React.FC = () => {
+  const [tab, setTab] = useState<Tab>('system');
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
+
+  // Settings
+  const [grouped, setGrouped] = useState<GroupedSettings>({});
+  const [showAddSetting, setShowAddSetting] = useState(false);
+  const [newSetting, setNewSetting] = useState({ key: '', value: '', type: 'string', category: 'general', description: '' });
+
+  // Health
+  const [health, setHealth] = useState<SystemHealth | null>(null);
+  const [maintenance, setMaintenance] = useState<{ enabled: boolean; message?: string } | null>(null);
+  const [maintenanceMsg, setMaintenanceMsg] = useState('');
+  const [clearingCache, setClearingCache] = useState(false);
+  const [togglingMaintenance, setTogglingMaintenance] = useState(false);
+
+  // Notification preferences
+  const [notifPrefs, setNotifPrefs] = useState({
+    email_enabled: true, sms_enabled: true, push_enabled: true, in_app_enabled: true,
+    order_updates: true, delivery_updates: true, payment_updates: true,
+    promotional: false, system_alerts: true, reminders: true,
+  });
+  const [savingNotifPrefs, setSavingNotifPrefs] = useState(false);
+
+  // Audit logs
+  const [auditLogs, setAuditLogs] = useState<any[]>([]);
+  const [auditPage, setAuditPage] = useState(1);
+  const [auditTotalPages, setAuditTotalPages] = useState(1);
+  const [auditFilter, setAuditFilter] = useState('');
+
+  // System events
+  const [systemEvents, setSystemEvents] = useState<any[]>([]);
+  const [eventPage, setEventPage] = useState(1);
+  const [eventTotalPages, setEventTotalPages] = useState(1);
+  const [eventSeverity, setEventSeverity] = useState('all');
+
+  const loadSettings = useCallback(async () => {
+    try {
+      const res = await getSystemSettings();
+      const data = res.data || [];
+      const grp: GroupedSettings = {};
+      for (const s of data) {
+        const cat = s.category || 'general';
+        if (!grp[cat]) grp[cat] = [];
+        grp[cat].push(s);
+      }
+      setGrouped(grp);
+    } catch (err: any) {
+      toast.error(err.message || 'Failed to load settings');
+    }
+  }, []);
+
+  const loadHealth = useCallback(async () => {
+    try {
+      const [healthRes, maintRes] = await Promise.all([
+        getSystemHealth(),
+        getMaintenanceStatus(),
+      ]);
+      setHealth(healthRes.data);
+      setMaintenance(maintRes.data);
+      setMaintenanceMsg(maintRes.data?.message || '');
+    } catch (err: any) {
+      console.error(err);
+    }
+  }, []);
+
+  const loadAuditLogs = useCallback(async () => {
+    try {
+      const params: any = { page: auditPage, limit: 50 };
+      if (auditFilter) params.entity_type = auditFilter;
+      const res = await getAuditLogs(params);
+      setAuditLogs(res.data || []);
+      setAuditTotalPages(res.pagination?.totalPages || 1);
+    } catch (err: any) {
+      console.error(err);
+    }
+  }, [auditPage, auditFilter]);
+
+  const loadEvents = useCallback(async () => {
+    try {
+      const params: any = { page: eventPage, limit: 50 };
+      if (eventSeverity !== 'all') params.severity = eventSeverity;
+      const res = await getSystemEvents(params);
+      setSystemEvents(res.data || []);
+      setEventTotalPages(res.pagination?.totalPages || 1);
+    } catch (err: any) {
+      console.error(err);
+    }
+  }, [eventPage, eventSeverity]);
+
+  const initialLoad = useCallback(async () => {
+    setLoading(true);
+    await Promise.all([loadSettings(), loadHealth()]);
+    setLoading(false);
+  }, [loadSettings, loadHealth]);
+
+  useEffect(() => { initialLoad(); }, [initialLoad]);
+  useEffect(() => { if (!loading && tab === 'audit') loadAuditLogs(); }, [tab, auditPage, auditFilter, loading, loadAuditLogs]);
+  useEffect(() => { if (!loading && tab === 'health') loadEvents(); }, [tab, eventPage, eventSeverity, loading, loadEvents]);
+
+  const handleRefresh = async () => {
+    setRefreshing(true);
+    await Promise.all([loadSettings(), loadHealth(), loadAuditLogs(), loadEvents()]);
+    setRefreshing(false);
+    toast.success('Refreshed');
+  };
+
+  const handleSaveSetting = async (key: string, value: string | number | boolean) => {
+    setSaving(true);
+    try {
+      await updateSystemSetting(key, value);
+      await loadSettings();
+      toast.success(`${key} updated`);
+    } catch (err: any) {
+      toast.error(err.message || 'Failed to update setting');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleDeleteSetting = async (key: string) => {
+    if (!window.confirm(`Delete setting "${key}"? This cannot be undone.`)) return;
+    try {
+      await deleteSystemSetting(key);
+      await loadSettings();
+      toast.success(`${key} deleted`);
+    } catch (err: any) {
+      toast.error(err.message || 'Failed to delete setting');
+    }
+  };
+
+  const handleAddSetting = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newSetting.key || !newSetting.value) {
+      toast.error('Key and value are required');
+      return;
+    }
+    try {
+      await createSystemSetting({
+        key: newSetting.key,
+        value: newSetting.value,
+        setting_type: newSetting.type,
+        category: newSetting.category,
+        description: newSetting.description || undefined,
+      });
+      setNewSetting({ key: '', value: '', type: 'string', category: 'general', description: '' });
+      setShowAddSetting(false);
+      await loadSettings();
+      toast.success('Setting created');
+    } catch (err: any) {
+      toast.error(err.message || 'Failed to create setting');
+    }
+  };
+
+  const handleToggleMaintenance = async () => {
+    setTogglingMaintenance(true);
+    try {
+      if (maintenance?.enabled) {
+        await disableMaintenanceMode();
+        toast.success('Maintenance mode disabled');
+      } else {
+        await enableMaintenanceMode(maintenanceMsg || undefined);
+        toast.success('Maintenance mode enabled');
+      }
+      await loadHealth();
+    } catch (err: any) {
+      toast.error(err.message || 'Failed to toggle maintenance mode');
+    } finally {
+      setTogglingMaintenance(false);
+    }
+  };
+
+  const handleClearCache = async () => {
+    if (!window.confirm('Clear all cache layers? Active sessions are not affected.')) return;
+    setClearingCache(true);
+    try {
+      const res = await clearSystemCache('all');
+      toast.success('Cache cleared');
+      console.log('Cache clear results:', res.data);
+    } catch (err: any) {
+      toast.error(err.message || 'Failed to clear cache');
+    } finally {
+      setClearingCache(false);
+    }
+  };
+
+  const handleSaveNotifPrefs = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setSavingNotifPrefs(true);
+    try {
+      await updateNotificationPreferences(notifPrefs);
+      toast.success('Notification preferences saved');
+    } catch (err: any) {
+      toast.error(err.message || 'Failed to save preferences');
+    } finally {
+      setSavingNotifPrefs(false);
+    }
+  };
+
+  const tabs: { key: Tab; label: string; icon: JSX.Element }[] = [
+    { key: 'system', label: 'System', icon: <SettingsIcon className="w-4 h-4" /> },
+    { key: 'business', label: 'Business', icon: <CreditCard className="w-4 h-4" /> },
+    { key: 'notifications', label: 'Notifications', icon: <Bell className="w-4 h-4" /> },
+    { key: 'security', label: 'Security', icon: <Shield className="w-4 h-4" /> },
+    { key: 'health', label: 'Health & Events', icon: <Activity className="w-4 h-4" /> },
+    { key: 'audit', label: 'Audit Logs', icon: <Database className="w-4 h-4" /> },
+  ];
+
+  // Map tabs to categories in the grouped settings
+  const tabCategoryMap: Record<Tab, string[]> = {
+    system: ['contact', 'general', 'system'],
+    business: ['delivery', 'orders', 'finance', 'payments', 'loyalty', 'integrations'],
+    notifications: ['notifications'],
+    security: ['security'],
+    health: [],
+    audit: [],
+  };
+
+  const getSettingsForTab = (t: Tab): SystemSetting[] => {
+    const cats = tabCategoryMap[t];
+    return cats.flatMap((cat) => grouped[cat] || []);
+  };
+
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center min-h-screen bg-gray-50 dark:bg-gray-900">
+        <RefreshCw className="w-8 h-8 text-green-500 animate-spin" />
+      </div>
+    );
+  }
+
+  const systemSettings = getSettingsForTab(tab);
+
+  return (
+    <div className="p-6 max-w-6xl mx-auto bg-gray-50 dark:bg-gray-900 min-h-screen">
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row justify-between gap-4 mb-6">
+        <div>
+          <h1 className="text-3xl font-bold text-gray-800 dark:text-gray-200">Settings</h1>
+          <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+            Platform configuration, maintenance, and monitoring.
+          </p>
+        </div>
+        <div className="flex gap-3">
+          <button
+            onClick={handleRefresh}
+            disabled={refreshing}
+            className="flex items-center gap-2 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-200"
+          >
+            <RefreshCw className={`w-4 h-4 ${refreshing ? 'animate-spin' : ''}`} />
+            Refresh
+          </button>
+        </div>
       </div>
 
-      <div className="max-w-7xl mx-auto p-6">
-        {/* Header */}
-        <div className="mb-8">
-          <div className="flex items-center gap-3 mb-2">
-            <div className="p-2 bg-blue-100 dark:bg-blue-900/20 rounded-xl">
-              <SettingsIcon className="h-8 w-8 text-blue-600 dark:text-blue-400" />
-            </div>
-            <div>
-              <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100">System Settings</h1>
-              <p className="text-gray-600 dark:text-gray-400">Configure and manage your application settings</p>
-            </div>
-          </div>
-          
-          {/* Category Stats */}
-          <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mt-6">
-            {getStatsByCategory().map((category) => {
-              const IconComponent = category.icon;
-              return (
-                <motion.div
-                  key={category.value}
-                  whileHover={{ scale: 1.02 }}
-                  className={`${category.color} bg-opacity-10 dark:bg-opacity-20 rounded-xl p-4 cursor-pointer transition-all hover:shadow-md ${
-                    filterCategory === category.value ? 'ring-2 ring-blue-500' : ''
-                  }`}
-                  onClick={() => setFilterCategory(filterCategory === category.value ? '' : category.value)}
-                >
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className={`text-2xl font-bold ${category.color.replace('bg-', 'text-')}`}>
-                        {category.count}
-                      </p>
-                      <p className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                        {category.label}
-                      </p>
-                    </div>
-                    <IconComponent className={`h-6 w-6 ${category.color.replace('bg-', 'text-')}`} />
-                  </div>
-                </motion.div>
-              );
-            })}
-          </div>
-        </div>
+      {/* Tabs */}
+      <div className="flex gap-1 mb-6 border-b border-gray-200 dark:border-gray-700 overflow-x-auto">
+        {tabs.map((t) => (
+          <button
+            key={t.key}
+            onClick={() => setTab(t.key)}
+            className={`flex items-center gap-2 px-4 py-2.5 text-sm font-medium border-b-2 whitespace-nowrap transition ${
+              tab === t.key
+                ? 'border-green-500 text-green-600 dark:text-green-400'
+                : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'
+            }`}
+          >
+            {t.icon}
+            {t.label}
+          </button>
+        ))}
+      </div>
 
-        {/* Controls */}
-        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6 mb-6">
-          <div className="flex flex-col space-y-4">
-            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-              <div className="relative flex-1 max-w-md">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
-                <input
-                  type="text"
-                  placeholder="Search settings..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full pl-10 pr-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 text-gray-900 dark:text-gray-100"
-                />
-              </div>
-              
-              <div className="flex gap-2">
-                <button
-                  onClick={() => setShowFilters(!showFilters)}
-                  className={`px-4 py-2.5 rounded-lg flex items-center gap-2 transition-colors ${
-                    showFilters 
-                      ? 'bg-blue-600 text-white' 
-                      : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600'
-                  }`}
-                >
-                  <Filter size={16} />
-                  Filters
-                </button>
-                
-                <motion.button
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
-                  onClick={() => setShowForm(true)}
-                  className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2.5 rounded-lg flex items-center gap-2 font-medium shadow-sm"
-                  disabled={loading}
-                >
-                  <Plus size={16} />
-                  Add Setting
-                </motion.button>
-              </div>
-            </div>
-
-            {/* Advanced Filters */}
-            <AnimatePresence>
-              {showFilters && (
-                <motion.div
-                  initial={{ opacity: 0, height: 0 }}
-                  animate={{ opacity: 1, height: 'auto' }}
-                  exit={{ opacity: 0, height: 0 }}
-                  className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-4 border-t border-gray-200 dark:border-gray-600"
-                >
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                      Category
-                    </label>
-                    <select
-                      value={filterCategory}
-                      onChange={(e) => setFilterCategory(e.target.value)}
-                      className="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 text-gray-900 dark:text-gray-100"
-                    >
-                      <option value="">All Categories</option>
-                      {categories.map(cat => (
-                        <option key={cat.value} value={cat.value}>{cat.label}</option>
-                      ))}
-                    </select>
-                  </div>
-                  
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                      Visibility
-                    </label>
-                    <select
-                      value={filterPublic}
-                      onChange={(e) => setFilterPublic(e.target.value)}
-                      className="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 text-gray-900 dark:text-gray-100"
-                    >
-                      <option value="">All</option>
-                      <option value="true">Public</option>
-                      <option value="false">Private</option>
-                    </select>
-                  </div>
-                </motion.div>
-              )}
-            </AnimatePresence>
-          </div>
-        </div>
-
-        {/* Settings Form Modal */}
-        <AnimatePresence>
-          {showForm && (
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-gray-900/50 backdrop-blur-sm"
-              onClick={(e) => e.target === e.currentTarget && handleCancel()}
+      {/* SYSTEM / BUSINESS / SECURITY — settings CRUD tabs */}
+      {['system', 'business', 'security'].includes(tab) && (
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow border border-gray-200 dark:border-gray-600">
+          <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200 dark:border-gray-600">
+            <h2 className="text-lg font-semibold text-gray-800 dark:text-gray-200 capitalize">{tab} Settings</h2>
+            <button
+              onClick={() => setShowAddSetting(true)}
+              className="flex items-center gap-2 px-3 py-2 bg-green-500 text-white rounded-md hover:bg-green-600 text-sm"
             >
-              <motion.div
-                initial={{ scale: 0.95, y: 20 }}
-                animate={{ scale: 1, y: 0 }}
-                exit={{ scale: 0.95, y: 20 }}
-                className="bg-white dark:bg-gray-800 rounded-xl shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto"
-              >
-                <div className="p-6 border-b border-gray-200 dark:border-gray-700">
-                  <div className="flex items-center justify-between">
-                    <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
-                      {editingSetting ? 'Edit Setting' : 'Create New Setting'}
-                    </h2>
-                    <button
-                      onClick={handleCancel}
-                      className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 transition-colors"
-                    >
-                      <X size={24} />
-                    </button>
-                  </div>
-                </div>
-
-                <form onSubmit={handleSubmit} className="p-6 space-y-6">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                        Key <span className="text-red-500">*</span>
-                      </label>
-                      <input
-                        type="text"
-                        name="setting_key"
-                        value={formData.setting_key}
-                        onChange={handleInputChange}
-                        disabled={!!editingSetting}
-                        className="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 text-gray-900 dark:text-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"
-                        required
-                        maxLength={100}
-                        placeholder="e.g., max_order_amount"
-                      />
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                        Type <span className="text-red-500">*</span>
-                      </label>
-                      <select
-                        name="setting_type"
-                        value={formData.setting_type}
-                        onChange={handleInputChange}
-                        className="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 text-gray-900 dark:text-gray-100"
-                      >
-                        {typeOptions.map(type => (
-                          <option key={type.value} value={type.value}>{type.label}</option>
-                        ))}
-                      </select>
-                      <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                        {typeOptions.find(t => t.value === formData.setting_type)?.description}
-                      </p>
-                    </div>
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                      Value <span className="text-red-500">*</span>
-                    </label>
-                    {formData.setting_type === 'json' ? (
-                      <textarea
-                        name="setting_value"
-                        value={formData.setting_value}
-                        onChange={handleInputChange}
-                        className="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 text-gray-900 dark:text-gray-100 font-mono text-sm"
-                        required
-                        rows={6}
-                        placeholder='{"key": "value"}'
-                      />
-                    ) : formData.setting_type === 'boolean' ? (
-                      <select
-                        name="setting_value"
-                        value={formData.setting_value}
-                        onChange={handleInputChange}
-                        className="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 text-gray-900 dark:text-gray-100"
-                        required
-                      >
-                        <option value="true">True</option>
-                        <option value="false">False</option>
-                      </select>
-                    ) : (
-                      <input
-                        type={formData.setting_type === 'number' ? 'number' : 'text'}
-                        name="setting_value"
-                        value={formData.setting_value}
-                        onChange={handleInputChange}
-                        className="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 text-gray-900 dark:text-gray-100"
-                        required
-                        placeholder={formData.setting_type === 'number' ? '0' : 'Enter value'}
-                      />
-                    )}
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                      Category <span className="text-red-500">*</span>
-                    </label>
-                    <select
-                      name="category"
-                      value={formData.category}
-                      onChange={handleInputChange}
-                      className="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 text-gray-900 dark:text-gray-100"
-                    >
-                      {categories.map(cat => (
-                        <option key={cat.value} value={cat.value}>{cat.label}</option>
-                      ))}
-                    </select>
-                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                      {categories.find(c => c.value === formData.category)?.description}
-                    </p>
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                      Description
-                    </label>
-                    <textarea
-                      name="description"
-                      value={formData.description}
-                      onChange={handleInputChange}
-                      className="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 text-gray-900 dark:text-gray-100"
-                      rows={3}
-                      placeholder="Describe what this setting does..."
-                    />
-                  </div>
-
-                  <div className="flex items-center gap-3">
-                    <input
-                      type="checkbox"
-                      name="is_public"
-                      id="is_public"
-                      checked={formData.is_public}
-                      onChange={handleInputChange}
-                      className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-                    />
-                    <div>
-                      <label htmlFor="is_public" className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                        Public Setting
-                      </label>
-                      <p className="text-xs text-gray-500 dark:text-gray-400">
-                        Public settings can be accessed by client applications
-                      </p>
-                    </div>
-                  </div>
-
-                  {error && (
-                    <motion.div
-                      initial={{ opacity: 0, y: -10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      className="flex items-center gap-2 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg"
-                    >
-                      <AlertTriangle className="h-4 w-4 text-red-500" />
-                      <p className="text-sm text-red-700 dark:text-red-400">{error}</p>
-                    </motion.div>
-                  )}
-
-                  <div className="flex justify-end gap-3 pt-4 border-t border-gray-200 dark:border-gray-700">
-                    <button
-                      type="button"
-                      onClick={handleCancel}
-                      className="px-6 py-2.5 text-gray-700 dark:text-gray-300 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 rounded-lg font-medium transition-colors"
-                      disabled={loading}
-                    >
-                      Cancel
-                    </button>
-                    <motion.button
-                      whileHover={{ scale: 1.02 }}
-                      whileTap={{ scale: 0.98 }}
-                      type="submit"
-                      className="px-6 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
-                      disabled={loading}
-                    >
-                      {loading ? (
-                        <>
-                          <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                          Saving...
-                        </>
-                      ) : (
-                        <>
-                          <Save size={16} />
-                          {editingSetting ? 'Update Setting' : 'Create Setting'}
-                        </>
-                      )}
-                    </motion.button>
-                  </div>
-                </form>
-              </motion.div>
-            </motion.div>
-          )}
-        </AnimatePresence>
-
-        {/* Settings Grid */}
-        <div className="space-y-4">
-          {loading && !showForm ? (
-            <div className="text-center py-12">
-              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto mb-4"></div>
-              <p className="text-gray-600 dark:text-gray-400">Loading settings...</p>
-            </div>
-          ) : filteredSettings.length === 0 ? (
-            <div className="text-center py-12 bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700">
-              <SettingsIcon className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-              <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-2">
-                {searchQuery || filterCategory || filterPublic ? 'No settings found' : 'No settings configured'}
-              </h3>
-              <p className="text-gray-600 dark:text-gray-400 mb-4">
-                {searchQuery || filterCategory || filterPublic 
-                  ? 'Try adjusting your search or filters'
-                  : 'Get started by creating your first system setting'
-                }
-              </p>
-              {!searchQuery && !filterCategory && !filterPublic && (
-                <button
-                  onClick={() => setShowForm(true)}
-                  className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg"
-                >
-                  Create First Setting
-                </button>
-              )}
+              <Plus className="w-4 h-4" />
+              Add Setting
+            </button>
+          </div>
+          {systemSettings.length === 0 ? (
+            <div className="px-6 py-12 text-center text-gray-500 dark:text-gray-400">
+              No {tab} settings found. Use "Add Setting" to create one.
             </div>
           ) : (
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              {filteredSettings.map((setting) => {
-                const categoryConfig = getCategoryConfig(setting.category);
-                const IconComponent = categoryConfig.icon;
+            systemSettings.map((s) => (
+              <SettingRow
+                key={s.setting_id || s.key || s.setting_key}
+                setting={s}
+                onSave={handleSaveSetting}
+                onDelete={handleDeleteSetting}
+                saving={saving}
+              />
+            ))
+          )}
+        </div>
+      )}
 
-                return (
-                  <motion.div
-                    key={setting.setting_id}
-                    layout
-                    whileHover={{ y: -2 }}
-                    className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6 hover:shadow-md transition-all"
-                  >
-                    <div className="flex items-start justify-between mb-4">
-                      <div className="flex items-center gap-3">
-                        <div className={`p-2 rounded-lg ${categoryConfig.color} bg-opacity-10 dark:bg-opacity-20`}>
-                          <IconComponent className={`h-5 w-5 ${categoryConfig.color.replace('bg-', 'text-')}`} />
-                        </div>
-                        <div>
-                          <h3 className="font-semibold text-gray-900 dark:text-gray-100">
-                            {setting.setting_key}
-                          </h3>
-                          <div className="flex items-center gap-2 mt-1">
-                            <span className={`px-2 py-1 rounded-full text-xs font-medium ${categoryConfig.color} bg-opacity-10 dark:bg-opacity-20 ${categoryConfig.color.replace('bg-', 'text-')}`}>
-                              {categoryConfig.label}
-                            </span>
-                            <span className="flex items-center gap-1 text-xs text-gray-500 dark:text-gray-400">
-                              {setting.is_public ? <Eye size={12} /> : <EyeOff size={12} />}
-                              {setting.is_public ? 'Public' : 'Private'}
-                            </span>
-                            <span className="text-xs text-gray-400 dark:text-gray-500 uppercase tracking-wide">
-                              {setting.setting_type}
-                            </span>
-                          </div>
-                        </div>
-                      </div>
+      {/* NOTIFICATIONS TAB */}
+      {tab === 'notifications' && (
+        <div className="space-y-6">
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow border border-gray-200 dark:border-gray-600 p-6">
+            <h2 className="text-lg font-semibold text-gray-800 dark:text-gray-200 mb-4">My Notification Preferences</h2>
+            <form onSubmit={handleSaveNotifPrefs}>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                {/* Channels */}
+                <div>
+                  <h3 className="text-sm font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-wide mb-3">Channels</h3>
+                  {(['email_enabled', 'sms_enabled', 'push_enabled', 'in_app_enabled'] as const).map((field) => (
+                    <label key={field} className="flex items-center justify-between py-2.5 border-b border-gray-100 dark:border-gray-700">
+                      <span className="text-sm text-gray-700 dark:text-gray-300 capitalize">{field.replace('_enabled', '').replace('_', ' ')}</span>
+                      <button
+                        type="button"
+                        onClick={() => setNotifPrefs((p) => ({ ...p, [field]: !p[field] }))}
+                        className={`relative w-10 h-6 rounded-full transition-colors ${notifPrefs[field] ? 'bg-green-500' : 'bg-gray-300 dark:bg-gray-600'}`}
+                      >
+                        <span className={`absolute top-1 left-1 w-4 h-4 bg-white rounded-full shadow transition-transform ${notifPrefs[field] ? 'translate-x-4' : ''}`} />
+                      </button>
+                    </label>
+                  ))}
+                </div>
+                {/* Event types */}
+                <div>
+                  <h3 className="text-sm font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-wide mb-3">Event Types</h3>
+                  {(['order_updates', 'delivery_updates', 'payment_updates', 'promotional', 'system_alerts', 'reminders'] as const).map((field) => (
+                    <label key={field} className="flex items-center justify-between py-2.5 border-b border-gray-100 dark:border-gray-700">
+                      <span className="text-sm text-gray-700 dark:text-gray-300 capitalize">{field.replace(/_/g, ' ')}</span>
+                      <button
+                        type="button"
+                        onClick={() => setNotifPrefs((p) => ({ ...p, [field]: !p[field] }))}
+                        className={`relative w-10 h-6 rounded-full transition-colors ${notifPrefs[field] ? 'bg-green-500' : 'bg-gray-300 dark:bg-gray-600'}`}
+                      >
+                        <span className={`absolute top-1 left-1 w-4 h-4 bg-white rounded-full shadow transition-transform ${notifPrefs[field] ? 'translate-x-4' : ''}`} />
+                      </button>
+                    </label>
+                  ))}
+                </div>
+              </div>
+              <div className="mt-6 flex justify-end">
+                <button
+                  type="submit"
+                  disabled={savingNotifPrefs}
+                  className="flex items-center gap-2 px-6 py-2.5 bg-green-500 text-white rounded-md hover:bg-green-600 disabled:opacity-50"
+                >
+                  <Save className="w-4 h-4" />
+                  {savingNotifPrefs ? 'Saving…' : 'Save Preferences'}
+                </button>
+              </div>
+            </form>
+          </div>
 
-                      <div className="flex gap-1">
-                        <motion.button
-                          whileHover={{ scale: 1.1 }}
-                          whileTap={{ scale: 0.9 }}
-                          onClick={() => handleEdit(setting)}
-                          className="p-2 text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
-                          disabled={loading}
-                          title="Edit setting"
-                        >
-                          <Edit3 size={16} />
-                        </motion.button>
-                        <motion.button
-                          whileHover={{ scale: 1.1 }}
-                          whileTap={{ scale: 0.9 }}
-                          onClick={() => handleDelete(setting.setting_id, setting.setting_key)}
-                          className="p-2 text-gray-400 hover:text-red-600 dark:hover:text-red-400 transition-colors"
-                          disabled={loading}
-                          title="Delete setting"
-                        >
-                          <Trash2 size={16} />
-                        </motion.button>
-                      </div>
-                    </div>
-
-                    <div className="mb-3">
-                      <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Value:</h4>
-                      <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-3">
-                        <pre className="text-sm text-gray-900 dark:text-gray-100 whitespace-pre-wrap break-words">
-                          {formatValue(setting.setting_value, setting.setting_type)}
-                        </pre>
-                      </div>
-                    </div>
-
-                    {setting.description && (
-                      <div className="mb-3">
-                        <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Description:</h4>
-                        <p className="text-sm text-gray-600 dark:text-gray-400">
-                          {setting.description}
-                        </p>
-                      </div>
-                    )}
-
-                    <div className="flex justify-between items-center text-xs text-gray-500 dark:text-gray-400 pt-3 border-t border-gray-200 dark:border-gray-700">
-                      <span>Created: {new Date(setting.createdAt).toLocaleDateString()}</span>
-                      <span>Updated: {new Date(setting.updatedAt).toLocaleDateString()}</span>
-                    </div>
-                  </motion.div>
-                );
-              })}
+          {/* Notification system settings */}
+          {(grouped['notifications'] || []).length > 0 && (
+            <div className="bg-white dark:bg-gray-800 rounded-lg shadow border border-gray-200 dark:border-gray-600">
+              <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-600">
+                <h2 className="text-lg font-semibold text-gray-800 dark:text-gray-200">Notification System Settings</h2>
+              </div>
+              {(grouped['notifications'] || []).map((s) => (
+                <SettingRow key={s.setting_id} setting={s} onSave={handleSaveSetting} onDelete={handleDeleteSetting} saving={saving} />
+              ))}
             </div>
           )}
         </div>
+      )}
 
-        {/* Summary Stats */}
-        <div className="mt-8 bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">Summary</h3>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <div className="text-center">
-              <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">
-                {settings.length}
+      {/* HEALTH & EVENTS TAB */}
+      {tab === 'health' && (
+        <div className="space-y-6">
+          {/* Maintenance mode */}
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow border border-gray-200 dark:border-gray-600 p-6">
+            <div className="flex items-start justify-between">
+              <div>
+                <h2 className="text-lg font-semibold text-gray-800 dark:text-gray-200 flex items-center gap-2">
+                  <Wrench className="w-5 h-5 text-yellow-500" />
+                  Maintenance Mode
+                </h2>
+                <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+                  When enabled, the platform will display a maintenance notice to end users. Admin access is not affected.
+                </p>
               </div>
-              <div className="text-sm text-gray-600 dark:text-gray-400">Total Settings</div>
+              {maintenance && (
+                <HealthBadge status={maintenance.enabled ? 'degraded' : 'healthy'} />
+              )}
             </div>
-            <div className="text-center">
-              <div className="text-2xl font-bold text-green-600 dark:text-green-400">
-                {settings.filter(s => s.is_public).length}
+            <div className="mt-4 space-y-3">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Maintenance Message (optional)</label>
+                <input
+                  type="text"
+                  value={maintenanceMsg}
+                  onChange={(e) => setMaintenanceMsg(e.target.value)}
+                  placeholder="We're performing scheduled maintenance. Back shortly!"
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 text-sm"
+                />
               </div>
-              <div className="text-sm text-gray-600 dark:text-gray-400">Public</div>
-            </div>
-            <div className="text-center">
-              <div className="text-2xl font-bold text-red-600 dark:text-red-400">
-                {settings.filter(s => !s.is_public).length}
-              </div>
-              <div className="text-sm text-gray-600 dark:text-gray-400">Private</div>
-            </div>
-            <div className="text-center">
-              <div className="text-2xl font-bold text-purple-600 dark:text-purple-400">
-                {new Set(settings.map(s => s.category)).size}
-              </div>
-              <div className="text-sm text-gray-600 dark:text-gray-400">Categories</div>
+              <button
+                onClick={handleToggleMaintenance}
+                disabled={togglingMaintenance}
+                className={`flex items-center gap-2 px-5 py-2.5 rounded-md text-white text-sm font-medium disabled:opacity-50 ${
+                  maintenance?.enabled ? 'bg-green-500 hover:bg-green-600' : 'bg-yellow-500 hover:bg-yellow-600'
+                }`}
+              >
+                {togglingMaintenance ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Wrench className="w-4 h-4" />}
+                {maintenance?.enabled ? 'Disable Maintenance Mode' : 'Enable Maintenance Mode'}
+              </button>
             </div>
           </div>
+
+          {/* Health status */}
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow border border-gray-200 dark:border-gray-600 p-6">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-lg font-semibold text-gray-800 dark:text-gray-200 flex items-center gap-2">
+                <Activity className="w-5 h-5 text-green-500" />
+                System Health
+              </h2>
+              {health && <HealthBadge status={health.status} />}
+            </div>
+            {health ? (
+              <div className="space-y-4">
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                  <div className="bg-gray-50 dark:bg-gray-700 p-4 rounded-lg">
+                    <p className="text-xs text-gray-500 dark:text-gray-400">Uptime</p>
+                    <p className="text-lg font-bold text-gray-900 dark:text-gray-100 mt-1">
+                      {Math.floor(health.uptimeSeconds / 3600)}h {Math.floor((health.uptimeSeconds % 3600) / 60)}m
+                    </p>
+                  </div>
+                  <div className="bg-gray-50 dark:bg-gray-700 p-4 rounded-lg">
+                    <p className="text-xs text-gray-500 dark:text-gray-400">Memory</p>
+                    <p className="text-lg font-bold text-gray-900 dark:text-gray-100 mt-1">{health.memoryUsageMb} MB</p>
+                  </div>
+                  {health.checks && Object.entries(health.checks).map(([service, check]: [string, any]) => (
+                    <div key={service} className="bg-gray-50 dark:bg-gray-700 p-4 rounded-lg">
+                      <p className="text-xs text-gray-500 dark:text-gray-400 capitalize">{service.replace(/([A-Z])/g, ' $1')}</p>
+                      <div className="flex items-center gap-2 mt-1">
+                        <HealthBadge status={check.status} />
+                        {check.latencyMs !== undefined && (
+                          <span className="text-xs text-gray-500 dark:text-gray-400">{check.latencyMs}ms</span>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ) : (
+              <p className="text-gray-500 dark:text-gray-400 text-sm">Health data unavailable.</p>
+            )}
+          </div>
+
+          {/* Cache clear */}
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow border border-gray-200 dark:border-gray-600 p-6">
+            <h2 className="text-lg font-semibold text-gray-800 dark:text-gray-200 flex items-center gap-2 mb-2">
+              <Server className="w-5 h-5 text-blue-500" />
+              Cache Management
+            </h2>
+            <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">
+              Clears both the in-memory cache and Redis cache layers. Active user sessions are not affected.
+            </p>
+            <button
+              onClick={handleClearCache}
+              disabled={clearingCache}
+              className="flex items-center gap-2 px-5 py-2.5 bg-red-500 text-white rounded-md hover:bg-red-600 disabled:opacity-50 text-sm font-medium"
+            >
+              {clearingCache ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Trash2 className="w-4 h-4" />}
+              {clearingCache ? 'Clearing…' : 'Clear All Cache'}
+            </button>
+          </div>
+
+          {/* System events */}
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow border border-gray-200 dark:border-gray-600">
+            <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200 dark:border-gray-600">
+              <h2 className="text-lg font-semibold text-gray-800 dark:text-gray-200">System Events</h2>
+              <select
+                value={eventSeverity}
+                onChange={(e) => { setEventSeverity(e.target.value); setEventPage(1); }}
+                className="px-3 py-1.5 text-sm border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
+              >
+                <option value="all">All Severity</option>
+                <option value="info">Info</option>
+                <option value="warning">Warning</option>
+                <option value="error">Error</option>
+                <option value="critical">Critical</option>
+              </select>
+            </div>
+            <div className="overflow-x-auto">
+              <table className="min-w-full text-sm text-left text-gray-800 dark:text-gray-200">
+                <thead className="bg-gray-50 dark:bg-gray-700 text-xs uppercase text-gray-500 dark:text-gray-400">
+                  <tr>
+                    <th className="px-6 py-3">Event Type</th>
+                    <th className="px-6 py-3">Category</th>
+                    <th className="px-6 py-3">Severity</th>
+                    <th className="px-6 py-3">Source</th>
+                    <th className="px-6 py-3">Time</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
+                  {systemEvents.length === 0 ? (
+                    <tr><td colSpan={5} className="px-6 py-10 text-center text-gray-500">No system events found.</td></tr>
+                  ) : (
+                    systemEvents.map((e) => (
+                      <tr key={e.event_id} className="hover:bg-gray-50 dark:hover:bg-gray-700/50">
+                        <td className="px-6 py-3 font-medium">{e.event_type}</td>
+                        <td className="px-6 py-3 capitalize">{e.event_category}</td>
+                        <td className="px-6 py-3">
+                          <span className={`px-2 py-0.5 rounded text-xs font-medium ${
+                            e.severity === 'critical' ? 'bg-red-100 text-red-800 dark:bg-red-900/40 dark:text-red-300' :
+                            e.severity === 'error' ? 'bg-orange-100 text-orange-800 dark:bg-orange-900/40 dark:text-orange-300' :
+                            e.severity === 'warning' ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/40 dark:text-yellow-300' :
+                            'bg-blue-100 text-blue-800 dark:bg-blue-900/40 dark:text-blue-300'
+                          }`}>{e.severity}</span>
+                        </td>
+                        <td className="px-6 py-3 text-gray-500 dark:text-gray-400">{e.source_system || '—'}</td>
+                        <td className="px-6 py-3 text-gray-500 dark:text-gray-400">{formatDate(e.created_at)}</td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
+            </div>
+            <Pagination page={eventPage} totalPages={eventTotalPages} onChange={setEventPage} />
+          </div>
         </div>
-      </div>
+      )}
+
+      {/* AUDIT LOGS TAB */}
+      {tab === 'audit' && (
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow border border-gray-200 dark:border-gray-600">
+          <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200 dark:border-gray-600">
+            <h2 className="text-lg font-semibold text-gray-800 dark:text-gray-200">Audit Logs</h2>
+            <select
+              value={auditFilter}
+              onChange={(e) => { setAuditFilter(e.target.value); setAuditPage(1); }}
+              className="px-3 py-1.5 text-sm border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
+            >
+              <option value="">All Entities</option>
+              <option value="system_settings">System Settings</option>
+              <option value="orders">Orders</option>
+              <option value="users">Users</option>
+              <option value="vendors">Vendors</option>
+              <option value="riders">Riders</option>
+              <option value="system">System</option>
+            </select>
+          </div>
+          <div className="overflow-x-auto">
+            <table className="min-w-full text-sm text-left text-gray-800 dark:text-gray-200">
+              <thead className="bg-gray-50 dark:bg-gray-700 text-xs uppercase text-gray-500 dark:text-gray-400">
+                <tr>
+                  <th className="px-6 py-3">Action</th>
+                  <th className="px-6 py-3">Entity</th>
+                  <th className="px-6 py-3">Performed By</th>
+                  <th className="px-6 py-3">IP</th>
+                  <th className="px-6 py-3">Path</th>
+                  <th className="px-6 py-3">Time</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
+                {auditLogs.length === 0 ? (
+                  <tr><td colSpan={6} className="px-6 py-10 text-center text-gray-500">No audit logs found.</td></tr>
+                ) : (
+                  auditLogs.map((log) => (
+                    <tr key={log.log_id} className="hover:bg-gray-50 dark:hover:bg-gray-700/50">
+                      <td className="px-6 py-3">
+                        <span className={`px-2 py-0.5 rounded text-xs font-medium ${
+                          log.action?.includes('delete') ? 'bg-red-100 text-red-800 dark:bg-red-900/40 dark:text-red-300' :
+                          log.action?.includes('create') ? 'bg-green-100 text-green-800 dark:bg-green-900/40 dark:text-green-300' :
+                          log.action?.includes('enable') ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/40 dark:text-yellow-300' :
+                          'bg-blue-100 text-blue-800 dark:bg-blue-900/40 dark:text-blue-300'
+                        }`}>{log.action}</span>
+                      </td>
+                      <td className="px-6 py-3">
+                        <span className="text-xs text-gray-500 dark:text-gray-400">{log.entity_type}</span>
+                        {log.entity_id && <span className="ml-1 text-xs text-gray-400">#{log.entity_id}</span>}
+                      </td>
+                      <td className="px-6 py-3 text-gray-500 dark:text-gray-400">
+                        {log.performed_by_type} {log.performed_by_id ? `#${log.performed_by_id}` : ''}
+                      </td>
+                      <td className="px-6 py-3 font-mono text-xs text-gray-500 dark:text-gray-400">{log.ip_address || '—'}</td>
+                      <td className="px-6 py-3 font-mono text-xs text-gray-500 dark:text-gray-400 truncate max-w-[140px]">{log.request_path || '—'}</td>
+                      <td className="px-6 py-3 text-gray-500 dark:text-gray-400 whitespace-nowrap">{formatDate(log.created_at)}</td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
+          <Pagination page={auditPage} totalPages={auditTotalPages} onChange={setAuditPage} />
+        </div>
+      )}
+
+      {/* Add Setting Modal */}
+      {showAddSetting && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" onClick={() => setShowAddSetting(false)}>
+          <form
+            onSubmit={handleAddSetting}
+            className="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-md w-full p-6"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex justify-between items-start mb-4">
+              <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-200">Add Setting</h3>
+              <button type="button" onClick={() => setShowAddSetting(false)} className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            <div className="space-y-4">
+              {[
+                { label: 'Key', field: 'key', placeholder: 'e.g. min_order_amount' },
+                { label: 'Value', field: 'value', placeholder: 'e.g. 500' },
+                { label: 'Description (optional)', field: 'description', placeholder: 'What this setting controls' },
+              ].map(({ label, field, placeholder }) => (
+                <div key={field}>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{label}</label>
+                  <input
+                    type="text"
+                    value={(newSetting as any)[field]}
+                    onChange={(e) => setNewSetting((p) => ({ ...p, [field]: e.target.value }))}
+                    placeholder={placeholder}
+                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 text-sm"
+                  />
+                </div>
+              ))}
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Type</label>
+                  <select
+                    value={newSetting.type}
+                    onChange={(e) => setNewSetting((p) => ({ ...p, type: e.target.value }))}
+                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 text-sm"
+                  >
+                    <option value="string">String</option>
+                    <option value="number">Number</option>
+                    <option value="boolean">Boolean</option>
+                    <option value="json">JSON</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Category</label>
+                  <select
+                    value={newSetting.category}
+                    onChange={(e) => setNewSetting((p) => ({ ...p, category: e.target.value }))}
+                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 text-sm"
+                  >
+                    {['general', 'delivery', 'orders', 'payments', 'finance', 'loyalty', 'integrations', 'contact', 'security', 'system', 'notifications'].map((c) => (
+                      <option key={c} value={c}>{c}</option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+            </div>
+            <div className="flex justify-end gap-3 mt-6">
+              <button type="button" onClick={() => setShowAddSetting(false)} className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700 text-sm">
+                Cancel
+              </button>
+              <button type="submit" className="px-4 py-2 bg-green-500 text-white rounded-md hover:bg-green-600 text-sm">
+                Create Setting
+              </button>
+            </div>
+          </form>
+        </div>
+      )}
     </div>
   );
 };
