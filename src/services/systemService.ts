@@ -320,6 +320,44 @@ export async function clearSystemCache(cacheType?: 'all' | 'redis' | 'applicatio
   }
 }
 
+// ---- SystemHealth type (used in settings.tsx) ----
+export interface SystemHealth {
+  status: 'healthy' | 'degraded' | 'unhealthy';
+  timestamp: string;
+  uptimeSeconds: number;
+  memoryUsageMb: number;
+  checks: Record<string, { status: string; latencyMs?: number; error?: string; detail?: string; stats?: any }>;
+}
+
+// ---- Maintenance status ----
+export async function getMaintenanceStatus(): Promise<ApiResponse<{ enabled: boolean; message?: string }>> {
+  try {
+    const res = await api.get('/v1/admin/system/maintenance');
+    return res.data;
+  } catch (error: any) {
+    throw new Error(error?.response?.data?.error || 'Failed to get maintenance status');
+  }
+}
+
+// ---- Admin notification preferences ----
+export async function getNotificationPreferences(): Promise<ApiResponse> {
+  try {
+    const res = await api.get('/v1/admin/system/notification-preferences');
+    return res.data;
+  } catch (error: any) {
+    throw new Error(error?.response?.data?.error || 'Failed to get notification preferences');
+  }
+}
+
+export async function updateNotificationPreferences(prefs: Record<string, boolean>): Promise<ApiResponse> {
+  try {
+    const res = await api.put('/v1/admin/system/notification-preferences', prefs);
+    return res.data;
+  } catch (error: any) {
+    throw new Error(error?.response?.data?.error || 'Failed to update notification preferences');
+  }
+}
+
 // Default export
 export default {
   // Settings
@@ -347,4 +385,8 @@ export default {
   enableMaintenanceMode,
   disableMaintenanceMode,
   clearSystemCache,
+
+  // Maintenance status & notification preferences (added for settings page)
+  getMaintenanceStatus,
+  updateNotificationPreferences,
 };
