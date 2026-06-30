@@ -272,7 +272,7 @@ const AdminAnalytics: React.FC = () => {
   // Fetch overview statistics using your existing endpoint
   const fetchOverviewStats = useCallback(async (): Promise<void> => {
     try {
-      const response = await api.get<OverviewStats>('/v1/analytics/overview');
+      const response = await api.get<OverviewStats>(`/v1/analytics/overview?range=${timeRange}`);
       // Handle both nested data structure and direct response
       const data = response.data || response;
       setOverviewStats({
@@ -293,12 +293,12 @@ const AdminAnalytics: React.FC = () => {
         totalRevenue: 0
       });
     }
-  }, []);
+  }, [timeRange]);
 
   // Fetch sales analytics using your existing endpoint
   const fetchSalesData = useCallback(async (): Promise<void> => {
     try {
-      const response = await api.get<SalesDataItem[]>('/v1/analytics/sales');
+      const response = await api.get<SalesDataItem[]>(`/v1/analytics/sales?range=${timeRange}`);
       // Your backend returns data with date, totalSales, totalOrders structure
       const data = Array.isArray(response) ? response : (response.data || []);
       
@@ -311,12 +311,12 @@ const AdminAnalytics: React.FC = () => {
       console.error('Error fetching sales data:', error);
       setSalesData([]);
     }
-  }, []);
+  }, [timeRange]);
 
   // Fetch user growth data using your existing endpoint
   const fetchUserGrowthData = useCallback(async (): Promise<void> => {
     try {
-      const response = await api.get<UserGrowthItem[]>('/v1/analytics/users');
+      const response = await api.get<UserGrowthItem[]>(`/v1/analytics/users?range=${timeRange}`);
       // Your backend returns data with date, totalUsers structure
       const data = Array.isArray(response) ? response : (response.data || []);
       
@@ -328,12 +328,12 @@ const AdminAnalytics: React.FC = () => {
       console.error('Error fetching user growth data:', error);
       setUserGrowthData([]);
     }
-  }, []);
+  }, [timeRange]);
 
   // Fetch delivery performance using your existing endpoint
   const fetchDeliveryPerformance = useCallback(async (): Promise<void> => {
     try {
-      const response = await api.get<DeliveryPerformanceItem[]>('/v1/analytics/delivery-performance');
+      const response = await api.get<DeliveryPerformanceItem[]>(`/v1/analytics/delivery-performance?range=${timeRange}`);
       // Your backend returns performance data with rider details
       const data = Array.isArray(response) ? response : (response.data || []);
       
@@ -346,12 +346,12 @@ const AdminAnalytics: React.FC = () => {
       console.error('Error fetching delivery performance:', error);
       setDeliveryPerformance([]);
     }
-  }, []);
+  }, [timeRange]);
 
   // Fetch revenue data using your existing endpoint
   const fetchRevenueData = useCallback(async (): Promise<void> => {
     try {
-      const response = await api.get<RevenueDataItem[]>('/v1/analytics/revenue');
+      const response = await api.get<RevenueDataItem[]>(`/v1/analytics/revenue?range=${timeRange}`);
       // Your backend returns data with date, totalRevenue structure
       const data = Array.isArray(response) ? response : (response.data || []);
       
@@ -363,7 +363,7 @@ const AdminAnalytics: React.FC = () => {
       console.error('Error fetching revenue data:', error);
       setRevenueData([]);
     }
-  }, []);
+  }, [timeRange]);
 
   // Fetch all analytics data
   const fetchAllData = useCallback(async (): Promise<void> => {
