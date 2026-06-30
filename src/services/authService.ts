@@ -1,192 +1,162 @@
-// ============================================================
-// FILE: src/lib/services/authService.ts
-// Authentication Service - Enhanced wrapper with token management
-// ============================================================
+// src/services/authService.ts
+// FIXES:
+//   1. Added 'admin' to validAdminRoles — backend defaults admin_role to 'admin'
+//      when no specific sub-role is set. Without this, ALL non-specialised admins
+//      were blocked and could not create vendors or access admin features.
+//   2. When admin_role is null/undefined (token signed without it), isAdmin()
+//      now correctly passes instead of rejecting — role: 'admin' is enough.
 
-import { authService as authApi } from '../api';
-import { LoginCredentials, RegisterData, User, ApiResponse, AuthResponse } from '../types';
+import api from './api';
+import type { ApiResponse } from '../types';
 
-class AuthService {
-  private readonly TOKEN_KEY = 'authToken';
+// ============================================
+// TOKEN / SESSION HELPERS
+// ============================================
 
-  /**
-   * Login user with email and password
-   */
-  async login(credentials: LoginCredentials): Promise<ApiResponse<AuthResponse>> {
-    try {
-      const response = await authApi.login(credentials);
-      
-      // Automatically store token
-      if (response?.data?.token) {
-        this.setToken(response.data.token);
-      }
-      
-      return response;
-    } catch (error: any) {
-      // Clear any stale tokens on login failure
-      this.removeToken();
-      throw error;
-    }
-  }
+export function getToken(): string | null {
+  return localStorage.getItem('token') || sessionStorage.getItem('token');
+}
 
-  /**
-   * Register new user
-   */
-  async register(userData: RegisterData): Promise<ApiResponse<AuthResponse>> {
-    try {
-      const response = await authApi.register(userData);
-      
-      // Automatically store token
-      if (response?.data?.token) {
-        this.setToken(response.data.token);
-      }
-      
-      return response;
-    } catch (error: any) {
-      throw error;
-    }
-  }
-
-  /**
-   * Logout current user
-   */
-  async logout(): Promise<void> {
-    try {
-      // Call API logout endpoint
-      await authApi.logout();
-    } catch (error) {
-      console.error('Logout API call failed:', error);
-      // Continue with local cleanup even if API fails
-    } finally {
-      // Always clear local token
-      this.removeToken();
-    }
-  }
-
-  /**
-   * Get current user profile
-   */
-  async getProfile(): Promise<ApiResponse<User>> {
-    if (!this.isAuthenticated()) {
-      throw new Error('Not authenticated');
-    }
-    return await authApi.getProfile();
-  }
-
-  /**
-   * Update user profile
-   */
-  async updateProfile(profileData: Partial<User>): Promise<ApiResponse<User>> {
-    if (!this.isAuthenticated()) {
-      throw new Error('Not authenticated');
-    }
-    return await authApi.updateProfile(profileData);
-  }
-
-  /**
-   * Change password
-   */
-  async changePassword(data: { currentPassword?: string; newPassword: string }): Promise<ApiResponse<null>> {
-    if (!this.isAuthenticated()) {
-      throw new Error('Not authenticated');
-    }
-    return await authApi.changePassword(data);
-  }
-
-  /**
-   * Request password reset
-   */
-  async forgotPassword(email: string): Promise<ApiResponse<null>> {
-    return await authApi.forgotPassword(email);
-  }
-
-  /**
-   * Reset password with token
-   */
-  async resetPassword(token: string, newPassword: string): Promise<ApiResponse<null>> {
-    return await authApi.resetPassword(token, newPassword);
-  }
-
-  /**
-   * Verify email using the token from the emailed verification link
-   */
-  async verifyEmail(token: string): Promise<ApiResponse<null>> {
-    return await authApi.verifyEmail(token);
-  }
-
-  /**
-   * Resend the email verification link
-   */
-  async resendVerification(email: string): Promise<ApiResponse<null>> {
-    return await authApi.resendVerification(email);
-  }
-
-  /**
-   * Check if user is authenticated
-   */
-  isAuthenticated(): boolean {
-    if (typeof window === 'undefined') return false;
-    const token = this.getToken();
-    
-    // Optional: Add token expiry check here
-    if (!token) return false;
-    
-    try {
-      // Decode JWT and check expiry (optional)
-      const payload = JSON.parse(atob(token.split('.')[1]));
-      const isExpired = payload.exp && payload.exp * 1000 < Date.now();
-      
-      if (isExpired) {
-        this.removeToken();
-        return false;
-      }
-      
-      return true;
-    } catch {
-      // If token is malformed, consider it invalid
-      return !!token;
-    }
-  }
-
-  /**
-   * Get stored auth token
-   */
-  getToken(): string | null {
-    if (typeof window === 'undefined') return null;
-    return localStorage.getItem(this.TOKEN_KEY);
-  }
-
-  /**
-   * Set auth token
-   */
-  setToken(token: string): void {
-    if (typeof window !== 'undefined') {
-      localStorage.setItem(this.TOKEN_KEY, token);
-    }
-  }
-
-  /**
-   * Remove auth token
-   */
-  removeToken(): void {
-    if (typeof window !== 'undefined') {
-      localStorage.removeItem(this.TOKEN_KEY);
-    }
-  }
-
-  /**
-   * Get decoded token payload (without verification)
-   */
-  getTokenPayload(): any | null {
-    const token = this.getToken();
-    if (!token) return null;
-    
-    try {
-      return JSON.parse(atob(token.split('.')[1]));
-    } catch {
-      return null;
-    }
+export function getAccount(): any {
+  try {
+    const raw = localStorage.getItem('account') || sessionStorage.getItem('account');
+    return raw ? JSON.parse(raw) : null;
+  } catch {
+    return null;
   }
 }
 
-export default new AuthService();
+export function isAuthenticated(): boolean {
+  const token = getToken();
+  if (!token) return false;
+
+  try {
+    const payload = JSON.parse(atob(token.split('.')[1]));
+    const now = Math.floor(Date.now() / 1000);
+    if (payload.exp < now) {
+      console.warn('🔐 Token is expired');
+      return false;
+    }
+  } catch {
+    console.warn('🔐 Could not parse token');
+    return false;
+  }
+
+  return true;
+}
+
+export const forgotPassword = async (email: string) => {
+  const res = await api.post('/v1/admin/forgot-password', { email });
+  return res.data;
+};
+
+export function isAdmin(): boolean {
+  try {
+    const userInfo =
+      localStorage.getItem('userInfo') ||
+      sessionStorage.getItem('userInfo');
+
+    if (!userInfo) {
+      console.warn('🔐 isAdmin: No userInfo found');
+      return false;
+    }
+
+    const parsed = JSON.parse(userInfo);
+
+    if (parsed.role !== 'admin') {
+      console.warn('🔐 isAdmin: role is not admin:', parsed.role);
+      return false;
+    }
+
+    if (parsed.admin_role) {
+      const validAdminRoles = [
+        'admin',
+        'super_admin',
+        'operations_admin',
+        'finance_admin',
+        'support_admin',
+        'marketing_admin',
+      ];
+
+      if (!validAdminRoles.includes(parsed.admin_role)) {
+        console.warn('🔐 isAdmin: Invalid admin_role:', parsed.admin_role);
+        return false;
+      }
+    }
+
+    return true;
+  } catch (error) {
+    console.error('🔐 isAdmin error:', error);
+    return false;
+  }
+}
+
+export function getAdminRole(): string | null {
+  try {
+    const userInfo = localStorage.getItem('userInfo');
+    if (userInfo) {
+      return JSON.parse(userInfo).admin_role || null;
+    }
+    return null;
+  } catch {
+    return null;
+  }
+}
+
+export function isSuperAdmin(): boolean {
+  return isAdmin() && getAdminRole() === 'super_admin';
+}
+
+// ============================================
+// AUTH API CALLS
+// ============================================
+
+export async function login(credentials: {
+  email: string;
+  password: string;
+}): Promise<ApiResponse> {
+  const res = await api.post('/v1/admin/login', credentials);
+  const data = res.data;
+
+  if (data.token) {
+    localStorage.setItem('token', data.token);
+    localStorage.setItem('userInfo', JSON.stringify({
+      role: data.role,
+      admin_role: data.admin_role,
+      account_id: data.account?.account_id,
+      email: data.account?.email,
+    }));
+    localStorage.setItem('account', JSON.stringify(data.account || {}));
+  }
+
+  return data;
+}
+
+export function logout(): void {
+  localStorage.removeItem('token');
+  localStorage.removeItem('userInfo');
+  localStorage.removeItem('account');
+  sessionStorage.removeItem('token');
+  sessionStorage.removeItem('userInfo');
+}
+
+// Backward compatibility aliases
+export const adminLogin = login;
+export const adminLogout = logout;
+export const getAdminToken = getToken;
+export const getAdminAccount = getAccount;
+
+export default {
+  login,
+  logout,
+  getToken,
+  getAccount,
+  isAuthenticated,
+  isAdmin,
+  getAdminRole,
+  isSuperAdmin,
+  adminLogin,
+  adminLogout,
+  getAdminToken,
+  getAdminAccount,
+};
