@@ -5,6 +5,7 @@ import { getToken, getAccount, isAuthenticated } from './services/authService';
 import { Toaster } from 'react-hot-toast';
 import Login from './pages/auth/Login';
 import ForgotPassword from './pages/auth/ForgotPassword';
+import ResetPassword from './pages/auth/ResetPassword';
 import AdminDashboard from './layouts/DashboardLayout';
 
 // Protected Route wrapper
@@ -78,6 +79,10 @@ export default function App() {
         <Route
           path="/forgot-password"
           element={<PublicRoute><ForgotPassword /></PublicRoute>}
+        />
+        <Route
+          path="/reset-password"
+          element={<PublicRoute><ResetPassword /></PublicRoute>}
         />
 
         {/* Protected routes - AdminDashboard handles internal routing */}
