@@ -46,7 +46,26 @@ export function isAuthenticated(): boolean {
 }
 
 export const forgotPassword = async (email: string) => {
-  const res = await api.post('/v1/admin/forgot-password', { email });
+  // NOTE: was '/v1/admin/forgot-password', which does not exist on the
+  // backend (admin.js has no forgot-password route) and 404'd silently.
+  // The real, role-agnostic endpoint lives under /v1/auth and works for
+  // user/vendor/rider/admin accounts alike.
+  const res = await api.post('/v1/auth/forgot-password', { email });
+  return res.data;
+};
+
+export const resetPassword = async (token: string, newPassword: string) => {
+  const res = await api.post('/v1/auth/reset-password', { token, newPassword });
+  return res.data;
+};
+
+export const verifyEmail = async (token: string) => {
+  const res = await api.post('/v1/auth/verify-email', { token });
+  return res.data;
+};
+
+export const resendVerificationEmail = async (email: string) => {
+  const res = await api.post('/v1/auth/resend-verification', { email });
   return res.data;
 };
 
@@ -68,6 +87,12 @@ export function isAdmin(): boolean {
       return false;
     }
 
+    // 'admin' is included because the backend defaults admin_role to plain
+    // 'admin' when no specialised sub-role is set — omitting it here used
+    // to block every non-specialised admin from vendor creation and other
+    // admin features. A falsy admin_role (null/undefined) skips this check
+    // entirely and passes, since "no sub-role" means "generic admin", not
+    // "invalid admin".
     if (parsed.admin_role) {
       const validAdminRoles = [
         'admin',
@@ -155,6 +180,10 @@ export default {
   isAdmin,
   getAdminRole,
   isSuperAdmin,
+  forgotPassword,
+  resetPassword,
+  verifyEmail,
+  resendVerificationEmail,
   adminLogin,
   adminLogout,
   getAdminToken,
