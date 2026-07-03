@@ -747,13 +747,23 @@ function VendorDetail({ vendor, onBack, onUpdate, onManageOutlets, loading }: {
   loading: boolean;
 }) {
   const [editing, setEditing] = useState(false);
-  const [form, setForm] = useState({
-    business_name: vendor.business_name,
-    contact_person: vendor.contact_person,
-    business_phone: vendor.business_phone || '',
-    business_email: vendor.business_email || '',
-    trading_name: vendor.trading_name || '',
+  const buildForm = (v: Vendor) => ({
+    business_name: v.business_name,
+    contact_person: v.contact_person,
+    business_phone: v.business_phone || '',
+    business_email: v.business_email || '',
+    trading_name: v.trading_name || '',
   });
+  const [form, setForm] = useState(buildForm(vendor));
+
+  // `vendor` is only the *initial* value for useState above — it does not
+  // resync on its own. Without this, saving an edit updates `vendor` via
+  // the parent, but `form` keeps holding whatever it had on first mount.
+  // The next time you open Edit and save, those stale fields get PUT back
+  // to the server, silently reverting the previous change.
+  useEffect(() => {
+    setForm(buildForm(vendor));
+  }, [vendor]);
 
   const set = (k: string) => (e: React.ChangeEvent<HTMLInputElement>) =>
     setForm(prev => ({ ...prev, [k]: e.target.value }));
