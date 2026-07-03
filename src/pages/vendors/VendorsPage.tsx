@@ -141,6 +141,31 @@ async function apiUpdateOutlet(vendorId: string, outletId: string, body: OutletF
   };
 }
 
+async function apiFetchOutletProducts(outletId: string): Promise<any[]> {
+  // Public storefront endpoint — same one the customer-facing site uses,
+  // scoped to a single outlet's live inventory (vendor_inventory + products).
+  const res = await fetch(`${API_BASE}/v1/outlets/${outletId}/products`, {
+    headers: authHeaders(),
+  });
+  if (!res.ok) throw new Error('Failed to fetch outlet products');
+  const data = await res.json();
+  return data.products ?? data.data ?? data ?? [];
+}
+
+async function apiFetchOutletOrders(vendorId: string, outletId: string): Promise<any[]> {
+  // Ask the backend to filter by outlet_id directly. If the admin orders
+  // endpoint doesn't support that filter yet, it'll just return the vendor's
+  // full order list — so we also filter client-side as a safety net below.
+  const res = await fetch(
+    `${API_BASE}/v1/admin/orders?vendor_id=${vendorId}&outlet_id=${outletId}&limit=100`,
+    { headers: authHeaders() }
+  );
+  if (!res.ok) throw new Error('Failed to fetch outlet orders');
+  const data = await res.json();
+  const rows: any[] = data.data ?? data.orders ?? data ?? [];
+  return rows.filter((o: any) => !o.outlet_id || String(o.outlet_id) === String(outletId));
+}
+
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
 const emptyOutletForm = (): OutletFormData => ({
@@ -421,10 +446,42 @@ function OutletForm({ initial, onSubmit, onCancel, loading }: {
 
 // ─── OutletCard ───────────────────────────────────────────────────────────────
 
-function OutletCard({ outlet, onEdit }: { outlet: Outlet; onEdit: () => void }) {
+function OutletCard({ outlet, vendorId, onEdit }: { outlet: Outlet; vendorId: string; onEdit: () => void }) {
   const mapsUrl = outlet.latitude && outlet.longitude
     ? `https://www.google.com/maps?q=${outlet.latitude},${outlet.longitude}`
     : null;
+
+  const [expanded, setExpanded] = useState(false);
+  const [tab, setTab] = useState<'products' | 'orders'>('products');
+  const [loadingData, setLoadingData] = useState(false);
+  const [loadError, setLoadError] = useState('');
+  const [products, setProducts] = useState<any[] | null>(null);
+  const [orders, setOrders] = useState<any[] | null>(null);
+
+  const loadData = useCallback(async () => {
+    setLoadingData(true);
+    setLoadError('');
+    try {
+      const [prods, ords] = await Promise.all([
+        apiFetchOutletProducts(outlet.outlet_id),
+        apiFetchOutletOrders(vendorId, outlet.outlet_id),
+      ]);
+      setProducts(prods);
+      setOrders(ords);
+    } catch (err: any) {
+      setLoadError(err.message || 'Failed to load outlet data');
+    } finally {
+      setLoadingData(false);
+    }
+  }, [outlet.outlet_id, vendorId]);
+
+  const toggleExpanded = () => {
+    const next = !expanded;
+    setExpanded(next);
+    if (next && products === null && orders === null) {
+      loadData();
+    }
+  };
 
   return (
     <div className="bg-white border border-gray-100 rounded-xl p-4 space-y-2.5">
@@ -471,6 +528,97 @@ function OutletCard({ outlet, onEdit }: { outlet: Outlet; onEdit: () => void }) 
           <span className="text-xs text-gray-500 flex items-center gap-1"><Clock size={10} />{outlet.opening_time} – {outlet.closing_time}</span>
         )}
       </div>
+
+      <button
+        onClick={toggleExpanded}
+        className="flex items-center gap-1.5 text-xs font-medium text-emerald-700 hover:text-emerald-800 pt-1"
+      >
+        <ChevronRight size={12} className={`transition-transform ${expanded ? 'rotate-90' : ''}`} />
+        {expanded ? 'Hide' : 'View'} products & orders
+      </button>
+
+      {expanded && (
+        <div className="border-t border-gray-100 pt-3 mt-1">
+          {/* Tabs */}
+          <div className="flex gap-1 mb-3">
+            <button
+              onClick={() => setTab('products')}
+              className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg transition-colors ${
+                tab === 'products' ? 'bg-emerald-50 text-emerald-700' : 'text-gray-500 hover:bg-gray-50'
+              }`}
+            >
+              <Package size={12} /> Products {products ? `(${products.length})` : ''}
+            </button>
+            <button
+              onClick={() => setTab('orders')}
+              className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg transition-colors ${
+                tab === 'orders' ? 'bg-emerald-50 text-emerald-700' : 'text-gray-500 hover:bg-gray-50'
+              }`}
+            >
+              <ShoppingBag size={12} /> Orders {orders ? `(${orders.length})` : ''}
+            </button>
+            <button
+              onClick={loadData}
+              disabled={loadingData}
+              className="ml-auto flex items-center gap-1 px-2 py-1.5 text-xs text-gray-400 hover:text-gray-700 transition-colors"
+              title="Refresh"
+            >
+              <RefreshCw size={12} className={loadingData ? 'animate-spin' : ''} />
+            </button>
+          </div>
+
+          {loadingData ? (
+            <div className="flex items-center justify-center py-8 text-gray-400 text-xs gap-2">
+              <RefreshCw size={14} className="animate-spin" /> Loading…
+            </div>
+          ) : loadError ? (
+            <div className="flex items-center gap-2 text-xs text-red-600 bg-red-50 border border-red-100 rounded-lg px-3 py-2">
+              <AlertCircle size={12} /> {loadError}
+            </div>
+          ) : tab === 'products' ? (
+            !products || products.length === 0 ? (
+              <p className="text-xs text-gray-400 py-4 text-center">No products stocked at this outlet yet.</p>
+            ) : (
+              <div className="space-y-1.5 max-h-64 overflow-y-auto pr-1">
+                {products.map((p: any) => (
+                  <div key={p.product_id || p.inventory_id} className="flex items-center justify-between gap-2 bg-gray-50 rounded-lg px-3 py-2">
+                    <div className="min-w-0">
+                      <p className="text-xs font-medium text-gray-800 truncate">{p.product_name || p.name}</p>
+                      <p className="text-[11px] text-gray-400">
+                        Stock: {p.current_stock ?? p.stock ?? 0}
+                        {(p.is_available === false || p.is_active === false) && (
+                          <span className="text-red-500 ml-1.5">· Inactive</span>
+                        )}
+                      </p>
+                    </div>
+                    <span className="text-xs font-semibold text-gray-700 flex-shrink-0">
+                      KES {Number(p.selling_price ?? p.price ?? 0).toLocaleString()}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            )
+          ) : !orders || orders.length === 0 ? (
+            <p className="text-xs text-gray-400 py-4 text-center">No orders for this outlet yet.</p>
+          ) : (
+            <div className="space-y-1.5 max-h-64 overflow-y-auto pr-1">
+              {orders.map((o: any) => (
+                <div key={o.order_id} className="flex items-center justify-between gap-2 bg-gray-50 rounded-lg px-3 py-2">
+                  <div className="min-w-0">
+                    <p className="text-xs font-medium text-gray-800 truncate">#{o.order_number || o.order_id}</p>
+                    <p className="text-[11px] text-gray-400">
+                      {o.created_at ? new Date(o.created_at).toLocaleDateString() : ''} · {o.status}
+                    </p>
+                  </div>
+                  <span className="text-xs font-semibold text-gray-700 flex-shrink-0">
+                    KES {Number(o.total_amount ?? o.total ?? 0).toLocaleString()}
+                  </span>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 }
@@ -632,6 +780,7 @@ function OutletsModal({ vendor, onClose }: { vendor: Vendor; onClose: () => void
                     <OutletCard
                       key={outlet.outlet_id}
                       outlet={outlet}
+                      vendorId={vendor.vendor_id}
                       onEdit={() => { setEditingOutlet(outlet); setView('edit'); }}
                     />
                   ))}
