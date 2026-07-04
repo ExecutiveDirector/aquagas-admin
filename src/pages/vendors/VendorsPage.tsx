@@ -4,7 +4,8 @@ import {
   XCircle, ChevronRight, ArrowLeft, BarChart2, Package,
   ShoppingBag, TrendingUp, Users, Eye, Edit2, Power,
   PowerOff, X, Building2, Mail, Phone, Lock, User, Layers,
-  MapPin, Link, Clock, ExternalLink,
+  MapPin, Link, Clock, ExternalLink, Minus, Save, Filter,
+  ChevronDown, AlertTriangle, PackagePlus, Truck,
 } from 'lucide-react';
 import {
   listVendors,
@@ -141,29 +142,113 @@ async function apiUpdateOutlet(vendorId: string, outletId: string, body: OutletF
   };
 }
 
-async function apiFetchOutletProducts(outletId: string): Promise<any[]> {
-  // Public storefront endpoint — same one the customer-facing site uses,
-  // scoped to a single outlet's live inventory (vendor_inventory + products).
-  const res = await fetch(`${API_BASE}/v1/outlets/${outletId}/products`, {
-    headers: authHeaders(),
+// Live, management-grade inventory for a single outlet (inventory_id,
+// stock_status, needs_reorder, pricing — everything the storefront endpoint
+// doesn't expose).
+async function apiSetOutletActive(vendorId: string, outletId: string, isActive: boolean): Promise<void> {
+  const res = await fetch(`${API_BASE}/v1/admin/vendors/${vendorId}/outlets/${outletId}`, {
+    method: 'PUT', headers: authHeaders(), body: JSON.stringify({ is_active: isActive }),
   });
-  if (!res.ok) throw new Error('Failed to fetch outlet products');
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error || 'Failed to update outlet status');
+}
+
+async function apiFetchOutletInventory(vendorId: string, outletId: string): Promise<any[]> {
+  const res = await fetch(
+    `${API_BASE}/v1/admin/vendors/${vendorId}/inventory?outlet_id=${outletId}&limit=200`,
+    { headers: authHeaders() }
+  );
+  if (!res.ok) throw new Error('Failed to fetch outlet inventory');
+  const data = await res.json();
+  return data.data ?? data ?? [];
+}
+
+async function apiAdjustStock(vendorId: string, inventoryId: number, quantityChange: number, reason: string): Promise<any> {
+  const res = await fetch(
+    `${API_BASE}/v1/admin/vendors/${vendorId}/inventory/${inventoryId}/adjust`,
+    {
+      method: 'POST',
+      headers: authHeaders(),
+      body: JSON.stringify({ quantity_change: quantityChange, reason }),
+    }
+  );
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error || 'Failed to adjust stock');
+  return data.data;
+}
+
+async function apiUpdateInventoryItem(vendorId: string, inventoryId: number, updates: Record<string, any>): Promise<any> {
+  const res = await fetch(
+    `${API_BASE}/v1/admin/vendors/${vendorId}/inventory/${inventoryId}`,
+    { method: 'PUT', headers: authHeaders(), body: JSON.stringify(updates) }
+  );
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error || 'Failed to update inventory item');
+  return data.data;
+}
+
+async function apiAddInventoryItem(vendorId: string, body: {
+  product_id: number; outlet_id: string; current_stock?: number; selling_price: number;
+}): Promise<any> {
+  const res = await fetch(`${API_BASE}/v1/admin/vendors/${vendorId}/inventory`, {
+    method: 'POST', headers: authHeaders(), body: JSON.stringify(body),
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error || 'Failed to add product to outlet');
+  return data.data;
+}
+
+// Platform-wide product catalog, used to pick a product to stock at an outlet.
+async function apiSearchCatalogProducts(search: string): Promise<any[]> {
+  const res = await fetch(
+    `${API_BASE}/v1/products?search=${encodeURIComponent(search)}&limit=20`,
+    { headers: authHeaders() }
+  );
+  if (!res.ok) throw new Error('Failed to search products');
   const data = await res.json();
   return data.products ?? data.data ?? data ?? [];
 }
 
-async function apiFetchOutletOrders(vendorId: string, outletId: string): Promise<any[]> {
-  // Ask the backend to filter by outlet_id directly. If the admin orders
-  // endpoint doesn't support that filter yet, it'll just return the vendor's
-  // full order list — so we also filter client-side as a safety net below.
+async function apiFetchOutletOrders(vendorId: string, outletId: string, status?: string): Promise<any[]> {
+  const qs = new URLSearchParams({ outlet_id: outletId, limit: '100' });
+  if (status) qs.set('status', status);
   const res = await fetch(
-    `${API_BASE}/v1/admin/orders?vendor_id=${vendorId}&outlet_id=${outletId}&limit=100`,
+    `${API_BASE}/v1/admin/vendors/${vendorId}/orders?${qs.toString()}`,
     { headers: authHeaders() }
   );
   if (!res.ok) throw new Error('Failed to fetch outlet orders');
   const data = await res.json();
-  const rows: any[] = data.data ?? data.orders ?? data ?? [];
-  return rows.filter((o: any) => !o.outlet_id || String(o.outlet_id) === String(outletId));
+  return data.data ?? data.orders ?? data ?? [];
+}
+
+async function apiFetchOrderDetails(vendorId: string, orderId: string): Promise<any> {
+  const res = await fetch(`${API_BASE}/v1/admin/vendors/${vendorId}/orders/${orderId}`, {
+    headers: authHeaders(),
+  });
+  if (!res.ok) throw new Error('Failed to fetch order details');
+  return res.json();
+}
+
+const ORDER_STATUSES = ['pending', 'confirmed', 'preparing', 'ready', 'dispatched', 'delivered', 'canceled', 'refunded'];
+
+async function apiUpdateOrderStatus(vendorId: string, orderId: string, status: string): Promise<any> {
+  const res = await fetch(`${API_BASE}/v1/admin/vendors/${vendorId}/orders/${orderId}/status`, {
+    method: 'PUT', headers: authHeaders(), body: JSON.stringify({ status }),
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error || 'Failed to update order status');
+  return data;
+}
+
+function orderStatusBadgeClass(status: string) {
+  switch (status) {
+    case 'delivered':  return 'bg-emerald-50 text-emerald-700';
+    case 'canceled':
+    case 'refunded':   return 'bg-red-50 text-red-600';
+    case 'pending':    return 'bg-amber-50 text-amber-700';
+    case 'dispatched': return 'bg-blue-50 text-blue-700';
+    default:           return 'bg-gray-100 text-gray-600';
+  }
 }
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -446,7 +531,9 @@ function OutletForm({ initial, onSubmit, onCancel, loading }: {
 
 // ─── OutletCard ───────────────────────────────────────────────────────────────
 
-function OutletCard({ outlet, vendorId, onEdit }: { outlet: Outlet; vendorId: string; onEdit: () => void }) {
+function OutletCard({ outlet, vendorId, onEdit, onChanged }: {
+  outlet: Outlet; vendorId: string; onEdit: () => void; onChanged: () => void;
+}) {
   const mapsUrl = outlet.latitude && outlet.longitude
     ? `https://www.google.com/maps?q=${outlet.latitude},${outlet.longitude}`
     : null;
@@ -455,39 +542,80 @@ function OutletCard({ outlet, vendorId, onEdit }: { outlet: Outlet; vendorId: st
   const [tab, setTab] = useState<'products' | 'orders'>('products');
   const [loadingData, setLoadingData] = useState(false);
   const [loadError, setLoadError] = useState('');
-  const [products, setProducts] = useState<any[] | null>(null);
+  const [inventory, setInventory] = useState<any[] | null>(null);
   const [orders, setOrders] = useState<any[] | null>(null);
+  const [statusFilter, setStatusFilter] = useState('');
+  const [togglingActive, setTogglingActive] = useState(false);
+  const [showAddProduct, setShowAddProduct] = useState(false);
+
+  const loadInventory = useCallback(async () => {
+    const inv = await apiFetchOutletInventory(vendorId, outlet.outlet_id);
+    setInventory(inv);
+  }, [outlet.outlet_id, vendorId]);
+
+  const loadOrders = useCallback(async (status?: string) => {
+    const ords = await apiFetchOutletOrders(vendorId, outlet.outlet_id, status || undefined);
+    setOrders(ords);
+  }, [outlet.outlet_id, vendorId]);
 
   const loadData = useCallback(async () => {
     setLoadingData(true);
     setLoadError('');
     try {
-      const [prods, ords] = await Promise.all([
-        apiFetchOutletProducts(outlet.outlet_id),
-        apiFetchOutletOrders(vendorId, outlet.outlet_id),
-      ]);
-      setProducts(prods);
-      setOrders(ords);
+      await Promise.all([loadInventory(), loadOrders(statusFilter)]);
     } catch (err: any) {
       setLoadError(err.message || 'Failed to load outlet data');
     } finally {
       setLoadingData(false);
     }
-  }, [outlet.outlet_id, vendorId]);
+  }, [loadInventory, loadOrders, statusFilter]);
 
   const toggleExpanded = () => {
     const next = !expanded;
     setExpanded(next);
-    if (next && products === null && orders === null) {
-      loadData();
+    if (next && inventory === null && orders === null) loadData();
+  };
+
+  const handleToggleActive = async () => {
+    setTogglingActive(true);
+    try {
+      await apiSetOutletActive(vendorId, outlet.outlet_id, !outlet.is_active);
+      onChanged();
+    } catch {
+      // onChanged() re-fetches from the server, so a failed toggle just
+      // leaves the badge showing the true current state.
+    } finally {
+      setTogglingActive(false);
     }
   };
 
+  const handleStatusFilterChange = async (status: string) => {
+    setStatusFilter(status);
+    setLoadingData(true);
+    try {
+      await loadOrders(status);
+    } catch (err: any) {
+      setLoadError(err.message || 'Failed to filter orders');
+    } finally {
+      setLoadingData(false);
+    }
+  };
+
+  const lowStockCount = inventory ? inventory.filter((i: any) => i.stock_status === 'low_stock' || i.stock_status === 'out_of_stock').length : 0;
+  const revenue = orders ? orders
+    .filter((o: any) => (o.order_status || o.status) === 'delivered')
+    .reduce((sum: number, o: any) => sum + Number(o.total_amount ?? o.total ?? 0), 0) : 0;
+
   return (
-    <div className="bg-white border border-gray-100 rounded-xl p-4 space-y-2.5">
+    <div className={`bg-white border rounded-xl p-4 space-y-2.5 ${outlet.is_active ? 'border-gray-100' : 'border-red-100 bg-red-50/20'}`}>
       <div className="flex items-start justify-between gap-3">
         <div>
-          <p className="text-sm font-medium text-gray-900">{outlet.outlet_name}</p>
+          <div className="flex items-center gap-2">
+            <p className="text-sm font-medium text-gray-900">{outlet.outlet_name}</p>
+            <span className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-medium ${outlet.is_active ? 'bg-emerald-50 text-emerald-700' : 'bg-red-50 text-red-600'}`}>
+              {outlet.is_active ? 'Active' : 'Inactive'}
+            </span>
+          </div>
           <p className="text-xs text-gray-400 mt-0.5">{outlet.outlet_code}</p>
         </div>
         <div className="flex items-center gap-1.5 flex-shrink-0">
@@ -504,6 +632,18 @@ function OutletCard({ outlet, vendorId, onEdit }: { outlet: Outlet; vendorId: st
             className="flex items-center gap-1 px-2.5 py-1 text-xs text-gray-600 bg-gray-50 hover:bg-gray-100 border border-gray-200 rounded-lg transition-colors"
           >
             <Edit2 size={11} /> Edit
+          </button>
+          <button
+            onClick={handleToggleActive}
+            disabled={togglingActive}
+            title={outlet.is_active ? 'Deactivate outlet' : 'Activate outlet'}
+            className={`flex items-center gap-1 px-2.5 py-1 text-xs rounded-lg border transition-colors ${
+              outlet.is_active
+                ? 'text-red-600 bg-red-50 hover:bg-red-100 border-red-100'
+                : 'text-emerald-700 bg-emerald-50 hover:bg-emerald-100 border-emerald-100'
+            } disabled:opacity-50`}
+          >
+            {togglingActive ? <RefreshCw size={11} className="animate-spin" /> : outlet.is_active ? <PowerOff size={11} /> : <Power size={11} />}
           </button>
         </div>
       </div>
@@ -529,25 +669,50 @@ function OutletCard({ outlet, vendorId, onEdit }: { outlet: Outlet; vendorId: st
         )}
       </div>
 
+      {(inventory || orders) && (
+        <div className="flex flex-wrap gap-2 pt-0.5">
+          {inventory && (
+            <span className="text-[11px] text-gray-500 bg-gray-50 px-2 py-1 rounded-lg flex items-center gap-1">
+              <Package size={10} /> {inventory.length} product{inventory.length !== 1 ? 's' : ''}
+            </span>
+          )}
+          {inventory && lowStockCount > 0 && (
+            <span className="text-[11px] text-amber-700 bg-amber-50 px-2 py-1 rounded-lg flex items-center gap-1">
+              <AlertTriangle size={10} /> {lowStockCount} low/out of stock
+            </span>
+          )}
+          {orders && (
+            <span className="text-[11px] text-gray-500 bg-gray-50 px-2 py-1 rounded-lg flex items-center gap-1">
+              <ShoppingBag size={10} /> {orders.length} order{orders.length !== 1 ? 's' : ''}
+            </span>
+          )}
+          {orders && revenue > 0 && (
+            <span className="text-[11px] text-emerald-700 bg-emerald-50 px-2 py-1 rounded-lg flex items-center gap-1">
+              <TrendingUp size={10} /> KES {revenue.toLocaleString()} delivered
+            </span>
+          )}
+        </div>
+      )}
+
       <button
         onClick={toggleExpanded}
         className="flex items-center gap-1.5 text-xs font-medium text-emerald-700 hover:text-emerald-800 pt-1"
       >
         <ChevronRight size={12} className={`transition-transform ${expanded ? 'rotate-90' : ''}`} />
-        {expanded ? 'Hide' : 'View'} products & orders
+        {expanded ? 'Hide' : 'Manage'} products & orders
       </button>
 
       {expanded && (
         <div className="border-t border-gray-100 pt-3 mt-1">
           {/* Tabs */}
-          <div className="flex gap-1 mb-3">
+          <div className="flex items-center gap-1 mb-3">
             <button
               onClick={() => setTab('products')}
               className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg transition-colors ${
                 tab === 'products' ? 'bg-emerald-50 text-emerald-700' : 'text-gray-500 hover:bg-gray-50'
               }`}
             >
-              <Package size={12} /> Products {products ? `(${products.length})` : ''}
+              <Package size={12} /> Products {inventory ? `(${inventory.length})` : ''}
             </button>
             <button
               onClick={() => setTab('orders')}
@@ -557,10 +722,28 @@ function OutletCard({ outlet, vendorId, onEdit }: { outlet: Outlet; vendorId: st
             >
               <ShoppingBag size={12} /> Orders {orders ? `(${orders.length})` : ''}
             </button>
+            {tab === 'products' && (
+              <button
+                onClick={() => setShowAddProduct(true)}
+                className="ml-auto flex items-center gap-1 px-2.5 py-1.5 text-xs font-medium text-emerald-700 bg-emerald-50 hover:bg-emerald-100 rounded-lg transition-colors"
+              >
+                <PackagePlus size={12} /> Add product
+              </button>
+            )}
+            {tab === 'orders' && (
+              <select
+                value={statusFilter}
+                onChange={e => handleStatusFilterChange(e.target.value)}
+                className="ml-auto text-xs border border-gray-200 rounded-lg px-2 py-1.5 text-gray-600 focus:outline-none focus:ring-1 focus:ring-emerald-400"
+              >
+                <option value="">All statuses</option>
+                {ORDER_STATUSES.map(s => <option key={s} value={s}>{s}</option>)}
+              </select>
+            )}
             <button
               onClick={loadData}
               disabled={loadingData}
-              className="ml-auto flex items-center gap-1 px-2 py-1.5 text-xs text-gray-400 hover:text-gray-700 transition-colors"
+              className="flex items-center gap-1 px-2 py-1.5 text-xs text-gray-400 hover:text-gray-700 transition-colors"
               title="Refresh"
             >
               <RefreshCw size={12} className={loadingData ? 'animate-spin' : ''} />
@@ -576,46 +759,392 @@ function OutletCard({ outlet, vendorId, onEdit }: { outlet: Outlet; vendorId: st
               <AlertCircle size={12} /> {loadError}
             </div>
           ) : tab === 'products' ? (
-            !products || products.length === 0 ? (
-              <p className="text-xs text-gray-400 py-4 text-center">No products stocked at this outlet yet.</p>
+            !inventory || inventory.length === 0 ? (
+              <p className="text-xs text-gray-400 py-4 text-center">No products stocked at this outlet yet. Click "Add product" to stock one.</p>
             ) : (
-              <div className="space-y-1.5 max-h-64 overflow-y-auto pr-1">
-                {products.map((p: any) => (
-                  <div key={p.product_id || p.inventory_id} className="flex items-center justify-between gap-2 bg-gray-50 rounded-lg px-3 py-2">
-                    <div className="min-w-0">
-                      <p className="text-xs font-medium text-gray-800 truncate">{p.product_name || p.name}</p>
-                      <p className="text-[11px] text-gray-400">
-                        Stock: {p.current_stock ?? p.stock ?? 0}
-                        {(p.is_available === false || p.is_active === false) && (
-                          <span className="text-red-500 ml-1.5">· Inactive</span>
-                        )}
-                      </p>
-                    </div>
-                    <span className="text-xs font-semibold text-gray-700 flex-shrink-0">
-                      KES {Number(p.selling_price ?? p.price ?? 0).toLocaleString()}
-                    </span>
-                  </div>
+              <div className="space-y-1.5 max-h-80 overflow-y-auto pr-1">
+                {inventory.map((item: any) => (
+                  <InventoryRow
+                    key={item.inventory_id}
+                    item={item}
+                    vendorId={vendorId}
+                    onChanged={loadInventory}
+                  />
                 ))}
               </div>
             )
           ) : !orders || orders.length === 0 ? (
             <p className="text-xs text-gray-400 py-4 text-center">No orders for this outlet yet.</p>
           ) : (
-            <div className="space-y-1.5 max-h-64 overflow-y-auto pr-1">
+            <div className="space-y-1.5 max-h-80 overflow-y-auto pr-1">
               {orders.map((o: any) => (
-                <div key={o.order_id} className="flex items-center justify-between gap-2 bg-gray-50 rounded-lg px-3 py-2">
-                  <div className="min-w-0">
-                    <p className="text-xs font-medium text-gray-800 truncate">#{o.order_number || o.order_id}</p>
-                    <p className="text-[11px] text-gray-400">
-                      {o.created_at ? new Date(o.created_at).toLocaleDateString() : ''} · {o.status}
-                    </p>
-                  </div>
-                  <span className="text-xs font-semibold text-gray-700 flex-shrink-0">
-                    KES {Number(o.total_amount ?? o.total ?? 0).toLocaleString()}
-                  </span>
-                </div>
+                <OrderRow key={o.order_id} order={o} vendorId={vendorId} onChanged={() => loadOrders(statusFilter)} />
               ))}
             </div>
+          )}
+        </div>
+      )}
+
+      {showAddProduct && (
+        <AddProductModal
+          vendorId={vendorId}
+          outletId={outlet.outlet_id}
+          onClose={() => setShowAddProduct(false)}
+          onAdded={() => { setShowAddProduct(false); loadInventory(); }}
+        />
+      )}
+    </div>
+  );
+}
+
+// ─── InventoryRow ───────────────────────────────────────────────────────────────
+
+function InventoryRow({ item, vendorId, onChanged }: { item: any; vendorId: string; onChanged: () => void }) {
+  const [busy, setBusy] = useState(false);
+  const [editingPrice, setEditingPrice] = useState(false);
+  const [priceInput, setPriceInput] = useState(String(item.selling_price ?? 0));
+  const [error, setError] = useState('');
+
+  const stockColor = item.stock_status === 'out_of_stock'
+    ? 'text-red-600' : item.stock_status === 'low_stock' ? 'text-amber-600' : 'text-gray-500';
+
+  const adjust = async (delta: number) => {
+    setBusy(true);
+    setError('');
+    try {
+      await apiAdjustStock(vendorId, item.inventory_id, delta, delta > 0 ? 'restock' : 'manual');
+      onChanged();
+    } catch (err: any) {
+      setError(err.message || 'Failed to adjust stock');
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const savePrice = async () => {
+    const price = parseFloat(priceInput);
+    if (isNaN(price) || price < 0) { setError('Invalid price'); return; }
+    setBusy(true);
+    setError('');
+    try {
+      await apiUpdateInventoryItem(vendorId, item.inventory_id, { selling_price: price });
+      setEditingPrice(false);
+      onChanged();
+    } catch (err: any) {
+      setError(err.message || 'Failed to update price');
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const toggleAvailable = async () => {
+    setBusy(true);
+    setError('');
+    try {
+      await apiUpdateInventoryItem(vendorId, item.inventory_id, { is_available: !item.is_available });
+      onChanged();
+    } catch (err: any) {
+      setError(err.message || 'Failed to update availability');
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  return (
+    <div className="bg-gray-50 rounded-lg px-3 py-2">
+      <div className="flex items-center justify-between gap-2">
+        <div className="min-w-0">
+          <p className="text-xs font-medium text-gray-800 truncate">{item.product_name}</p>
+          <p className={`text-[11px] ${stockColor}`}>
+            Stock: {item.current_stock}
+            {item.stock_status === 'out_of_stock' && ' · Out of stock'}
+            {item.stock_status === 'low_stock' && ' · Low stock'}
+            {!item.is_available && <span className="text-red-500"> · Hidden</span>}
+          </p>
+        </div>
+
+        <div className="flex items-center gap-1.5 flex-shrink-0">
+          {/* Stock stepper */}
+          <div className="flex items-center gap-0.5 bg-white border border-gray-200 rounded-lg">
+            <button onClick={() => adjust(-1)} disabled={busy || item.current_stock <= 0} className="p-1 text-gray-500 hover:text-red-600 disabled:opacity-30">
+              <Minus size={11} />
+            </button>
+            <button onClick={() => adjust(10)} disabled={busy} className="px-1 text-[10px] text-gray-500 hover:text-emerald-700" title="Restock +10">
+              +10
+            </button>
+            <button onClick={() => adjust(1)} disabled={busy} className="p-1 text-gray-500 hover:text-emerald-700 disabled:opacity-30">
+              <Plus size={11} />
+            </button>
+          </div>
+
+          {/* Price */}
+          {editingPrice ? (
+            <div className="flex items-center gap-1">
+              <input
+                type="number" value={priceInput} onChange={e => setPriceInput(e.target.value)}
+                className="w-16 text-xs border border-gray-200 rounded px-1.5 py-1 focus:outline-none focus:ring-1 focus:ring-emerald-400"
+                autoFocus
+              />
+              <button onClick={savePrice} disabled={busy} className="p-1 text-emerald-700 hover:text-emerald-800"><Save size={12} /></button>
+              <button onClick={() => { setEditingPrice(false); setPriceInput(String(item.selling_price ?? 0)); }} className="p-1 text-gray-400 hover:text-gray-600"><X size={12} /></button>
+            </div>
+          ) : (
+            <button
+              onClick={() => setEditingPrice(true)}
+              className="text-xs font-semibold text-gray-700 hover:text-emerald-700 flex-shrink-0"
+              title="Click to edit price"
+            >
+              KES {Number(item.selling_price ?? 0).toLocaleString()}
+            </button>
+          )}
+
+          <button
+            onClick={toggleAvailable}
+            disabled={busy}
+            title={item.is_available ? 'Hide from storefront' : 'Show on storefront'}
+            className={`p-1 rounded ${item.is_available ? 'text-emerald-600 hover:bg-emerald-50' : 'text-gray-300 hover:bg-gray-100'}`}
+          >
+            <Eye size={12} />
+          </button>
+        </div>
+      </div>
+      {error && <p className="text-[11px] text-red-500 mt-1">{error}</p>}
+    </div>
+  );
+}
+
+// ─── AddProductModal ────────────────────────────────────────────────────────────
+
+function AddProductModal({ vendorId, outletId, onClose, onAdded }: {
+  vendorId: string; outletId: string; onClose: () => void; onAdded: () => void;
+}) {
+  const [query, setQuery] = useState('');
+  const [results, setResults] = useState<any[]>([]);
+  const [searching, setSearching] = useState(false);
+  const [selected, setSelected] = useState<any | null>(null);
+  const [stock, setStock] = useState('20');
+  const [price, setPrice] = useState('');
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState('');
+
+  useEffect(() => {
+    if (!query.trim()) { setResults([]); return; }
+    const t = setTimeout(async () => {
+      setSearching(true);
+      try {
+        const rows = await apiSearchCatalogProducts(query.trim());
+        setResults(rows);
+      } catch {
+        setResults([]);
+      } finally {
+        setSearching(false);
+      }
+    }, 350);
+    return () => clearTimeout(t);
+  }, [query]);
+
+  const pick = (p: any) => {
+    setSelected(p);
+    setPrice(String(p.base_price ?? p.price ?? ''));
+  };
+
+  const submit = async () => {
+    if (!selected) return;
+    const sellingPrice = parseFloat(price);
+    const initialStock = parseInt(stock) || 0;
+    if (isNaN(sellingPrice) || sellingPrice <= 0) { setError('Enter a valid selling price'); return; }
+    setSaving(true);
+    setError('');
+    try {
+      await apiAddInventoryItem(vendorId, {
+        product_id: selected.product_id,
+        outlet_id: outletId,
+        current_stock: initialStock,
+        selling_price: sellingPrice,
+      });
+      onAdded();
+    } catch (err: any) {
+      setError(err.message || 'Failed to add product');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 z-[70] flex items-start justify-center bg-black/40 backdrop-blur-sm p-4 overflow-y-auto" onClick={onClose}>
+      <div className="bg-white rounded-2xl w-full max-w-md my-8 border border-gray-100 shadow-2xl overflow-hidden" onClick={e => e.stopPropagation()}>
+        <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100">
+          <p className="text-sm font-semibold text-gray-900">Add product to outlet</p>
+          <button onClick={onClose} className="text-gray-400 hover:text-gray-600"><X size={18} /></button>
+        </div>
+        <div className="p-5 space-y-3">
+          {!selected ? (
+            <>
+              <div className="relative">
+                <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+                <input
+                  value={query} onChange={e => setQuery(e.target.value)}
+                  placeholder="Search the product catalog…"
+                  autoFocus
+                  className="w-full pl-9 pr-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-emerald-400"
+                />
+              </div>
+              {searching && (
+                <div className="flex items-center gap-2 text-xs text-gray-400 py-2"><RefreshCw size={12} className="animate-spin" /> Searching…</div>
+              )}
+              {!searching && query.trim() && results.length === 0 && (
+                <p className="text-xs text-gray-400 py-2 text-center">No matching products found.</p>
+              )}
+              <div className="space-y-1.5 max-h-64 overflow-y-auto">
+                {results.map((p: any) => (
+                  <button
+                    key={p.product_id}
+                    onClick={() => pick(p)}
+                    className="w-full flex items-center justify-between gap-2 bg-gray-50 hover:bg-emerald-50 rounded-lg px-3 py-2 text-left transition-colors"
+                  >
+                    <div className="min-w-0">
+                      <p className="text-xs font-medium text-gray-800 truncate">{p.product_name || p.name}</p>
+                      <p className="text-[11px] text-gray-400">{p.brand || p.category_name || ''}</p>
+                    </div>
+                    <span className="text-xs text-gray-500 flex-shrink-0">KES {Number(p.base_price ?? p.price ?? 0).toLocaleString()}</span>
+                  </button>
+                ))}
+              </div>
+            </>
+          ) : (
+            <>
+              <div className="flex items-center justify-between bg-gray-50 rounded-lg px-3 py-2">
+                <p className="text-sm font-medium text-gray-800">{selected.product_name || selected.name}</p>
+                <button onClick={() => setSelected(null)} className="text-xs text-gray-400 hover:text-gray-600">Change</button>
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-medium text-gray-500 mb-1">Initial stock</label>
+                  <input type="number" value={stock} onChange={e => setStock(e.target.value)} className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-emerald-400" />
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-gray-500 mb-1">Selling price (KES)</label>
+                  <input type="number" value={price} onChange={e => setPrice(e.target.value)} className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-emerald-400" />
+                </div>
+              </div>
+              {error && <p className="text-xs text-red-500">{error}</p>}
+              <button
+                onClick={submit}
+                disabled={saving}
+                className="w-full flex items-center justify-center gap-2 py-2 text-sm font-medium text-white bg-emerald-600 hover:bg-emerald-700 rounded-lg transition-colors disabled:opacity-60"
+              >
+                {saving ? <><RefreshCw size={13} className="animate-spin" /> Adding…</> : 'Add to outlet'}
+              </button>
+            </>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ─── OrderRow ───────────────────────────────────────────────────────────────────
+
+function OrderRow({ order, vendorId, onChanged }: { order: any; vendorId: string; onChanged: () => void }) {
+  const [expanded, setExpanded] = useState(false);
+  const [loadingDetail, setLoadingDetail] = useState(false);
+  const [detail, setDetail] = useState<any | null>(null);
+  const [status, setStatus] = useState(order.order_status || order.status || 'pending');
+  const [updating, setUpdating] = useState(false);
+  const [error, setError] = useState('');
+
+  const toggle = async () => {
+    const next = !expanded;
+    setExpanded(next);
+    if (next && !detail) {
+      setLoadingDetail(true);
+      try {
+        const data = await apiFetchOrderDetails(vendorId, order.order_id);
+        setDetail(data.data ?? data);
+      } catch (err: any) {
+        setError(err.message || 'Failed to load order details');
+      } finally {
+        setLoadingDetail(false);
+      }
+    }
+  };
+
+  const saveStatus = async () => {
+    setUpdating(true);
+    setError('');
+    try {
+      await apiUpdateOrderStatus(vendorId, order.order_id, status);
+      onChanged();
+    } catch (err: any) {
+      setError(err.message || 'Failed to update status');
+    } finally {
+      setUpdating(false);
+    }
+  };
+
+  const items = detail?.order_items || detail?.items || [];
+
+  return (
+    <div className="bg-gray-50 rounded-lg overflow-hidden">
+      <button onClick={toggle} className="w-full flex items-center justify-between gap-2 px-3 py-2 text-left">
+        <div className="min-w-0 flex items-center gap-1.5">
+          <ChevronDown size={12} className={`text-gray-400 transition-transform flex-shrink-0 ${expanded ? 'rotate-180' : ''}`} />
+          <div className="min-w-0">
+            <p className="text-xs font-medium text-gray-800 truncate">#{order.order_number || order.order_id}</p>
+            <p className="text-[11px] text-gray-400">
+              {order.created_at ? new Date(order.created_at).toLocaleDateString() : ''}
+            </p>
+          </div>
+        </div>
+        <div className="flex items-center gap-2 flex-shrink-0">
+          <span className={`text-[10px] font-medium px-1.5 py-0.5 rounded ${orderStatusBadgeClass(order.order_status || order.status)}`}>
+            {order.order_status || order.status}
+          </span>
+          <span className="text-xs font-semibold text-gray-700">
+            KES {Number(order.total_amount ?? order.total ?? 0).toLocaleString()}
+          </span>
+        </div>
+      </button>
+
+      {expanded && (
+        <div className="px-3 pb-3 pt-1 border-t border-gray-200/70 space-y-2.5">
+          {loadingDetail ? (
+            <div className="flex items-center gap-2 text-xs text-gray-400 py-2"><RefreshCw size={12} className="animate-spin" /> Loading…</div>
+          ) : (
+            <>
+              {items.length > 0 && (
+                <div className="space-y-1">
+                  {items.map((it: any, idx: number) => (
+                    <div key={it.item_id || idx} className="flex items-center justify-between text-[11px] text-gray-600">
+                      <span className="truncate">{it.quantity}× {it.product_name}</span>
+                      <span className="flex-shrink-0">KES {Number(it.total_price ?? (it.unit_price * it.quantity) ?? 0).toLocaleString()}</span>
+                    </div>
+                  ))}
+                </div>
+              )}
+              {(detail?.delivery_address || order.delivery_address) && (
+                <p className="text-[11px] text-gray-500 flex items-start gap-1">
+                  <Truck size={11} className="mt-0.5 flex-shrink-0" /> {detail?.delivery_address || order.delivery_address}
+                </p>
+              )}
+              <div className="flex items-center gap-2">
+                <select
+                  value={status}
+                  onChange={e => setStatus(e.target.value)}
+                  className="text-xs border border-gray-200 rounded-lg px-2 py-1.5 flex-1 focus:outline-none focus:ring-1 focus:ring-emerald-400"
+                >
+                  {ORDER_STATUSES.map(s => <option key={s} value={s}>{s}</option>)}
+                </select>
+                <button
+                  onClick={saveStatus}
+                  disabled={updating || status === (order.order_status || order.status)}
+                  className="flex items-center gap-1 px-3 py-1.5 text-xs font-medium text-white bg-emerald-600 hover:bg-emerald-700 rounded-lg transition-colors disabled:opacity-40"
+                >
+                  {updating ? <RefreshCw size={11} className="animate-spin" /> : <Save size={11} />} Update
+                </button>
+              </div>
+              {error && <p className="text-[11px] text-red-500">{error}</p>}
+            </>
           )}
         </div>
       )}
@@ -782,6 +1311,7 @@ function OutletsModal({ vendor, onClose }: { vendor: Vendor; onClose: () => void
                       outlet={outlet}
                       vendorId={vendor.vendor_id}
                       onEdit={() => { setEditingOutlet(outlet); setView('edit'); }}
+                      onChanged={load}
                     />
                   ))}
                 </div>
