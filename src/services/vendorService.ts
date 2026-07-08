@@ -16,6 +16,7 @@ export interface Vendor {
   account_id: string;
   business_name: string;
   trading_name?: string;
+  vendor_type: 'gas' | 'general';
   brand?: 'Total' | 'Rubis' | 'Shell' | 'Kobil' | 'Vivo' | 'Independent';
   business_registration_no?: string;
   tax_pin?: string;
