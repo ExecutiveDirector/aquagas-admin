@@ -1,4 +1,4 @@
-/// supportService.ts
+/// supportService.tsx
 // Use consistent API base URL matching your admin service
 const API_BASE_URL =
   import.meta.env.VITE_API_BASE_URL ||
@@ -191,7 +191,7 @@ class SupportService {
       }
 
       const response = await fetch(
-        `${API_BASE_URL}/v1/support/tickets?${params}`,
+        `${API_BASE_URL}/v1/support/tickets/all?${params}`,
         { headers: await this.getAuthHeaders() }
       );
       return this.handleResponse(response);
