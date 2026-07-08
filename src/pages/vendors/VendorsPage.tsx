@@ -290,10 +290,10 @@ function Skeleton({ className }: { className?: string }) {
 // ─── AddVendorModal ───────────────────────────────────────────────────────────
 
 function AddVendorModal({ onClose, onSubmit, loading }: { onClose: () => void; onSubmit: (d: any) => Promise<void>; loading: boolean }) {
-  const [form, setForm] = useState({ business_name: '', contact_person: '', business_email: '', business_phone: '', password: '' });
+  const [form, setForm] = useState({ business_name: '', contact_person: '', business_email: '', business_phone: '', password: '', vendor_type: 'gas' });
   const [errors, setErrors] = useState<Record<string, string>>({});
 
-  const set = (k: string) => (e: React.ChangeEvent<HTMLInputElement>) => {
+  const set = (k: string) => (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     setForm(prev => ({ ...prev, [k]: e.target.value }));
     setErrors(prev => ({ ...prev, [k]: '' }));
   };
@@ -336,6 +336,22 @@ function AddVendorModal({ onClose, onSubmit, loading }: { onClose: () => void; o
           <button onClick={onClose} className="text-gray-400 hover:text-gray-600 transition-colors"><X size={18} /></button>
         </div>
         <form onSubmit={handleSubmit} className="p-6 space-y-4">
+          <div>
+            <label className="block text-xs font-medium text-gray-600 mb-1.5">Vendor type</label>
+            <div className="relative">
+              <Store size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
+              <select
+                value={form.vendor_type}
+                onChange={set('vendor_type')}
+                disabled={loading}
+                className="w-full pl-9 pr-3 py-2.5 text-sm border border-gray-200 rounded-lg bg-gray-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-emerald-100 focus:border-emerald-400 transition-all appearance-none"
+              >
+                <option value="gas">Gas vendor</option>
+                <option value="general">General vendor</option>
+              </select>
+            </div>
+            <p className="text-[11px] text-gray-400 mt-1">Gas vendors: pickup is free. General vendors: pickup has a flat KES 70 fee.</p>
+          </div>
           {fields.map(({ key, label, icon: Icon, type, placeholder }) => (
             <div key={key}>
               <label className="block text-xs font-medium text-gray-600 mb-1.5">{label}</label>
@@ -1432,6 +1448,7 @@ function VendorDetail({ vendor, onBack, onUpdate, onManageOutlets, loading }: {
     business_phone: v.business_phone || '',
     business_email: v.business_email || '',
     trading_name: v.trading_name || '',
+    vendor_type: v.vendor_type || 'gas',
   });
   const [form, setForm] = useState(buildForm(vendor));
 
@@ -1444,7 +1461,7 @@ function VendorDetail({ vendor, onBack, onUpdate, onManageOutlets, loading }: {
     setForm(buildForm(vendor));
   }, [vendor]);
 
-  const set = (k: string) => (e: React.ChangeEvent<HTMLInputElement>) =>
+  const set = (k: string) => (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) =>
     setForm(prev => ({ ...prev, [k]: e.target.value }));
 
   const handleSave = async (e: React.FormEvent) => {
@@ -1456,6 +1473,7 @@ function VendorDetail({ vendor, onBack, onUpdate, onManageOutlets, loading }: {
   const infoRows = [
     { label: 'Email', value: vendor.business_email, icon: Mail },
     { label: 'Phone', value: vendor.business_phone, icon: Phone },
+    { label: 'Vendor type', value: vendor.vendor_type === 'general' ? 'General vendor' : 'Gas vendor', icon: Store },
     { label: 'Brand', value: vendor.brand || 'Independent', icon: Building2 },
     { label: 'Commission', value: `${((vendor.commission_rate ?? 0) * 100).toFixed(1)}%`, icon: TrendingUp },
     { label: 'Min order', value: `KES ${vendor.minimum_order_amount?.toLocaleString() ?? 0}`, icon: ShoppingBag },
@@ -1509,6 +1527,17 @@ function VendorDetail({ vendor, onBack, onUpdate, onManageOutlets, loading }: {
 
         {editing ? (
           <form onSubmit={handleSave} className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="block text-xs font-medium text-gray-500 mb-1">Vendor type</label>
+              <select
+                value={form.vendor_type}
+                onChange={set('vendor_type')}
+                className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg bg-gray-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-emerald-100 focus:border-emerald-400 transition-all"
+              >
+                <option value="gas">Gas vendor</option>
+                <option value="general">General vendor</option>
+              </select>
+            </div>
             {[
               ['business_name', 'Business name'],
               ['trading_name', 'Trading name'],
