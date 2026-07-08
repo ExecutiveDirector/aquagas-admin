@@ -96,7 +96,7 @@ export default function SupportPage() {
 
       // Load all data in parallel with proper error handling
       const [ticketsResult, knowledgeResult, faqResult] = await Promise.allSettled([
-        supportService.getUserTickets(),
+        supportService.getAllTickets(),
         supportService.getKnowledgeBase(),
         supportService.getFAQs()
       ]);
@@ -139,7 +139,7 @@ export default function SupportPage() {
   const loadTickets = useCallback(async () => {
     setTicketsLoading(true);
     try {
-      const result = await supportService.getUserTickets();
+      const result = await supportService.getAllTickets();
       setTickets(result || []);
     } catch (error) {
       console.error('Error loading tickets:', error);
