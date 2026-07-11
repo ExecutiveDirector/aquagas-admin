@@ -1,0 +1,597 @@
+From d95790f81b3b1eb35e0ab5757d52df40e2e8f01d Mon Sep 17 00:00:00 2001
+From: Claude <you@example.com>
+Date: Sat, 11 Jul 2026 20:28:18 +0000
+Subject: [PATCH] feat: polish Analytics page UI/UX + fix fake trend
+ percentages
+
+- Restyle MetricCard, ChartCard, TimeRangeSelector, and tables to match
+  the premium dashboard look (rounded-2xl cards, soft icon backgrounds,
+  hover states, indigo primary color)
+- Reuse the shared EmptyState component from src/components/dashboard
+- Replace hardcoded/fabricated trend percentages (Total Users +12.5%,
+  Active Riders -3.2%, Success Rate +2.1%) with a real calcTrend()
+  helper that compares first-half vs second-half of the fetched series
+- Active Riders and Success Rate no longer show a trend badge, since
+  the backend doesn't return time-series data to support one honestly
+- No changes to API calls, endpoints, or business logic
+---
+ src/pages/analytics/AnalyticsPage.tsx | 402 +++++++++++++-------------
+ 1 file changed, 206 insertions(+), 196 deletions(-)
+
+diff --git a/src/pages/analytics/AnalyticsPage.tsx b/src/pages/analytics/AnalyticsPage.tsx
+index 3dd5560..f123f02 100644
+--- a/src/pages/analytics/AnalyticsPage.tsx
++++ b/src/pages/analytics/AnalyticsPage.tsx
+@@ -29,6 +29,7 @@ import {
+   BarChart3,
+   type LucideIcon
+ } from 'lucide-react';
++import { EmptyState } from '../../components/dashboard';
+ 
+ // Type definitions
+ interface OverviewStats {
+@@ -99,7 +100,8 @@ interface MetricCardProps {
+   value: number;
+   change?: number;
+   icon: LucideIcon;
+-  color: string;
++  iconColor: string;
++  iconBg: string;
+   loading?: boolean;
+ }
+ 
+@@ -155,6 +157,19 @@ const calculateGrowth = (current: number, previous: number): number => {
+   return ((current - previous) / previous) * 100;
+ };
+ 
++// Splits a time series in half and compares the second half's total against
++// the first half's — adapts automatically to whatever granularity/range the
++// backend returns (daily, weekly, monthly buckets). Returns 0 (no badge shown)
++// when there isn't enough data to support a real comparison.
++const calcTrend = (series: number[]): number | undefined => {
++  if (series.length < 4) return undefined;
++  const mid = Math.floor(series.length / 2);
++  const firstHalf = series.slice(0, mid).reduce((a, b) => a + b, 0);
++  const secondHalf = series.slice(mid).reduce((a, b) => a + b, 0);
++  if (firstHalf === 0) return undefined;
++  return calculateGrowth(secondHalf, firstHalf);
++};
++
+ const formatDate = (dateStr: string): string => {
+   return new Date(dateStr).toLocaleDateString('en-US', { 
+     month: 'short', 
+@@ -171,51 +186,47 @@ const formatMonth = (dateStr: string): string => {
+ 
+ const COLORS = ['#10B981', '#3B82F6', '#8B5CF6', '#F59E0B', '#EF4444', '#06B6D4'];
+ 
+-const MetricCard: React.FC<MetricCardProps> = ({ title, value, change, icon: Icon, color, loading = false }) => {
++const MetricCard: React.FC<MetricCardProps> = ({ title, value, change, icon: Icon, iconColor, iconBg, loading = false }) => {
+   return (
+-    <div className="bg-white rounded-lg shadow-sm border p-6">
+-      <div className="flex items-center justify-between">
+-        <div>
+-          <p className="text-sm text-gray-600 font-medium">{title}</p>
+-          <div className="flex items-center space-x-2 mt-1">
+-            {loading ? (
+-              <div className="animate-pulse bg-gray-300 h-8 w-24 rounded"></div>
+-            ) : (
+-              <p className="text-2xl font-bold text-gray-900">
+-                {typeof value === 'number' && title.toLowerCase().includes('revenue') 
+-                  ? `KSh ${value.toLocaleString()}`
+-                  : typeof value === 'number' && title.toLowerCase().includes('rate')
+-                  ? `${value.toFixed(1)}%`
+-                  : value.toLocaleString()
+-                }
+-              </p>
+-            )}
+-            {change !== undefined && (
+-              <div className={`flex items-center space-x-1 ${
+-                change >= 0 ? 'text-green-500' : 'text-red-500'
+-              }`}>
+-                {change >= 0 ? <TrendingUp className="w-4 h-4" /> : <TrendingDown className="w-4 h-4" />}
+-                <span className="text-sm font-medium">{Math.abs(change).toFixed(1)}%</span>
+-              </div>
+-            )}
+-          </div>
+-        </div>
+-        <div className={`p-3 rounded-full ${color}`}>
+-          <Icon className="w-6 h-6 text-white" />
++    <div className="group relative overflow-hidden rounded-2xl border border-gray-100 bg-white p-5 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-xl hover:border-blue-200">
++      <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-blue-600 via-cyan-500 to-emerald-500 opacity-0 transition-opacity group-hover:opacity-100" />
++
++      <div className="mb-3 flex items-start justify-between">
++        <span className="text-xs font-medium uppercase tracking-wide text-gray-500">{title}</span>
++        <div className={`flex h-10 w-10 items-center justify-center rounded-xl ${iconBg} shadow-sm transition-transform group-hover:scale-110`}>
++          <Icon className={iconColor} size={18} />
+         </div>
+       </div>
++
++      {loading ? (
++        <div className="h-8 w-24 animate-pulse rounded bg-gray-200" />
++      ) : (
++        <p className="text-2xl font-bold tracking-tight text-gray-900">
++          {typeof value === 'number' && title.toLowerCase().includes('revenue')
++            ? `KSh ${value.toLocaleString()}`
++            : typeof value === 'number' && title.toLowerCase().includes('rate')
++            ? `${value.toFixed(1)}%`
++            : value.toLocaleString()
++          }
++        </p>
++      )}
++
++      {change !== undefined && !loading && (
++        <div className={`mt-1.5 flex items-center gap-1 text-xs font-medium ${change >= 0 ? 'text-emerald-600' : 'text-red-500'}`}>
++          {change >= 0 ? <TrendingUp className="h-3.5 w-3.5" /> : <TrendingDown className="h-3.5 w-3.5" />}
++          <span>{Math.abs(change).toFixed(1)}% vs prior period</span>
++        </div>
++      )}
+     </div>
+   );
+ };
+ 
+ const ChartCard: React.FC<ChartCardProps> = ({ title, children, loading = false }) => {
+   return (
+-    <div className="bg-white rounded-lg shadow-sm border p-6">
+-      <h3 className="text-lg font-semibold text-gray-900 mb-4">{title}</h3>
++    <div className="rounded-2xl border border-gray-100 bg-white p-5 shadow-sm transition hover:shadow-lg">
++      <h3 className="mb-4 text-sm font-semibold text-gray-900">{title}</h3>
+       {loading ? (
+-        <div className="animate-pulse">
+-          <div className="bg-gray-300 h-64 rounded"></div>
+-        </div>
++        <div className="h-64 animate-pulse rounded-xl bg-gray-100" />
+       ) : (
+         children
+       )}
+@@ -232,15 +243,15 @@ const TimeRangeSelector: React.FC<TimeRangeSelectorProps> = ({ selected, onChang
+   ];
+ 
+   return (
+-    <div className="flex space-x-2">
++    <div className="flex gap-1 rounded-xl border border-gray-200 bg-white p-1 shadow-sm">
+       {ranges.map((range) => (
+         <button
+           key={range.value}
+           onClick={() => onChange(range.value)}
+-          className={`px-3 py-1 text-sm rounded-lg transition-colors ${
++          className={`rounded-lg px-3 py-1.5 text-sm font-medium transition-colors ${
+             selected === range.value
+-              ? 'bg-blue-500 text-white'
+-              : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
++              ? 'bg-indigo-600 text-white shadow-sm'
++              : 'text-gray-600 hover:bg-gray-100'
+           }`}
+         >
+           {range.label}
+@@ -435,10 +446,10 @@ const AdminAnalytics: React.FC = () => {
+     const totalSales = salesData.reduce((sum: number, item: SalesDataItem) => sum + (item.totalSales || 0), 0);
+     const averageOrderValue = totalOrders > 0 ? totalSales / totalOrders : 0;
+ 
+-    // Get previous period data for growth calculation (simple approach)
+-    const currentPeriodRevenue = revenueData.slice(-7).reduce((sum: number, item: RevenueDataItem) => sum + (item.totalRevenue || 0), 0);
+-    const previousPeriodRevenue = revenueData.slice(-14, -7).reduce((sum: number, item: RevenueDataItem) => sum + (item.totalRevenue || 0), 0);
+-    const revenueGrowth = calculateGrowth(currentPeriodRevenue, previousPeriodRevenue);
++    // First half of the selected range vs second half — same underlying
++    // buckets the charts already show, so the badge never claims a number
++    // that isn't backed by fetched data.
++    const revenueGrowth = calcTrend(revenueData.map((item) => item.totalRevenue)) ?? 0;
+ 
+     return {
+       successRate,
+@@ -449,6 +460,13 @@ const AdminAnalytics: React.FC = () => {
+     };
+   }, [salesData, deliveryPerformance, revenueData]);
+ 
++  // Real period-over-period trends for the KPI cards. `undefined` means there
++  // isn't enough data to support a claim, in which case the card simply omits
++  // the trend badge rather than showing a made-up number.
++  const usersTrend = useMemo(() => calcTrend(userGrowthData.map((item) => item.totalUsers)), [userGrowthData]);
++  const ordersTrend = useMemo(() => calcTrend(salesData.map((item) => item.totalOrders)), [salesData]);
++  const revenueTrend = useMemo(() => calcTrend(revenueData.map((item) => item.totalRevenue)), [revenueData]);
++
+   const handleExport = (): void => {
+     const exportData = {
+       overview: overviewStats,
+@@ -472,16 +490,16 @@ const AdminAnalytics: React.FC = () => {
+   };
+ 
+   return (
+-    <div className="min-h-screen bg-gray-50 p-6">
+-      {/* Header */}
+-      <div className="mb-8">
+-        <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
++    <div className="min-h-screen bg-slate-50">
++      <div className="mx-auto max-w-7xl space-y-8 px-4 py-6 sm:px-6 lg:px-8">
++        {/* Header */}
++        <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+           <div>
+-            <h1 className="text-3xl font-bold text-gray-900 flex items-center gap-3">
+-              <BarChart3 className="text-blue-500" />
++            <h1 className="flex items-center gap-3 text-2xl font-bold text-gray-900">
++              <BarChart3 className="text-indigo-600" size={26} />
+               Analytics Dashboard
+             </h1>
+-            <p className="text-gray-600 mt-1">
++            <p className="mt-1 text-sm text-gray-500">
+               Monitor business performance and key metrics
+             </p>
+           </div>
+@@ -491,98 +509,100 @@ const AdminAnalytics: React.FC = () => {
+             <button
+               onClick={fetchAllData}
+               disabled={loading}
+-              className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors disabled:opacity-50"
++              className="flex items-center gap-2 rounded-xl border border-gray-200 bg-white px-4 py-2 text-sm font-medium text-gray-700 shadow-sm transition-colors hover:bg-gray-50 disabled:opacity-50"
+             >
+-              <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
++              <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
+               Refresh
+             </button>
+             <button
+               onClick={handleExport}
+-              className="flex items-center gap-2 px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg transition-colors"
++              className="flex items-center gap-2 rounded-xl bg-indigo-600 px-4 py-2 text-sm font-medium text-white shadow-sm transition-colors hover:bg-indigo-700"
+             >
+-              <Download className="w-4 h-4" />
++              <Download className="h-4 w-4" />
+               Export
+             </button>
+           </div>
+         </div>
+-      </div>
+ 
+-      {/* Overview Stats */}
+-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6 mb-8">
+-        <MetricCard
+-          title="Total Users"
+-          value={overviewStats.totalUsers}
+-          change={12.5}
+-          icon={Users}
+-          color="bg-blue-500"
+-          loading={loading}
+-        />
+-        <MetricCard
+-          title="Total Orders"
+-          value={overviewStats.totalOrders}
+-          change={calculatedMetrics.revenueGrowth > 0 ? 8.3 : -3.2}
+-          icon={ShoppingCart}
+-          color="bg-green-500"
+-          loading={loading}
+-        />
+-        <MetricCard
+-          title="Total Revenue"
+-          value={overviewStats.totalRevenue}
+-          change={calculatedMetrics.revenueGrowth}
+-          icon={DollarSign}
+-          color="bg-purple-500"
+-          loading={loading}
+-        />
+-        <MetricCard
+-          title="Active Riders"
+-          value={overviewStats.totalRiders}
+-          change={-3.2}
+-          icon={Truck}
+-          color="bg-orange-500"
+-          loading={loading}
+-        />
+-        <MetricCard
+-          title="Success Rate"
+-          value={calculatedMetrics.successRate}
+-          change={2.1}
+-          icon={CheckCircle}
+-          color="bg-emerald-500"
+-          loading={loading}
+-        />
+-      </div>
++        {/* Overview Stats */}
++        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-5">
++          <MetricCard
++            title="Total Users"
++            value={overviewStats.totalUsers}
++            change={usersTrend}
++            icon={Users}
++            iconColor="text-indigo-600"
++            iconBg="bg-indigo-50"
++            loading={loading}
++          />
++          <MetricCard
++            title="Total Orders"
++            value={overviewStats.totalOrders}
++            change={ordersTrend}
++            icon={ShoppingCart}
++            iconColor="text-emerald-600"
++            iconBg="bg-emerald-50"
++            loading={loading}
++          />
++          <MetricCard
++            title="Total Revenue"
++            value={overviewStats.totalRevenue}
++            change={revenueTrend}
++            icon={DollarSign}
++            iconColor="text-amber-600"
++            iconBg="bg-amber-50"
++            loading={loading}
++          />
++          <MetricCard
++            title="Active Riders"
++            value={overviewStats.totalRiders}
++            icon={Truck}
++            iconColor="text-violet-600"
++            iconBg="bg-violet-50"
++            loading={loading}
++          />
++          <MetricCard
++            title="Success Rate"
++            value={calculatedMetrics.successRate}
++            icon={CheckCircle}
++            iconColor="text-cyan-600"
++            iconBg="bg-cyan-50"
++            loading={loading}
++          />
++        </div>
+ 
+       {/* Charts Section */}
+-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-8">
++      <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
+         {/* Main Chart */}
+         <div className="lg:col-span-2">
+           <ChartCard title="Performance Trends" loading={loading}>
+-            <div className="mb-4 flex space-x-2">
++            <div className="mb-4 flex gap-2">
+               <button
+                 onClick={() => setActiveChart('sales')}
+-                className={`px-3 py-1 text-sm rounded-lg transition-colors ${
++                className={`rounded-lg px-3 py-1 text-sm font-medium transition-colors ${
+                   activeChart === 'sales'
+-                    ? 'bg-blue-500 text-white'
+-                    : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
++                    ? 'bg-indigo-600 text-white'
++                    : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                 }`}
+               >
+                 Sales
+               </button>
+               <button
+                 onClick={() => setActiveChart('users')}
+-                className={`px-3 py-1 text-sm rounded-lg transition-colors ${
++                className={`rounded-lg px-3 py-1 text-sm font-medium transition-colors ${
+                   activeChart === 'users'
+-                    ? 'bg-blue-500 text-white'
+-                    : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
++                    ? 'bg-indigo-600 text-white'
++                    : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                 }`}
+               >
+                 User Growth
+               </button>
+               <button
+                 onClick={() => setActiveChart('revenue')}
+-                className={`px-3 py-1 text-sm rounded-lg transition-colors ${
++                className={`rounded-lg px-3 py-1 text-sm font-medium transition-colors ${
+                   activeChart === 'revenue'
+-                    ? 'bg-blue-500 text-white'
+-                    : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
++                    ? 'bg-indigo-600 text-white'
++                    : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                 }`}
+               >
+                 Revenue
+@@ -667,97 +687,94 @@ const AdminAnalytics: React.FC = () => {
+       </div>
+ 
+       {/* Detailed Tables */}
+-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
++      <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+         {/* Rider Performance Table */}
+-        <div className="bg-white rounded-lg shadow-sm border">
+-          <div className="p-6">
+-            <h3 className="text-lg font-semibold text-gray-900 mb-4">Rider Performance</h3>
+-            <div className="overflow-x-auto">
+-              <table className="w-full">
+-                <thead>
+-                  <tr className="border-b">
+-                    <th className="text-left py-2 px-3 font-medium text-gray-700">Rider</th>
+-                    <th className="text-left py-2 px-3 font-medium text-gray-700">Total</th>
+-                    <th className="text-left py-2 px-3 font-medium text-gray-700">Completed</th>
+-                    <th className="text-left py-2 px-3 font-medium text-gray-700">Rate</th>
+-                  </tr>
+-                </thead>
+-                <tbody>
+-                  {deliveryPerformance.map((rider: DeliveryPerformanceItem, index: number) => {
+-                    const riderName = rider.rider?.name || 
+-                                     `${rider.rider?.first_name || ''} ${rider.rider?.last_name || ''}`.trim() ||
+-                                     `Rider ${index + 1}`;
+-                    const successRate = rider.totalDeliveries > 0 
+-                      ? (rider.completedDeliveries / rider.totalDeliveries) * 100 
+-                      : 0;
+-                    
+-                    return (
+-                      <tr key={rider.rider?.rider_id || index} className="border-b hover:bg-gray-50">
+-                        <td className="py-2 px-3 text-gray-900">{riderName}</td>
+-                        <td className="py-2 px-3 text-gray-600">{rider.totalDeliveries}</td>
+-                        <td className="py-2 px-3 text-gray-600">{rider.completedDeliveries}</td>
+-                        <td className="py-2 px-3">
+-                          <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+-                            successRate > 90
+-                              ? 'bg-green-100 text-green-800'
+-                              : successRate > 80
+-                              ? 'bg-yellow-100 text-yellow-800'
+-                              : 'bg-red-100 text-red-800'
+-                          }`}>
+-                            {successRate.toFixed(1)}%
+-                          </span>
+-                        </td>
+-                      </tr>
+-                    );
+-                  })}
+-                  {deliveryPerformance.length === 0 && !loading && (
+-                    <tr>
+-                      <td colSpan={4} className="py-8 px-3 text-center text-gray-500">
+-                        No delivery performance data available
+-                      </td>
++        <div className="rounded-2xl border border-gray-100 bg-white shadow-sm">
++          <div className="p-5">
++            <h3 className="mb-4 text-sm font-semibold text-gray-900">Rider Performance</h3>
++            {deliveryPerformance.length === 0 && !loading ? (
++              <EmptyState icon={Truck} title="No delivery performance data available" />
++            ) : (
++              <div className="overflow-x-auto">
++                <table className="w-full">
++                  <thead>
++                    <tr className="border-b border-gray-100">
++                      <th className="px-3 py-2 text-left text-[11px] font-semibold uppercase tracking-wide text-gray-400">Rider</th>
++                      <th className="px-3 py-2 text-left text-[11px] font-semibold uppercase tracking-wide text-gray-400">Total</th>
++                      <th className="px-3 py-2 text-left text-[11px] font-semibold uppercase tracking-wide text-gray-400">Completed</th>
++                      <th className="px-3 py-2 text-left text-[11px] font-semibold uppercase tracking-wide text-gray-400">Rate</th>
+                     </tr>
+-                  )}
+-                </tbody>
+-              </table>
+-            </div>
++                  </thead>
++                  <tbody className="divide-y divide-gray-50">
++                    {deliveryPerformance.map((rider: DeliveryPerformanceItem, index: number) => {
++                      const riderName = rider.rider?.name ||
++                                       `${rider.rider?.first_name || ''} ${rider.rider?.last_name || ''}`.trim() ||
++                                       `Rider ${index + 1}`;
++                      const successRate = rider.totalDeliveries > 0
++                        ? (rider.completedDeliveries / rider.totalDeliveries) * 100
++                        : 0;
++
++                      return (
++                        <tr key={rider.rider?.rider_id || index} className="transition-colors hover:bg-gray-50">
++                          <td className="px-3 py-2.5 text-sm font-medium text-gray-900">{riderName}</td>
++                          <td className="px-3 py-2.5 text-sm text-gray-500">{rider.totalDeliveries}</td>
++                          <td className="px-3 py-2.5 text-sm text-gray-500">{rider.completedDeliveries}</td>
++                          <td className="px-3 py-2.5">
++                            <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${
++                              successRate > 90
++                                ? 'bg-emerald-100 text-emerald-700'
++                                : successRate > 80
++                                ? 'bg-amber-100 text-amber-700'
++                                : 'bg-red-100 text-red-700'
++                            }`}>
++                              {successRate.toFixed(1)}%
++                            </span>
++                          </td>
++                        </tr>
++                      );
++                    })}
++                  </tbody>
++                </table>
++              </div>
++            )}
+           </div>
+         </div>
+ 
+         {/* Key Insights */}
+-        <div className="bg-white rounded-lg shadow-sm border">
+-          <div className="p-6">
+-            <h3 className="text-lg font-semibold text-gray-900 mb-4">Key Insights</h3>
+-            <div className="space-y-4">
++        <div className="rounded-2xl border border-gray-100 bg-white shadow-sm">
++          <div className="p-5">
++            <h3 className="mb-4 text-sm font-semibold text-gray-900">Key Insights</h3>
++            <div className="space-y-3">
+               {calculatedMetrics.successRate > 90 && (
+-                <div className="flex items-start gap-3 p-3 bg-green-50 rounded-lg">
+-                  <CheckCircle className="w-5 h-5 text-green-500 mt-0.5" />
++                <div className="flex items-start gap-3 rounded-xl bg-emerald-50 p-3">
++                  <CheckCircle className="mt-0.5 h-5 w-5 flex-shrink-0 text-emerald-500" />
+                   <div>
+-                    <p className="font-medium text-green-900">Excellent Performance</p>
+-                    <p className="text-sm text-green-700">
++                    <p className="text-sm font-medium text-emerald-900">Excellent Performance</p>
++                    <p className="text-xs text-emerald-700">
+                       Success rate is {calculatedMetrics.successRate.toFixed(1)}%, above target
+                     </p>
+                   </div>
+                 </div>
+               )}
+-              
++
+               {calculatedMetrics.revenueGrowth > 0 && (
+-                <div className="flex items-start gap-3 p-3 bg-blue-50 rounded-lg">
+-                  <TrendingUp className="w-5 h-5 text-blue-500 mt-0.5" />
++                <div className="flex items-start gap-3 rounded-xl bg-indigo-50 p-3">
++                  <TrendingUp className="mt-0.5 h-5 w-5 flex-shrink-0 text-indigo-500" />
+                   <div>
+-                    <p className="font-medium text-blue-900">Revenue Growth</p>
+-                    <p className="text-sm text-blue-700">
++                    <p className="text-sm font-medium text-indigo-900">Revenue Growth</p>
++                    <p className="text-xs text-indigo-700">
+                       Revenue increased by {calculatedMetrics.revenueGrowth.toFixed(1)}% this period
+                     </p>
+                   </div>
+                 </div>
+               )}
+ 
+-              {calculatedMetrics.successRate < 85 && (
+-                <div className="flex items-start gap-3 p-3 bg-orange-50 rounded-lg">
+-                  <AlertCircle className="w-5 h-5 text-orange-500 mt-0.5" />
++              {calculatedMetrics.successRate < 85 && calculatedMetrics.successRate > 0 && (
++                <div className="flex items-start gap-3 rounded-xl bg-orange-50 p-3">
++                  <AlertCircle className="mt-0.5 h-5 w-5 flex-shrink-0 text-orange-500" />
+                   <div>
+-                    <p className="font-medium text-orange-900">Performance Alert</p>
+-                    <p className="text-sm text-orange-700">
++                    <p className="text-sm font-medium text-orange-900">Performance Alert</p>
++                    <p className="text-xs text-orange-700">
+                       Success rate is {calculatedMetrics.successRate.toFixed(1)}%, below 85% target
+                     </p>
+                   </div>
+@@ -765,11 +782,11 @@ const AdminAnalytics: React.FC = () => {
+               )}
+ 
+               {calculatedMetrics.averageOrderValue > 0 && (
+-                <div className="flex items-start gap-3 p-3 bg-purple-50 rounded-lg">
+-                  <Eye className="w-5 h-5 text-purple-500 mt-0.5" />
++                <div className="flex items-start gap-3 rounded-xl bg-violet-50 p-3">
++                  <Eye className="mt-0.5 h-5 w-5 flex-shrink-0 text-violet-500" />
+                   <div>
+-                    <p className="font-medium text-purple-900">Order Value Insight</p>
+-                    <p className="text-sm text-purple-700">
++                    <p className="text-sm font-medium text-violet-900">Order Value Insight</p>
++                    <p className="text-xs text-violet-700">
+                       Average order value is KSh {calculatedMetrics.averageOrderValue.toFixed(0)}
+                     </p>
+                   </div>
+@@ -777,15 +794,7 @@ const AdminAnalytics: React.FC = () => {
+               )}
+ 
+               {overviewStats.totalOrders === 0 && !loading && (
+-                <div className="flex items-start gap-3 p-3 bg-gray-50 rounded-lg">
+-                  <AlertCircle className="w-5 h-5 text-gray-500 mt-0.5" />
+-                  <div>
+-                    <p className="font-medium text-gray-900">No Data Available</p>
+-                    <p className="text-sm text-gray-700">
+-                      No analytics data found for the selected time period
+-                    </p>
+-                  </div>
+-                </div>
++                <EmptyState icon={AlertCircle} title="No analytics data found for the selected time period" />
+               )}
+             </div>
+           </div>
+@@ -793,13 +802,14 @@ const AdminAnalytics: React.FC = () => {
+       </div>
+ 
+       {/* Footer */}
+-      <div className="mt-8 text-center text-gray-500">
+-        <p className="text-sm">
+-          Last updated: {new Date().toLocaleString()} • 
+-          Data refreshes every 15 minutes • 
++      <div className="pb-2 text-center text-gray-400">
++        <p className="text-xs">
++          Last updated: {new Date().toLocaleString()} •
++          Data refreshes every 15 minutes •
+           Time range: {timeRange}
+         </p>
+       </div>
++      </div>
+     </div>
+   );
+ };
+-- 
+2.43.0
+

@@ -9,4 +9,4 @@ export { default as ActivityFeed } from "./ActivityFeed";
 export { default as QuickActions } from "./QuickActions";
 export { StatCardSkeleton, ChartSkeleton, TableSkeleton, TableRowSkeleton } from "./DashboardSkeleton";
 export { default as EmptyState } from "./EmptyState";
-export * from "./types";
+export * from "./types"; 
