@@ -1,107 +1,69 @@
 import { useState, useEffect, useCallback } from 'react';
 import { motion } from 'framer-motion';
-import { 
+import {
   MessageSquare, Book, HelpCircle, Home,
-  Phone, MessageCircle, Clock, User, ChevronRight,
-  Shield, Headphones
+  Phone, Mail, Clock, ChevronRight,
+  PhoneCall
 } from 'lucide-react';
 import { toast, Toaster } from 'react-hot-toast';
 
-// Import types from the updated service
 import { supportService } from './SupportService';
-import type { SupportTicket, KnowledgeBaseItem } from './SupportService';
+import type { SupportTicket, KnowledgeBaseItem, FAQ, Agent, SupportStats } from './SupportService';
+import { getAccount } from '../../services/authService';
 
-// Import your existing components (make sure these exist in your project)
-import CreateTicketForm from './CreateTicketForm';
+import LogTicketForm from './CreateTicketForm';
 import SupportTickets from './SupportTickets';
-import FAQ from './FAQ';
-import KnowledgeBase from './KnowledgeBase';
+import FAQManager from './FAQ';
+import KnowledgeBaseManager from './KnowledgeBase';
 import SupportOverview from './SupportOverview';
-// Types
-interface FAQ {
-  id: number;
-  question: string;
-  answer: string;
-  category: string;
-  helpful_count: number;
-}
-// Main SupportPage component
+
+type Tab = 'overview' | 'tickets' | 'log-ticket' | 'faq' | 'knowledge' | 'contact';
+
 export default function SupportPage() {
-  // Navigation state
-  const [activeTab, setActiveTab] = useState<'overview' | 'tickets' | 'create-ticket' | 'faq' | 'knowledge' | 'chat'>('overview');
+  const account = getAccount();
+  const currentAdminId: number | undefined = account?.admin_id ?? account?.id;
+
+  const [activeTab, setActiveTab] = useState<Tab>('overview');
   const [globalSearchQuery, setGlobalSearchQuery] = useState('');
 
-  // Data state
   const [tickets, setTickets] = useState<SupportTicket[]>([]);
   const [knowledgeBase, setKnowledgeBase] = useState<KnowledgeBaseItem[]>([]);
   const [faqs, setFAQs] = useState<FAQ[]>([]);
+  const [agents, setAgents] = useState<Agent[]>([]);
+  const [stats, setStats] = useState<SupportStats | null>(null);
 
-  // UI state
   const [loading, setLoading] = useState(true);
   const [ticketsLoading, setTicketsLoading] = useState(false);
-  const [showCreateTicketModal, setShowCreateTicketModal] = useState(false);
+  const [showLogTicketModal, setShowLogTicketModal] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Tab configuration
-  const tabs = [
-    {
-      id: 'overview',
-      label: 'Overview',
-      icon: Home,
-      description: 'Dashboard and quick actions'
-    },
-    {
-      id: 'tickets',
-      label: 'My Tickets',
-      icon: MessageSquare,
-      description: 'View and manage your support tickets'
-    },
-    {
-      id: 'create-ticket',
-      label: 'Create Ticket',
-      icon: MessageCircle,
-      description: 'Submit a new support request'
-    },
-    {
-      id: 'faq',
-      label: 'FAQ',
-      icon: HelpCircle,
-      description: 'Frequently asked questions'
-    },
-    {
-      id: 'knowledge',
-      label: 'Help Articles',
-      icon: Book,
-      description: 'Browse our knowledge base'
-    },
-    {
-      id: 'chat',
-      label: 'Live Chat',
-      icon: Headphones,
-      description: 'Chat with support agent'
-    }
+  const tabs: { id: Tab; label: string; icon: typeof Home; description: string }[] = [
+    { id: 'overview', label: 'Overview', icon: Home, description: 'Queue health & what needs attention' },
+    { id: 'tickets', label: 'Tickets', icon: MessageSquare, description: 'All customer, vendor & rider tickets' },
+    { id: 'log-ticket', label: 'Log a Ticket', icon: PhoneCall, description: 'Record a ticket from a call or email' },
+    { id: 'faq', label: 'FAQ Manager', icon: HelpCircle, description: 'Manage published FAQs' },
+    { id: 'knowledge', label: 'Knowledge Base', icon: Book, description: 'Manage published help articles' },
+    { id: 'contact', label: 'Contact Channels', icon: Phone, description: 'How customers reach support' },
   ];
 
-  // Load initial data
   const loadData = useCallback(async () => {
     setLoading(true);
     setError(null);
 
     try {
-      // Test connection first
       const isConnected = await supportService.testConnection();
       if (!isConnected) {
         throw new Error('Unable to connect to support service. Please check your connection.');
       }
 
-      // Load all data in parallel with proper error handling
-      const [ticketsResult, knowledgeResult, faqResult] = await Promise.allSettled([
+      const [ticketsResult, knowledgeResult, faqResult, agentsResult, statsResult] = await Promise.allSettled([
         supportService.getAllTickets(),
         supportService.getKnowledgeBase(),
-        supportService.getFAQs()
+        supportService.getFAQs(),
+        supportService.getAgents(),
+        supportService.getSupportStats(),
       ]);
 
-      // Handle tickets
       if (ticketsResult.status === 'fulfilled') {
         setTickets(ticketsResult.value || []);
       } else {
@@ -109,7 +71,6 @@ export default function SupportPage() {
         toast.error('Failed to load tickets');
       }
 
-      // Handle knowledge base
       if (knowledgeResult.status === 'fulfilled') {
         setKnowledgeBase(knowledgeResult.value || []);
       } else {
@@ -117,7 +78,6 @@ export default function SupportPage() {
         toast.error('Failed to load knowledge base');
       }
 
-      // Handle FAQs
       if (faqResult.status === 'fulfilled') {
         setFAQs(faqResult.value || []);
       } else {
@@ -125,6 +85,18 @@ export default function SupportPage() {
         toast.error('Failed to load FAQs');
       }
 
+      if (agentsResult.status === 'fulfilled') {
+        setAgents(agentsResult.value || []);
+      } else {
+        console.error('Error loading agents:', agentsResult.reason);
+        // Non-fatal — assignment dropdown just won't have options.
+      }
+
+      if (statsResult.status === 'fulfilled') {
+        setStats(statsResult.value);
+      } else {
+        console.error('Error loading support stats:', statsResult.reason);
+      }
     } catch (error) {
       console.error('Error loading support data:', error);
       const errorMessage = error instanceof Error ? error.message : 'Failed to load support data';
@@ -135,7 +107,6 @@ export default function SupportPage() {
     }
   }, []);
 
-  // Load tickets separately for refresh functionality
   const loadTickets = useCallback(async () => {
     setTicketsLoading(true);
     try {
@@ -149,31 +120,28 @@ export default function SupportPage() {
     }
   }, []);
 
-  // Initial data load
   useEffect(() => {
     loadData();
   }, [loadData]);
 
-  // Handle tab navigation from child components
   const handleNavigateToTab = useCallback((tab: string) => {
-    setActiveTab(tab as typeof activeTab);
+    setActiveTab(tab as Tab);
   }, []);
 
-  // Handle ticket creation success
-  const handleTicketCreated = useCallback(() => {
+  const handleTicketLogged = useCallback(() => {
     loadTickets();
     setActiveTab('tickets');
   }, [loadTickets]);
 
-  // Handle global search
   const handleGlobalSearchChange = useCallback((query: string) => {
     setGlobalSearchQuery(query);
   }, []);
 
-  // Get current tab info
   const currentTab = tabs.find(tab => tab.id === activeTab);
 
-  // Error state
+  const openCount = tickets.filter(t => t.status === 'open' || t.status === 'in_progress').length;
+  const urgentCount = tickets.filter(t => t.priority === 'urgent' && t.status !== 'resolved' && t.status !== 'closed').length;
+
   if (error && loading) {
     return (
       <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
@@ -198,8 +166,7 @@ export default function SupportPage() {
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
-      {/* Toast notifications */}
-      <Toaster 
+      <Toaster
         position="top-right"
         toastOptions={{
           duration: 4000,
@@ -210,62 +177,44 @@ export default function SupportPage() {
             border: '1px solid #E5E7EB',
             boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1)'
           },
-          success: {
-            iconTheme: {
-              primary: '#10B981',
-              secondary: 'white'
-            }
-          },
-          error: {
-            iconTheme: {
-              primary: '#EF4444',
-              secondary: 'white'
-            }
-          }
+          success: { iconTheme: { primary: '#10B981', secondary: 'white' } },
         }}
       />
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="max-w-7xl mx-auto p-6">
         {/* Header */}
-        <div className="mb-8">
+        <div className="mb-6">
           <motion.div
-            initial={{ opacity: 0, y: -20 }}
+            initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
-            className="bg-gradient-to-r from-blue-600 via-purple-600 to-teal-600 text-white p-8 rounded-2xl shadow-xl"
+            className="bg-gradient-to-r from-blue-600 to-indigo-700 text-white p-6 rounded-xl"
           >
-            <div className="flex items-center justify-between">
-              <div>
-                <h1 className="text-3xl font-bold mb-2">Support Center</h1>
-                <p className="text-blue-100 text-lg">
-                  We're here to help you get the most out of our service
-                </p>
-                <div className="flex items-center gap-6 mt-4 text-sm">
-                  <div className="flex items-center gap-2">
-                    <Clock className="h-4 w-4" />
-                    <span>24/7 Support</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Shield className="h-4 w-4" />
-                    <span>Secure & Private</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Phone className="h-4 w-4" />
-                    <span>Multiple Channels</span>
-                  </div>
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+              <div className="flex items-center gap-3">
+                <MessageSquare className="h-8 w-8" />
+                <div>
+                  <h1 className="text-2xl font-bold">Support Console</h1>
+                  <p className="text-blue-100 text-sm">
+                    Tickets raised by customers, vendors, and riders across AquaGas
+                  </p>
                 </div>
               </div>
-              
-              <div className="hidden md:flex items-center gap-4">
+
+              <div className="flex items-center gap-4">
                 <div className="text-right">
                   <div className="text-2xl font-bold">{tickets.length}</div>
                   <div className="text-sm text-blue-100">Total Tickets</div>
                 </div>
                 <div className="text-right">
-                  <div className="text-2xl font-bold">
-                    {tickets.filter(t => t.status === 'open' || t.status === 'in_progress').length}
-                  </div>
+                  <div className="text-2xl font-bold">{openCount}</div>
                   <div className="text-sm text-blue-100">Active</div>
                 </div>
+                {urgentCount > 0 && (
+                  <div className="text-right">
+                    <div className="text-2xl font-bold text-red-200">{urgentCount}</div>
+                    <div className="text-sm text-blue-100">Urgent</div>
+                  </div>
+                )}
               </div>
             </div>
           </motion.div>
@@ -278,27 +227,32 @@ export default function SupportPage() {
               {tabs.map((tab) => {
                 const IconComponent = tab.icon;
                 const isActive = activeTab === tab.id;
-                
+
                 return (
                   <button
                     key={tab.id}
-                    onClick={() => setActiveTab(tab.id as typeof activeTab)}
-                    className={`p-4 rounded-lg transition-all duration-200 text-left group ${
+                    onClick={() => setActiveTab(tab.id)}
+                    className={`p-4 rounded-lg transition-all duration-200 text-left group relative ${
                       isActive
                         ? 'bg-blue-600 text-white shadow-md'
                         : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700'
                     }`}
                   >
                     <div className="flex items-center gap-3 mb-2">
-                      <IconComponent 
-                        size={20} 
+                      <IconComponent
+                        size={20}
                         className={`${isActive ? 'text-white' : 'text-gray-500 group-hover:text-gray-700 dark:group-hover:text-gray-300'}`}
                       />
                       <span className="font-medium">{tab.label}</span>
+                      {tab.id === 'tickets' && urgentCount > 0 && (
+                        <span className={`ml-auto text-xs font-bold px-1.5 py-0.5 rounded-full ${isActive ? 'bg-white text-red-600' : 'bg-red-500 text-white'}`}>
+                          {urgentCount}
+                        </span>
+                      )}
                     </div>
                     <p className={`text-xs leading-relaxed ${
-                      isActive 
-                        ? 'text-blue-100' 
+                      isActive
+                        ? 'text-blue-100'
                         : 'text-gray-500 dark:text-gray-500 group-hover:text-gray-600 dark:group-hover:text-gray-400'
                     }`}>
                       {tab.description}
@@ -332,6 +286,7 @@ export default function SupportPage() {
             <SupportOverview
               tickets={tickets}
               knowledgeBase={knowledgeBase}
+              stats={stats}
               loading={loading}
               onNavigateToTab={handleNavigateToTab}
             />
@@ -340,117 +295,85 @@ export default function SupportPage() {
           {activeTab === 'tickets' && (
             <SupportTickets
               tickets={tickets}
+              agents={agents}
+              currentAdminId={currentAdminId}
               loading={ticketsLoading}
               onRefresh={loadTickets}
-              isAdmin={false}
+              isAdmin={true}
             />
           )}
 
-          {activeTab === 'create-ticket' && (
-            <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-600 p-8">
-              <div className="max-w-3xl mx-auto">
-                <div className="text-center mb-8">
-                  <MessageCircle className="h-16 w-16 text-blue-500 mx-auto mb-4" />
-                  <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-200 mb-2">
-                    Create Support Ticket
-                  </h2>
-                  <p className="text-gray-600 dark:text-gray-400">
-                    Tell us about your issue and we'll help you resolve it quickly
-                  </p>
-                </div>
-                
-                <button
-                  onClick={() => setShowCreateTicketModal(true)}
-                  className="w-full bg-blue-600 hover:bg-blue-700 text-white py-4 px-6 rounded-xl font-medium text-lg transition-colors flex items-center justify-center gap-3"
-                >
-                  <MessageSquare size={20} />
-                  Start New Ticket
-                </button>
-
-                <div className="mt-8 grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
-                  <div className="p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
-                    <h4 className="font-medium text-blue-900 dark:text-blue-100 mb-2">
-                      Before creating a ticket:
-                    </h4>
-                    <ul className="space-y-1 text-blue-700 dark:text-blue-200">
-                      <li>• Check our FAQ for quick answers</li>
-                      <li>• Browse help articles</li>
-                      <li>• Try our live chat for instant help</li>
-                    </ul>
-                  </div>
-                  
-                  <div className="p-4 bg-green-50 dark:bg-green-900/20 rounded-lg">
-                    <h4 className="font-medium text-green-900 dark:text-green-100 mb-2">
-                      What to include:
-                    </h4>
-                    <ul className="space-y-1 text-green-700 dark:text-green-200">
-                      <li>• Detailed description of the issue</li>
-                      <li>• Steps to reproduce the problem</li>
-                      <li>• Screenshots if applicable</li>
-                      <li>• Related order ID if relevant</li>
-                    </ul>
-                  </div>
-                </div>
-              </div>
-            </div>
+          {activeTab === 'log-ticket' && (
+            <LogTicketForm onTicketLogged={handleTicketLogged} />
           )}
 
           {activeTab === 'faq' && (
-            <FAQ
+            <FAQManager
+              faqs={faqs}
+              onRefresh={loadData}
               searchQuery={globalSearchQuery}
               onSearchChange={handleGlobalSearchChange}
-              standalone={true}
             />
           )}
 
           {activeTab === 'knowledge' && (
-            <KnowledgeBase
+            <KnowledgeBaseManager
+              articles={knowledgeBase}
+              onRefresh={loadData}
               searchQuery={globalSearchQuery}
               onSearchChange={handleGlobalSearchChange}
-              standalone={true}
             />
           )}
 
-          {activeTab === 'chat' && (
+          {activeTab === 'contact' && (
             <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-600 p-8">
-              <div className="text-center max-w-2xl mx-auto">
-                <Headphones className="h-16 w-16 text-purple-500 mx-auto mb-6" />
-                <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-200 mb-4">
-                  Live Chat Support
+              <div className="max-w-2xl mx-auto text-center">
+                <Phone className="h-16 w-16 text-purple-500 mx-auto mb-6" />
+                <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-200 mb-2">
+                  How Customers Reach Support
                 </h2>
                 <p className="text-gray-600 dark:text-gray-400 mb-8">
-                  Connect with our support team instantly. Our agents are available 24/7 to help you with any questions or issues.
+                  These are the channels customers, vendors, and riders currently use to reach AquaGas.
+                  In-app live chat isn't built yet — every one of these currently routes into a ticket
+                  here in the Tickets tab.
                 </p>
-                
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-                  <div className="p-6 border border-gray-200 dark:border-gray-600 rounded-xl">
-                    <Clock className="h-8 w-8 text-green-500 mx-auto mb-4" />
-                    <h3 className="font-semibold text-gray-800 dark:text-gray-200 mb-2">
-                      Average Response Time
-                    </h3>
-                    <p className="text-2xl font-bold text-green-600 mb-1">2 minutes</p>
-                    <p className="text-sm text-gray-500">During business hours</p>
-                  </div>
-                  
-                  <div className="p-6 border border-gray-200 dark:border-gray-600 rounded-xl">
-                    <User className="h-8 w-8 text-blue-500 mx-auto mb-4" />
-                    <h3 className="font-semibold text-gray-800 dark:text-gray-200 mb-2">
-                      Available Agents
-                    </h3>
-                    <p className="text-2xl font-bold text-blue-600 mb-1">12</p>
-                    <p className="text-sm text-gray-500">Ready to help</p>
-                  </div>
-                </div>
-                
-                <button className="bg-purple-600 hover:bg-purple-700 text-white py-4 px-8 rounded-xl font-medium text-lg transition-colors inline-flex items-center gap-3">
-                  <MessageCircle size={20} />
-                  Start Live Chat
-                </button>
 
-                <div className="mt-8 p-4 bg-yellow-50 dark:bg-yellow-900/20 rounded-lg">
-                  <p className="text-sm text-yellow-800 dark:text-yellow-200">
-                    💡 For complex technical issues, consider creating a ticket instead for better tracking and documentation.
-                  </p>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-left">
+                  <div className="p-4 border border-gray-200 dark:border-gray-600 rounded-lg flex items-start gap-3">
+                    <Phone className="h-5 w-5 text-green-600 mt-0.5" />
+                    <div>
+                      <h4 className="font-medium text-gray-800 dark:text-gray-200">Phone</h4>
+                      <p className="text-sm text-gray-500 dark:text-gray-400">
+                        Use "Log a Ticket" to record what was discussed on a call.
+                      </p>
+                    </div>
+                  </div>
+                  <div className="p-4 border border-gray-200 dark:border-gray-600 rounded-lg flex items-start gap-3">
+                    <Mail className="h-5 w-5 text-blue-600 mt-0.5" />
+                    <div>
+                      <h4 className="font-medium text-gray-800 dark:text-gray-200">Email</h4>
+                      <p className="text-sm text-gray-500 dark:text-gray-400">
+                        Log emailed requests the same way, tagged with the right category.
+                      </p>
+                    </div>
+                  </div>
+                  <div className="p-4 border border-gray-200 dark:border-gray-600 rounded-lg flex items-start gap-3">
+                    <MessageSquare className="h-5 w-5 text-indigo-600 mt-0.5" />
+                    <div>
+                      <h4 className="font-medium text-gray-800 dark:text-gray-200">In-app tickets</h4>
+                      <p className="text-sm text-gray-500 dark:text-gray-400">
+                        Customers, vendors, and riders submit these directly from their apps — they land
+                        in Tickets automatically.
+                      </p>
+                    </div>
+                  </div>
+                  <div className="p-4 border border-gray-200 dark:border-gray-600 rounded-lg flex items-start gap-3 opacity-60">
+                    <Clock className="h-5 w-5 text-gray-500 mt-0.5" />
+                    <div>
+                      <h4 className="font-medium text-gray-800 dark:text-gray-200">Live chat</h4>
+                      <p className="text-sm text-gray-500 dark:text-gray-400">Coming soon — not built yet.</p>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
@@ -458,12 +381,11 @@ export default function SupportPage() {
         </motion.div>
       </div>
 
-      {/* Create Ticket Modal */}
-      <CreateTicketForm
-        isOpen={showCreateTicketModal}
-        onClose={() => setShowCreateTicketModal(false)}
-        onTicketCreated={handleTicketCreated}
-      />
+      {/* Legacy modal kept for compatibility if referenced elsewhere; the
+          Log-a-Ticket tab is now the primary entry point. */}
+      {showLogTicketModal && (
+        <div className="hidden" />
+      )}
     </div>
   );
 }
