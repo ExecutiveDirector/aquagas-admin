@@ -1,9 +1,30 @@
-/// supportService.tsx
-// Use consistent API base URL matching your admin service
+/// SupportService.tsx
+// Data layer for the admin Support console. This is the single source of
+// truth for support API calls — FAQ.tsx, KnowledgeBase.tsx, and
+// CreateTicketForm.tsx used to each carry their own copy-pasted client
+// with a couple of bugs that had gone unnoticed (missing `/v1` prefix on
+// their URLs, and reading the token from `auth_token` when it's actually
+// stored under `token` — see authService.ts). Everything now imports this
+// one instead.
 const API_BASE_URL =
   import.meta.env.VITE_API_BASE_URL ||
   process.env.VITE_API_BASE_URL ||
   "http://localhost:4000/api";
+
+export interface RequesterRef {
+  user_id?: number;
+  vendor_id?: number;
+  rider_id?: number;
+  first_name?: string;
+  last_name?: string;
+  business_name?: string;
+}
+
+export interface AssignedAdmin {
+  admin_id: number;
+  admin_role: string;
+  account?: { email: string };
+}
 
 export interface SupportTicket {
   ticket_id: number;
@@ -35,6 +56,11 @@ export interface SupportTicket {
   created_at: string;
   updated_at: string;
   support_messages?: SupportMessage[];
+  user?: RequesterRef;
+  vendor?: RequesterRef;
+  rider?: RequesterRef;
+  assigned_admin?: AssignedAdmin;
+  related_order?: { order_id: number; order_number: string };
 }
 
 export interface SupportMessage {
@@ -56,6 +82,8 @@ export interface FAQ {
   answer: string;
   category: string;
   helpful_count: number;
+  display_order?: number;
+  is_published?: boolean;
 }
 
 export interface KnowledgeBaseItem {
@@ -66,8 +94,17 @@ export interface KnowledgeBaseItem {
   views: number;
   helpful_votes: number;
   tags: string[];
+  is_published?: boolean;
   created_at: string;
   updated_at: string;
+}
+
+export interface Agent {
+  admin_id: number;
+  admin_role: string;
+  department?: string;
+  last_active_at?: string;
+  account?: { email: string };
 }
 
 export interface CreateTicketData {
@@ -79,10 +116,18 @@ export interface CreateTicketData {
   attachments?: string[];
 }
 
+export interface ManualTicketData {
+  requester_type: "user" | "vendor" | "rider";
+  requester_id: number;
+  subject: string;
+  description: string;
+  category: SupportTicket["category"];
+  priority?: SupportTicket["priority"];
+}
+
 export interface CreateMessageData {
-  message_text: string;
-  message_type?: "text" | "image" | "file";
-  attachments?: string[];
+  message: string;
+  is_internal?: boolean;
 }
 
 export interface SupportStats {
@@ -137,17 +182,29 @@ class SupportService {
   async createTicket(
     data: CreateTicketData
   ): Promise<{ message: string; data: SupportTicket }> {
-    try {
-      const response = await fetch(`${API_BASE_URL}/v1/support/tickets`, {
-        method: "POST",
-        headers: await this.getAuthHeaders(),
-        body: JSON.stringify(data),
-      });
-      return this.handleResponse(response);
-    } catch (error) {
-      console.error("Create ticket error:", error);
-      throw error;
-    }
+    const response = await fetch(`${API_BASE_URL}/v1/support/tickets`, {
+      method: "POST",
+      headers: await this.getAuthHeaders(),
+      body: JSON.stringify(data),
+    });
+    return this.handleResponse(response);
+  }
+
+  // Ticket logged by an admin on behalf of a customer/vendor/rider (e.g.
+  // after a phone call). Distinct from createTicket, which always
+  // attributes the ticket to whichever role the *logged-in* account has —
+  // an admin has no user_id/vendor_id/rider_id of their own, so calling
+  // createTicket as an admin previously created an orphaned, unowned
+  // ticket every time.
+  async createManualTicket(
+    data: ManualTicketData
+  ): Promise<{ message: string; data: SupportTicket }> {
+    const response = await fetch(`${API_BASE_URL}/v1/support/tickets/manual`, {
+      method: "POST",
+      headers: await this.getAuthHeaders(),
+      body: JSON.stringify(data),
+    });
+    return this.handleResponse(response);
   }
 
   async getUserTickets(filters?: {
@@ -155,23 +212,21 @@ class SupportService {
     priority?: string;
     category?: string;
   }): Promise<SupportTicket[]> {
-    try {
-      const params = new URLSearchParams();
-      if (filters) {
-        Object.entries(filters).forEach(([key, value]) => {
-          if (value && value !== "all") params.append(key, value);
-        });
-      }
-
-      const response = await fetch(
-        `${API_BASE_URL}/v1/support/tickets/user?${params}`,
-        { headers: await this.getAuthHeaders() }
-      );
-      return this.handleResponse(response);
-    } catch (error) {
-      console.error("Get user tickets error:", error);
-      throw error;
+    const params = new URLSearchParams();
+    if (filters) {
+      Object.entries(filters).forEach(([key, value]) => {
+        if (value && value !== "all") params.append(key, value);
+      });
     }
+
+    // NOTE: was previously `/v1/support/tickets/user`, which doesn't exist
+    // on the backend (the route for a caller's own tickets is just
+    // `/v1/support/tickets` — see routes/support.js) and would 404.
+    const response = await fetch(
+      `${API_BASE_URL}/v1/support/tickets?${params}`,
+      { headers: await this.getAuthHeaders() }
+    );
+    return this.handleResponse(response);
   }
 
   async getAllTickets(filters?: {
@@ -180,98 +235,90 @@ class SupportService {
     category?: string;
     user_id?: number;
     vendor_id?: number;
+    assigned_admin_id?: number;
+    unassigned?: boolean;
   }): Promise<SupportTicket[]> {
-    try {
-      const params = new URLSearchParams();
-      if (filters) {
-        Object.entries(filters).forEach(([key, value]) => {
-          if (value && value !== "all")
-            params.append(key, value.toString());
-        });
-      }
-
-      const response = await fetch(
-        `${API_BASE_URL}/v1/support/tickets/all?${params}`,
-        { headers: await this.getAuthHeaders() }
-      );
-      return this.handleResponse(response);
-    } catch (error) {
-      console.error("Get all tickets error:", error);
-      throw error;
+    const params = new URLSearchParams();
+    if (filters) {
+      Object.entries(filters).forEach(([key, value]) => {
+        if (value !== undefined && value !== null && value !== "all" && value !== false)
+          params.append(key, value.toString());
+      });
     }
+
+    const response = await fetch(
+      `${API_BASE_URL}/v1/support/tickets/all?${params}`,
+      { headers: await this.getAuthHeaders() }
+    );
+    return this.handleResponse(response);
   }
 
   async getTicketDetails(ticketId: number): Promise<SupportTicket> {
-    try {
-      const response = await fetch(
-        `${API_BASE_URL}/v1/support/tickets/${ticketId}`,
-        { headers: await this.getAuthHeaders() }
-      );
-      return this.handleResponse(response);
-    } catch (error) {
-      console.error("Get ticket details error:", error);
-      throw error;
-    }
+    const response = await fetch(
+      `${API_BASE_URL}/v1/support/tickets/${ticketId}`,
+      { headers: await this.getAuthHeaders() }
+    );
+    return this.handleResponse(response);
   }
 
   async updateTicketStatus(
     ticketId: number,
     status: SupportTicket["status"]
   ): Promise<{ message: string }> {
-    try {
-      const response = await fetch(
-        `${API_BASE_URL}/v1/support/tickets/${ticketId}/status`,
-        {
-          method: "PUT",
-          headers: await this.getAuthHeaders(),
-          body: JSON.stringify({ status }),
-        }
-      );
-      return this.handleResponse(response);
-    } catch (error) {
-      console.error("Update ticket status error:", error);
-      throw error;
-    }
+    const response = await fetch(
+      `${API_BASE_URL}/v1/support/tickets/${ticketId}/status`,
+      {
+        method: "PUT",
+        headers: await this.getAuthHeaders(),
+        body: JSON.stringify({ status }),
+      }
+    );
+    return this.handleResponse(response);
+  }
+
+  async updateTicketPriority(
+    ticketId: number,
+    priority: SupportTicket["priority"]
+  ): Promise<{ message: string }> {
+    const response = await fetch(
+      `${API_BASE_URL}/v1/support/tickets/${ticketId}/priority`,
+      {
+        method: "PUT",
+        headers: await this.getAuthHeaders(),
+        body: JSON.stringify({ priority }),
+      }
+    );
+    return this.handleResponse(response);
   }
 
   async assignTicket(
     ticketId: number,
     adminId: number
   ): Promise<{ message: string }> {
-    try {
-      const response = await fetch(
-        `${API_BASE_URL}/v1/support/tickets/${ticketId}/assign`,
-        {
-          method: "PUT",
-          headers: await this.getAuthHeaders(),
-          body: JSON.stringify({ assigned_admin_id: adminId }),
-        }
-      );
-      return this.handleResponse(response);
-    } catch (error) {
-      console.error("Assign ticket error:", error);
-      throw error;
-    }
+    const response = await fetch(
+      `${API_BASE_URL}/v1/support/tickets/${ticketId}/assign`,
+      {
+        method: "PUT",
+        headers: await this.getAuthHeaders(),
+        body: JSON.stringify({ assigned_admin_id: adminId }),
+      }
+    );
+    return this.handleResponse(response);
   }
 
   async rateTicket(
     ticketId: number,
     rating: number
   ): Promise<{ message: string }> {
-    try {
-      const response = await fetch(
-        `${API_BASE_URL}/v1/support/tickets/${ticketId}/rate`,
-        {
-          method: "PUT",
-          headers: await this.getAuthHeaders(),
-          body: JSON.stringify({ customer_satisfaction_rating: rating }),
-        }
-      );
-      return this.handleResponse(response);
-    } catch (error) {
-      console.error("Rate ticket error:", error);
-      throw error;
-    }
+    const response = await fetch(
+      `${API_BASE_URL}/v1/support/tickets/${ticketId}/rate`,
+      {
+        method: "PUT",
+        headers: await this.getAuthHeaders(),
+        body: JSON.stringify({ customer_satisfaction_rating: rating }),
+      }
+    );
+    return this.handleResponse(response);
   }
 
   // Message Management
@@ -279,123 +326,171 @@ class SupportService {
     ticketId: number,
     data: CreateMessageData
   ): Promise<{ message: string; data: SupportMessage }> {
-    try {
-      const response = await fetch(
-        `${API_BASE_URL}/v1/support/tickets/${ticketId}/messages`,
-        {
-          method: "POST",
-          headers: await this.getAuthHeaders(),
-          body: JSON.stringify(data),
-        }
-      );
-      return this.handleResponse(response);
-    } catch (error) {
-      console.error("Add message error:", error);
-      throw error;
-    }
+    // NOTE: the backend reads `req.body.message` (see
+    // supportController.js#addMessage, and the customer Flutter app's
+    // support_service.dart, which sends the same key) — this used to send
+    // `message_text`, which the backend never read, so every reply typed
+    // in the admin panel was silently saved as an empty message.
+    const response = await fetch(
+      `${API_BASE_URL}/v1/support/tickets/${ticketId}/messages`,
+      {
+        method: "POST",
+        headers: await this.getAuthHeaders(),
+        body: JSON.stringify(data),
+      }
+    );
+    return this.handleResponse(response);
   }
 
   async getTicketMessages(ticketId: number): Promise<SupportMessage[]> {
-    try {
-      const response = await fetch(
-        `${API_BASE_URL}/v1/support/tickets/${ticketId}/messages`,
-        { headers: await this.getAuthHeaders() }
-      );
-      return this.handleResponse(response);
-    } catch (error) {
-      console.error("Get ticket messages error:", error);
-      throw error;
-    }
+    const response = await fetch(
+      `${API_BASE_URL}/v1/support/tickets/${ticketId}/messages`,
+      { headers: await this.getAuthHeaders() }
+    );
+    return this.handleResponse(response);
   }
 
-  // FAQ Management
+  // Support agents (assignment dropdown)
+  async getAgents(): Promise<Agent[]> {
+    const response = await fetch(`${API_BASE_URL}/v1/support/agents`, {
+      headers: await this.getAuthHeaders(),
+    });
+    return this.handleResponse(response);
+  }
+
+  // FAQ (read)
   async getFAQs(category?: string): Promise<FAQ[]> {
-    try {
-      const params = new URLSearchParams();
-      if (category && category !== "all") params.append("category", category);
+    const params = new URLSearchParams();
+    if (category && category !== "all") params.append("category", category);
 
-      const response = await fetch(
-        `${API_BASE_URL}/v1/support/faq?${params}`,
-        { headers: await this.getAuthHeaders() }
-      );
-      return this.handleResponse(response);
-    } catch (error) {
-      console.error("Get FAQs error:", error);
-      throw error;
-    }
+    const response = await fetch(
+      `${API_BASE_URL}/v1/support/faq?${params}`,
+      { headers: await this.getAuthHeaders() }
+    );
+    return this.handleResponse(response);
   }
 
-  // Knowledge Base Management
+  // FAQ management (admin)
+  async createFAQ(data: {
+    question: string;
+    answer: string;
+    category: string;
+    display_order?: number;
+  }): Promise<{ message: string; data: FAQ }> {
+    const response = await fetch(`${API_BASE_URL}/v1/support/faq`, {
+      method: "POST",
+      headers: await this.getAuthHeaders(),
+      body: JSON.stringify(data),
+    });
+    return this.handleResponse(response);
+  }
+
+  async updateFAQ(
+    id: number,
+    data: Partial<Pick<FAQ, "question" | "answer" | "category" | "display_order" | "is_published">>
+  ): Promise<{ message: string; data: FAQ }> {
+    const response = await fetch(`${API_BASE_URL}/v1/support/faq/${id}`, {
+      method: "PUT",
+      headers: await this.getAuthHeaders(),
+      body: JSON.stringify(data),
+    });
+    return this.handleResponse(response);
+  }
+
+  async deleteFAQ(id: number): Promise<{ message: string }> {
+    const response = await fetch(`${API_BASE_URL}/v1/support/faq/${id}`, {
+      method: "DELETE",
+      headers: await this.getAuthHeaders(),
+    });
+    return this.handleResponse(response);
+  }
+
+  // Knowledge Base (read)
   async getKnowledgeBase(
     category?: string,
     search?: string
   ): Promise<KnowledgeBaseItem[]> {
-    try {
-      const params = new URLSearchParams();
-      if (category && category !== "all") params.append("category", category);
-      if (search) params.append("search", search);
+    const params = new URLSearchParams();
+    if (category && category !== "all") params.append("category", category);
+    if (search) params.append("search", search);
 
-      const response = await fetch(
-        `${API_BASE_URL}/v1/support/knowledge-base?${params}`,
-        { headers: await this.getAuthHeaders() }
-      );
-      return this.handleResponse(response);
-    } catch (error) {
-      console.error("Get knowledge base error:", error);
-      throw error;
-    }
+    const response = await fetch(
+      `${API_BASE_URL}/v1/support/knowledge-base?${params}`,
+      { headers: await this.getAuthHeaders() }
+    );
+    return this.handleResponse(response);
+  }
+
+  // Knowledge Base management (admin)
+  async createKBArticle(data: {
+    title: string;
+    content: string;
+    category: string;
+    tags?: string[];
+  }): Promise<{ message: string; data: KnowledgeBaseItem }> {
+    const response = await fetch(`${API_BASE_URL}/v1/support/knowledge-base`, {
+      method: "POST",
+      headers: await this.getAuthHeaders(),
+      body: JSON.stringify(data),
+    });
+    return this.handleResponse(response);
+  }
+
+  async updateKBArticle(
+    id: number,
+    data: Partial<Pick<KnowledgeBaseItem, "title" | "content" | "category" | "tags" | "is_published">>
+  ): Promise<{ message: string; data: KnowledgeBaseItem }> {
+    const response = await fetch(`${API_BASE_URL}/v1/support/knowledge-base/${id}`, {
+      method: "PUT",
+      headers: await this.getAuthHeaders(),
+      body: JSON.stringify(data),
+    });
+    return this.handleResponse(response);
+  }
+
+  async deleteKBArticle(id: number): Promise<{ message: string }> {
+    const response = await fetch(`${API_BASE_URL}/v1/support/knowledge-base/${id}`, {
+      method: "DELETE",
+      headers: await this.getAuthHeaders(),
+    });
+    return this.handleResponse(response);
   }
 
   async getHelpTopics(): Promise<string[]> {
-    try {
-      const response = await fetch(`${API_BASE_URL}/v1/support/help-topics`, {
-        headers: await this.getAuthHeaders(),
-      });
-      return this.handleResponse(response);
-    } catch (error) {
-      console.error("Get help topics error:", error);
-      throw error;
-    }
+    const response = await fetch(`${API_BASE_URL}/v1/support/help-topics`, {
+      headers: await this.getAuthHeaders(),
+    });
+    return this.handleResponse(response);
   }
 
-  // Support Statistics (for admin)
+  // Support Statistics (admin)
   async getSupportStats(): Promise<SupportStats> {
-    try {
-      const response = await fetch(`${API_BASE_URL}/v1/support/stats`, {
-        headers: await this.getAuthHeaders(),
-      });
-      return this.handleResponse(response);
-    } catch (error) {
-      console.error("Get support stats error:", error);
-      throw error;
-    }
+    const response = await fetch(`${API_BASE_URL}/v1/support/stats`, {
+      headers: await this.getAuthHeaders(),
+    });
+    return this.handleResponse(response);
   }
 
   // File Upload
   async uploadAttachment(
     file: File
   ): Promise<{ url: string; filename: string }> {
-    try {
-      const formData = new FormData();
-      formData.append("file", file);
+    const formData = new FormData();
+    formData.append("file", file);
 
-      const token = this.getToken();
+    const token = this.getToken();
 
-      const response = await fetch(
-        `${API_BASE_URL}/v1/support/attachments/upload`,
-        {
-          method: "POST",
-          headers: {
-            ...(token && { Authorization: `Bearer ${token}` }),
-          },
-          body: formData,
-        }
-      );
-      return this.handleResponse(response);
-    } catch (error) {
-      console.error("Upload attachment error:", error);
-      throw error;
-    }
+    const response = await fetch(
+      `${API_BASE_URL}/v1/support/attachments/upload`,
+      {
+        method: "POST",
+        headers: {
+          ...(token && { Authorization: `Bearer ${token}` }),
+        },
+        body: formData,
+      }
+    );
+    return this.handleResponse(response);
   }
 
   // Utility methods for tracking interactions
@@ -416,35 +511,25 @@ class SupportService {
   }
 
   async incrementFAQHelpful(id: number): Promise<void> {
-    try {
-      const response = await fetch(
-        `${API_BASE_URL}/v1/support/faq/${id}/helpful`,
-        {
-          method: "POST",
-          headers: await this.getAuthHeaders(),
-        }
-      );
-      await this.handleResponse(response);
-    } catch (error) {
-      console.error("Error incrementing FAQ helpful count:", error);
-      throw error;
-    }
+    const response = await fetch(
+      `${API_BASE_URL}/v1/support/faq/${id}/helpful`,
+      {
+        method: "POST",
+        headers: await this.getAuthHeaders(),
+      }
+    );
+    await this.handleResponse(response);
   }
 
   async voteHelpful(id: number): Promise<void> {
-    try {
-      const response = await fetch(
-        `${API_BASE_URL}/v1/support/knowledge-base/${id}/helpful`,
-        {
-          method: "POST",
-          headers: await this.getAuthHeaders(),
-        }
-      );
-      await this.handleResponse(response);
-    } catch (error) {
-      console.error("Error voting helpful:", error);
-      throw error;
-    }
+    const response = await fetch(
+      `${API_BASE_URL}/v1/support/knowledge-base/${id}/helpful`,
+      {
+        method: "POST",
+        headers: await this.getAuthHeaders(),
+      }
+    );
+    await this.handleResponse(response);
   }
 
   // Test connection to the support API
