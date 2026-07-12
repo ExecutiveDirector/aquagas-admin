@@ -1,433 +1,304 @@
-import { useState, useEffect, useMemo, useCallback } from 'react';
+// components/support/FAQ.tsx
+import { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { 
-  Search, HelpCircle, ChevronDown, ThumbsUp, 
-  Filter, MessageCircle, RefreshCw, BookOpen
+import {
+  HelpCircle, Plus, Pencil, Trash2, Search,
+  ThumbsUp, X, Save, Eye, EyeOff
 } from 'lucide-react';
 import { toast } from 'react-hot-toast';
+import { supportService, type FAQ } from './SupportService';
 
-// Types
-interface FAQ {
-  id: number;
+interface FAQManagerProps {
+  faqs: FAQ[];
+  onRefresh: () => void;
+  searchQuery: string;
+  onSearchChange: (query: string) => void;
+}
+
+const CATEGORY_OPTIONS = [
+  { value: 'order_issue', label: 'Order Issue' },
+  { value: 'delivery_problem', label: 'Delivery Problem' },
+  { value: 'payment_issue', label: 'Payment Issue' },
+  { value: 'product_quality', label: 'Product Quality' },
+  { value: 'account_issue', label: 'Account Issue' },
+  { value: 'technical_support', label: 'Technical Support' },
+  { value: 'billing_inquiry', label: 'Billing Inquiry' },
+  { value: 'other', label: 'Other' },
+];
+
+const categoryLabel = (value: string) =>
+  CATEGORY_OPTIONS.find(c => c.value === value)?.label || value;
+
+interface DraftFAQ {
+  id: number | null;
   question: string;
   answer: string;
   category: string;
-  helpful_count: number;
 }
 
-// Support service for API calls
-class SupportService {
-  private API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://aquagas-backend.onrender.com/api';
+const emptyDraft: DraftFAQ = { id: null, question: '', answer: '', category: 'other' };
 
-  private async getAuthHeaders(): Promise<HeadersInit> {
-    const token = localStorage.getItem('auth_token') || sessionStorage.getItem('auth_token');
-    return {
-      'Content-Type': 'application/json',
-      ...(token && { 'Authorization': `Bearer ${token}` }),
-    };
-  }
+export default function FAQManager({ faqs, onRefresh, searchQuery, onSearchChange }: FAQManagerProps) {
+  const [draft, setDraft] = useState<DraftFAQ | null>(null);
+  const [saving, setSaving] = useState(false);
+  const [deletingId, setDeletingId] = useState<number | null>(null);
+  const [categoryFilter, setCategoryFilter] = useState<'all' | string>('all');
 
-  private async handleResponse<T>(response: Response): Promise<T> {
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}));
-      throw new Error(errorData.error || errorData.message || `HTTP ${response.status}`);
-    }
-    return response.json();
-  }
-
-  async getFAQs(category?: string): Promise<FAQ[]> {
-    const params = new URLSearchParams();
-    if (category && category !== 'all') params.append('category', category);
-
-    const response = await fetch(`${this.API_BASE_URL}/support/faq?${params}`, {
-      headers: await this.getAuthHeaders(),
-    });
-    return this.handleResponse(response);
-  }
-
-  async incrementFAQHelpful(id: number): Promise<void> {
-    try {
-      const response = await fetch(`${this.API_BASE_URL}/support/faq/${id}/helpful`, {
-        method: 'POST',
-        headers: await this.getAuthHeaders(),
-      });
-      await this.handleResponse(response);
-    } catch (error) {
-      console.error('Error incrementing FAQ helpful count:', error);
-      throw error;
-    }
-  }
-}
-
-const supportService = new SupportService();
-
-// Main FAQ Component
-interface FAQProps {
-  searchQuery?: string;
-  onSearchChange?: (query: string) => void;
-  standalone?: boolean;
-}
-
-export default function FAQ({ 
-  searchQuery: externalSearchQuery = '', 
-  onSearchChange, 
-  standalone = false 
-}: FAQProps) {
-  // State
-  const [faqs, setFaqs] = useState<FAQ[]>([]);
-  const [expandedFAQ, setExpandedFAQ] = useState<number | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [refreshing, setRefreshing] = useState(false);
-  const [categoryFilter, setCategoryFilter] = useState<string>('all');
-  const [localSearchQuery, setLocalSearchQuery] = useState('');
-  const [helpfulClicks, setHelpfulClicks] = useState<Set<number>>(new Set());
-  const [showFilters, setShowFilters] = useState(false);
-
-  // Use external search query if provided
-  const searchQuery = externalSearchQuery || localSearchQuery;
-  const handleSearchChange = onSearchChange || setLocalSearchQuery;
-
-  // Fetch FAQs
-  const fetchFAQs = useCallback(async () => {
-    try {
-      const data = await supportService.getFAQs(categoryFilter === 'all' ? undefined : categoryFilter);
-      setFaqs(data);
-    } catch (error) {
-      console.error('Error fetching FAQs:', error);
-      toast.error('Failed to load FAQs');
-    }
-  }, [categoryFilter]);
-
-  // Initial load
-  useEffect(() => {
-    const loadFAQs = async () => {
-      setLoading(true);
-      await fetchFAQs();
-      setLoading(false);
-    };
-    loadFAQs();
-  }, [fetchFAQs]);
-
-  // Refresh FAQs
-  const handleRefresh = async () => {
-    setRefreshing(true);
-    await fetchFAQs();
-    setRefreshing(false);
-    toast.success('FAQs refreshed');
-  };
-
-  // Get unique categories
-  const categories = useMemo(() => {
-    const uniqueCategories = Array.from(new Set(faqs.map(faq => faq.category)));
-    return ['all', ...uniqueCategories.sort()];
-  }, [faqs]);
-
-  // Filtered FAQs
-  const filteredFaqs = useMemo(() => {
+  const filtered = useMemo(() => {
+    const q = searchQuery.toLowerCase();
     return faqs.filter(faq => {
-      const matchesSearch = searchQuery === '' ||
-        faq.question.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        faq.answer.toLowerCase().includes(searchQuery.toLowerCase());
-      
+      const matchesSearch =
+        !q || faq.question.toLowerCase().includes(q) || faq.answer.toLowerCase().includes(q);
       const matchesCategory = categoryFilter === 'all' || faq.category === categoryFilter;
-      
       return matchesSearch && matchesCategory;
     });
   }, [faqs, searchQuery, categoryFilter]);
 
-  // Mark FAQ helpful
-  const handleHelpfulClick = async (id: number) => {
-    if (helpfulClicks.has(id)) {
-      toast('You have already marked this as helpful');
+  const handleSave = async () => {
+    if (!draft) return;
+    if (!draft.question.trim() || !draft.answer.trim()) {
+      toast.error('Question and answer are required');
       return;
     }
-    
+
+    setSaving(true);
     try {
-      await supportService.incrementFAQHelpful(id);
-      setFaqs(prev =>
-        prev.map(faq => 
-          faq.id === id 
-            ? { ...faq, helpful_count: faq.helpful_count + 1 }
-            : faq
-        )
-      );
-      setHelpfulClicks(prev => new Set([...prev, id]));
-      toast.success('Thank you for your feedback!');
+      if (draft.id) {
+        await supportService.updateFAQ(draft.id, {
+          question: draft.question,
+          answer: draft.answer,
+          category: draft.category,
+        });
+        toast.success('FAQ updated');
+      } else {
+        await supportService.createFAQ({
+          question: draft.question,
+          answer: draft.answer,
+          category: draft.category,
+        });
+        toast.success('FAQ added');
+      }
+      setDraft(null);
+      onRefresh();
     } catch (error) {
-      console.error('Error marking FAQ as helpful:', error);
-      toast.error('Failed to record feedback');
+      console.error('Error saving FAQ:', error);
+      toast.error('Failed to save FAQ');
+    } finally {
+      setSaving(false);
     }
   };
 
-  // Toggle FAQ expand/collapse
-  const toggleFAQ = (id: number) => {
-    setExpandedFAQ(expandedFAQ === id ? null : id);
+  const handleDelete = async (id: number) => {
+    if (!confirm('Delete this FAQ? This can\'t be undone.')) return;
+    setDeletingId(id);
+    try {
+      await supportService.deleteFAQ(id);
+      toast.success('FAQ deleted');
+      onRefresh();
+    } catch (error) {
+      console.error('Error deleting FAQ:', error);
+      toast.error('Failed to delete FAQ');
+    } finally {
+      setDeletingId(null);
+    }
   };
 
-  // Category color mapping
-  const getCategoryColor = (category: string) => {
-    const colors = {
-      orders: 'bg-blue-100 text-blue-800 dark:bg-blue-900/20 dark:text-blue-400',
-      payment: 'bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400',
-      delivery: 'bg-orange-100 text-orange-800 dark:bg-orange-900/20 dark:text-orange-400',
-      support: 'bg-purple-100 text-purple-800 dark:bg-purple-900/20 dark:text-purple-400',
-      account: 'bg-indigo-100 text-indigo-800 dark:bg-indigo-900/20 dark:text-indigo-400',
-      general: 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300',
-    };
-    return colors[category as keyof typeof colors] || colors.general;
+  const handleTogglePublished = async (faq: FAQ) => {
+    try {
+      await supportService.updateFAQ(faq.id, { is_published: !faq.is_published });
+      toast.success(faq.is_published ? 'FAQ unpublished' : 'FAQ published');
+      onRefresh();
+    } catch (error) {
+      console.error('Error toggling FAQ visibility:', error);
+      toast.error('Failed to update FAQ');
+    }
   };
-
-  // Loading skeleton
-  if (loading) {
-    return (
-      <div className="space-y-6">
-        <div className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-sm border border-gray-200 dark:border-gray-600">
-          <div className="flex justify-center items-center h-32">
-            <motion.div
-              animate={{ rotate: 360 }}
-              transition={{ duration: 2, repeat: Infinity, ease: 'linear' }}
-            >
-              <HelpCircle className="h-12 w-12 text-blue-500" />
-            </motion.div>
-          </div>
-        </div>
-      </div>
-    );
-  }
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      {standalone && (
-        <div className="bg-gradient-to-r from-blue-600 to-purple-600 text-white p-6 rounded-xl">
-          <div className="flex items-center gap-3 mb-2">
-            <HelpCircle className="h-8 w-8" />
-            <h1 className="text-2xl font-bold">Frequently Asked Questions</h1>
-          </div>
-          <p className="text-blue-100">Find quick answers to common questions about our service</p>
-        </div>
-      )}
-
-      {/* Search + Filters */}
-      {/* ... your existing JSX stays mostly the same ... */}
-      {/* (omitted here for brevity, but unchanged except no react-toastify import) */}
-      
-      {/* Search and Filters */}
-      <div className="bg-white dark:bg-gray-800 p-4 rounded-xl shadow-sm border border-gray-200 dark:border-gray-600">
-        <div className="flex flex-col space-y-4">
-          {/* Search bar */}
+    <div className="space-y-4">
+      {/* Toolbar */}
+      <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-600 p-4">
+        <div className="flex flex-col md:flex-row gap-3">
           <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={16} />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
             <input
               type="text"
-              placeholder="Search FAQs by question or answer..."
+              placeholder="Search FAQs..."
               value={searchQuery}
-              onChange={(e) => handleSearchChange(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 text-gray-900 dark:text-gray-100"
+              onChange={(e) => onSearchChange(e.target.value)}
+              className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             />
           </div>
-
-          {/* Filter controls */}
-          <div className="flex flex-wrap items-center gap-2">
-            <button
-              onClick={() => setShowFilters(!showFilters)}
-              className={`px-3 py-1 rounded-lg text-sm flex items-center gap-1 transition-colors ${
-                showFilters 
-                  ? 'bg-blue-600 text-white' 
-                  : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600'
-              }`}
-            >
-              <Filter size={14} />
-              Categories
-              <ChevronDown className={`transition-transform ${showFilters ? 'rotate-180' : ''}`} size={14} />
-            </button>
-
-            <button
-              onClick={handleRefresh}
-              disabled={refreshing}
-              className="px-3 py-1 bg-green-600 hover:bg-green-700 disabled:opacity-50 text-white rounded-lg text-sm flex items-center gap-1"
-            >
-              <RefreshCw size={14} className={refreshing ? 'animate-spin' : ''} />
-              Refresh
-            </button>
-
-            <div className="text-sm text-gray-500 dark:text-gray-400">
-              {filteredFaqs.length} FAQ{filteredFaqs.length !== 1 ? 's' : ''} found
-            </div>
-          </div>
-
-          {/* Category filters */}
-          <AnimatePresence>
-            {showFilters && (
-              <motion.div
-                initial={{ opacity: 0, height: 0 }}
-                animate={{ opacity: 1, height: 'auto' }}
-                exit={{ opacity: 0, height: 0 }}
-                className="flex flex-wrap gap-2 pt-2 border-t border-gray-200 dark:border-gray-600"
-              >
-                {categories.map(category => (
-                  <button
-                    key={category}
-                    onClick={() => setCategoryFilter(category)}
-                    className={`px-3 py-1 rounded-full text-xs font-medium transition-colors ${
-                      categoryFilter === category
-                        ? 'bg-blue-600 text-white'
-                        : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
-                    }`}
-                  >
-                    {category === 'all' ? 'All Categories' : category.charAt(0).toUpperCase() + category.slice(1)}
-                    {category !== 'all' && (
-                      <span className="ml-1 text-xs opacity-75">
-                        ({faqs.filter(faq => faq.category === category).length})
-                      </span>
-                    )}
-                  </button>
-                ))}
-              </motion.div>
-            )}
-          </AnimatePresence>
+          <select
+            value={categoryFilter}
+            onChange={(e) => setCategoryFilter(e.target.value)}
+            className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 text-sm"
+          >
+            <option value="all">All Categories</option>
+            {CATEGORY_OPTIONS.map(c => (
+              <option key={c.value} value={c.value}>{c.label}</option>
+            ))}
+          </select>
+          <button
+            onClick={() => setDraft({ ...emptyDraft })}
+            className="flex items-center justify-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium"
+          >
+            <Plus size={16} /> Add FAQ
+          </button>
         </div>
       </div>
 
-      {/* FAQ List */}
+      {/* List */}
       <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-600 overflow-hidden">
-        {filteredFaqs.length === 0 ? (
+        {filtered.length === 0 ? (
           <div className="p-12 text-center">
-            <HelpCircle className="h-16 w-16 text-gray-400 mx-auto mb-4" />
-            <h3 className="text-xl font-semibold text-gray-800 dark:text-gray-200 mb-2">
-              No FAQs found
-            </h3>
-            <p className="text-gray-600 dark:text-gray-400 mb-4">
-              {searchQuery || categoryFilter !== 'all'
-                ? 'Try adjusting your search or category filter'
-                : 'No frequently asked questions are available at the moment'
-              }
+            <HelpCircle className="h-12 w-12 text-gray-300 dark:text-gray-600 mx-auto mb-3" />
+            <p className="text-gray-500 dark:text-gray-400 font-medium">
+              {faqs.length === 0 ? 'No FAQs yet' : 'No FAQs match this search'}
             </p>
-            {(searchQuery || categoryFilter !== 'all') && (
-              <div className="flex justify-center gap-2">
-                <button
-                  onClick={() => handleSearchChange('')}
-                  className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm"
-                >
-                  Clear Search
-                </button>
-                <button
-                  onClick={() => setCategoryFilter('all')}
-                  className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 text-sm"
-                >
-                  Show All Categories
-                </button>
-              </div>
+            {faqs.length === 0 && (
+              <button
+                onClick={() => setDraft({ ...emptyDraft })}
+                className="mt-3 text-sm text-blue-600 dark:text-blue-400 hover:underline"
+              >
+                Add your first FAQ
+              </button>
             )}
           </div>
         ) : (
-          <div className="divide-y divide-gray-200 dark:divide-gray-600">
-            {filteredFaqs.map((faq, index) => (
-              <motion.div
-                key={faq.id}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: index * 0.1 }}
-                className="p-6"
-              >
-                <button
-                  onClick={() => toggleFAQ(faq.id)}
-                  className="w-full text-left flex justify-between items-start gap-4 group"
-                >
-                  <div className="flex-1">
-                    <div className="flex items-center gap-2 mb-1">
-                      <span className={`px-2 py-1 rounded-full text-xs font-medium ${getCategoryColor(faq.category)}`}>
-                        {faq.category}
+          <div className="divide-y divide-gray-200 dark:divide-gray-700">
+            {filtered.map(faq => (
+              <div key={faq.id} className={`p-4 ${faq.is_published === false ? 'opacity-60' : ''}`}>
+                <div className="flex items-start justify-between gap-3">
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 mb-1 flex-wrap">
+                      <span className="text-xs px-2 py-0.5 rounded-full bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-400 font-medium">
+                        {categoryLabel(faq.category)}
+                      </span>
+                      {faq.is_published === false && (
+                        <span className="text-xs px-2 py-0.5 rounded-full bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400 flex items-center gap-1">
+                          <EyeOff size={11} /> Unpublished
+                        </span>
+                      )}
+                      <span className="text-xs text-gray-400 flex items-center gap-1">
+                        <ThumbsUp size={11} /> {faq.helpful_count}
                       </span>
                     </div>
-                    <h3 className="font-semibold text-gray-800 dark:text-gray-200 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
-                      {faq.question}
-                    </h3>
+                    <h3 className="font-medium text-gray-900 dark:text-gray-100">{faq.question}</h3>
+                    <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">{faq.answer}</p>
                   </div>
-                  <motion.div
-                    animate={{ rotate: expandedFAQ === faq.id ? 180 : 0 }}
-                    transition={{ duration: 0.2 }}
-                    className="flex-shrink-0 mt-1"
-                  >
-                    <ChevronDown size={20} className="text-gray-400 group-hover:text-gray-600 dark:group-hover:text-gray-300" />
-                  </motion.div>
-                </button>
 
-                <AnimatePresence>
-                  {expandedFAQ === faq.id && (
-                    <motion.div
-                      initial={{ opacity: 0, height: 0 }}
-                      animate={{ opacity: 1, height: 'auto' }}
-                      exit={{ opacity: 0, height: 0 }}
-                      transition={{ duration: 0.3 }}
-                      className="mt-4 overflow-hidden"
+                  <div className="flex items-center gap-1 flex-shrink-0">
+                    <button
+                      onClick={() => handleTogglePublished(faq)}
+                      className="p-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg"
+                      title={faq.is_published === false ? 'Publish' : 'Unpublish'}
                     >
-                      <div className="prose prose-sm max-w-none dark:prose-invert">
-                        <p className="text-gray-600 dark:text-gray-400 leading-relaxed">
-                          {faq.answer}
-                        </p>
-                      </div>
-                      
-                      <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-600 flex items-center justify-between">
-                        <div className="flex items-center gap-4">
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleHelpfulClick(faq.id);
-                            }}
-                            disabled={helpfulClicks.has(faq.id)}
-                            className={`flex items-center gap-1 text-sm transition-colors ${
-                              helpfulClicks.has(faq.id)
-                                ? 'text-green-600 dark:text-green-400'
-                                : 'text-gray-500 hover:text-blue-600 dark:text-gray-400 dark:hover:text-blue-400'
-                            }`}
-                          >
-                            <ThumbsUp size={16} className={helpfulClicks.has(faq.id) ? 'fill-current' : ''} />
-                            <span>
-                              {helpfulClicks.has(faq.id) ? 'Marked as helpful' : 'Helpful'} ({faq.helpful_count})
-                            </span>
-                          </button>
-                        </div>
-                        
-                        <div className="text-xs text-gray-400">
-                          FAQ #{faq.id}
-                        </div>
-                      </div>
-                    </motion.div>
-                  )}
-                </AnimatePresence>
-              </motion.div>
+                      {faq.is_published === false ? <Eye size={16} /> : <EyeOff size={16} />}
+                    </button>
+                    <button
+                      onClick={() => setDraft({ id: faq.id, question: faq.question, answer: faq.answer, category: faq.category })}
+                      className="p-2 text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg"
+                      title="Edit"
+                    >
+                      <Pencil size={16} />
+                    </button>
+                    <button
+                      onClick={() => handleDelete(faq.id)}
+                      disabled={deletingId === faq.id}
+                      className="p-2 text-gray-400 hover:text-red-600 dark:hover:text-red-400 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg disabled:opacity-50"
+                      title="Delete"
+                    >
+                      <Trash2 size={16} />
+                    </button>
+                  </div>
+                </div>
+              </div>
             ))}
           </div>
         )}
       </div>
 
-      {/* Help Section */}
-      <div className="bg-blue-50 dark:bg-blue-900/20 p-6 rounded-xl border border-blue-200 dark:border-blue-800">
-        <div className="flex items-start gap-4">
-          <div className="flex-shrink-0">
-            <MessageCircle className="h-6 w-6 text-blue-600" />
-          </div>
-          <div>
-            <h3 className="font-semibold text-blue-900 dark:text-blue-100 mb-2">
-              Still need help?
-            </h3>
-            <p className="text-blue-700 dark:text-blue-200 text-sm mb-3">
-              If you couldn't find the answer you're looking for, don't hesitate to reach out to our support team.
-            </p>
-            <div className="flex flex-wrap gap-2">
-              <button className="px-3 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm flex items-center gap-1">
-                <MessageCircle size={14} />
-                Contact Support
-              </button>
-              <button className="px-3 py-1 border border-blue-300 dark:border-blue-600 text-blue-700 dark:text-blue-300 hover:bg-blue-100 dark:hover:bg-blue-900/30 rounded-lg text-sm flex items-center gap-1">
-                <BookOpen size={14} />
-                Browse Help Articles
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
+      {/* Add/Edit modal */}
+      <AnimatePresence>
+        {draft && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4"
+            onClick={() => setDraft(null)}
+          >
+            <motion.div
+              initial={{ scale: 0.95, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.95, opacity: 0 }}
+              onClick={(e) => e.stopPropagation()}
+              className="bg-white dark:bg-gray-800 rounded-xl shadow-xl max-w-lg w-full p-6"
+            >
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="font-bold text-lg text-gray-900 dark:text-gray-100">
+                  {draft.id ? 'Edit FAQ' : 'Add FAQ'}
+                </h3>
+                <button onClick={() => setDraft(null)} className="p-1 text-gray-400 hover:text-gray-600 rounded-lg">
+                  <X size={20} />
+                </button>
+              </div>
+
+              <div className="space-y-3">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Category</label>
+                  <select
+                    value={draft.category}
+                    onChange={(e) => setDraft({ ...draft, category: e.target.value })}
+                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
+                  >
+                    {CATEGORY_OPTIONS.map(c => (
+                      <option key={c.value} value={c.value}>{c.label}</option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Question</label>
+                  <input
+                    type="text"
+                    value={draft.question}
+                    onChange={(e) => setDraft({ ...draft, question: e.target.value })}
+                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
+                    placeholder="How do I...?"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Answer</label>
+                  <textarea
+                    value={draft.answer}
+                    onChange={(e) => setDraft({ ...draft, answer: e.target.value })}
+                    rows={4}
+                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 resize-none"
+                    placeholder="Explain the answer clearly and concisely..."
+                  />
+                </div>
+              </div>
+
+              <div className="flex justify-end gap-2 mt-6">
+                <button
+                  onClick={() => setDraft(null)}
+                  className="px-4 py-2 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleSave}
+                  disabled={saving}
+                  className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg disabled:opacity-50"
+                >
+                  <Save size={16} /> {saving ? 'Saving...' : 'Save'}
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

@@ -34,7 +34,6 @@ export default function SupportPage() {
 
   const [loading, setLoading] = useState(true);
   const [ticketsLoading, setTicketsLoading] = useState(false);
-  const [showLogTicketModal, setShowLogTicketModal] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const tabs: { id: Tab; label: string; icon: typeof Home; description: string }[] = [
@@ -380,12 +379,6 @@ export default function SupportPage() {
           )}
         </motion.div>
       </div>
-
-      {/* Legacy modal kept for compatibility if referenced elsewhere; the
-          Log-a-Ticket tab is now the primary entry point. */}
-      {showLogTicketModal && (
-        <div className="hidden" />
-      )}
     </div>
   );
 }
