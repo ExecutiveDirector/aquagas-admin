@@ -118,7 +118,14 @@ export function isAdmin(): boolean {
 
 export function getAdminRole(): string | null {
   try {
-    const userInfo = localStorage.getItem('userInfo');
+    // Must check sessionStorage too, matching isAdmin()'s fallback — when
+    // "Remember me" is unchecked, Login.tsx moves userInfo into
+    // sessionStorage only. Reading localStorage alone made isSuperAdmin()
+    // silently return false (hiding the Admins nav item) for anyone who
+    // didn't check "Remember me", even genuine super_admins.
+    const userInfo =
+      localStorage.getItem('userInfo') ||
+      sessionStorage.getItem('userInfo');
     if (userInfo) {
       return JSON.parse(userInfo).admin_role || null;
     }
