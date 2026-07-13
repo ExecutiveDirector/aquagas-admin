@@ -24,6 +24,7 @@ import {
   Command,
   ChevronRight,
   Sparkles,
+  Shield,
 } from "lucide-react";
 
 import { motion } from "framer-motion";
@@ -39,11 +40,13 @@ import OrdersPage from "../pages/orders/OrderPage";
 import SupportPage from "../pages/support/SupportPage";
 import SettingPage from "../pages/settings/settings";
 import AdminAnalytics from "../pages/analytics/AnalyticsPage";
+import AdminsPage from "../pages/admins/AdminsPage";
 
 import {
   isAuthenticated,
   getAccount,
   logout,
+  isSuperAdmin,
 } from "../services/authService";
 
 // ======================================================
@@ -67,7 +70,10 @@ const NAV_SYSTEM = [
   { name: "Settings", href: "/settings", icon: Settings },
 ];
 
-const ALL_NAV = [...NAV_MAIN, ...NAV_SYSTEM];
+// "Admins" is appended per-render (see DashboardLayout body) rather than
+// here, since it depends on the logged-in admin's admin_role — a static
+// module-level array can't react to who's currently logged in.
+const NAV_ADMINS = { name: "Admins", href: "/admins", icon: Shield };
 
 // ======================================================
 // NAV ITEM
@@ -154,6 +160,12 @@ export default function DashboardLayout() {
     }
   }, [navigate]);
 
+  // Admins entry only shows for super_admin — everyone else can't use
+  // those endpoints anyway (backend returns 403), so hiding it avoids a
+  // dead-end nav item.
+  const navSystem = isSuperAdmin() ? [...NAV_SYSTEM, NAV_ADMINS] : NAV_SYSTEM;
+  const allNav = [...NAV_MAIN, ...navSystem];
+
   const isActive = (href: string) =>
     href === "/"
       ? location.pathname === "/"
@@ -163,7 +175,7 @@ export default function DashboardLayout() {
     if (location.pathname === "/") return "Overview";
 
     return (
-      ALL_NAV.find(
+      allNav.find(
         (i) =>
           i.href !== "/" &&
           location.pathname.startsWith(i.href)
@@ -215,6 +227,9 @@ export default function DashboardLayout() {
 
       case "/analytics":
         return <AdminAnalytics />;
+
+      case "/admins":
+        return <AdminsPage />;
 
       default:
         return <AdminHome />;
@@ -364,7 +379,7 @@ export default function DashboardLayout() {
               System
             </p>
 
-            {NAV_SYSTEM.map(({ name, href, icon }) => (
+            {navSystem.map(({ name, href, icon }) => (
               <NavItem
                 key={href}
                 name={name}

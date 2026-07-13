@@ -145,13 +145,27 @@ export async function login(credentials: {
 
   if (data.token) {
     localStorage.setItem('token', data.token);
+
+    // NOTE: adminController.adminLogin returns a flat payload (role,
+    // admin_id, admin_role, permissions, full_access) — there is no nested
+    // `data.account`. Build one here so the header/sidebar (which read
+    // getAccount().email / .role) have something to show, using the email
+    // the person just typed in since the backend doesn't echo it back.
+    const account = {
+      admin_id: data.admin_id,
+      email: credentials.email,
+      role: data.role,
+    };
+
     localStorage.setItem('userInfo', JSON.stringify({
       role: data.role,
       admin_role: data.admin_role,
-      account_id: data.account?.account_id,
-      email: data.account?.email,
+      admin_id: data.admin_id,
+      permissions: data.permissions || {},
+      full_access: !!data.full_access,
+      email: credentials.email,
     }));
-    localStorage.setItem('account', JSON.stringify(data.account || {}));
+    localStorage.setItem('account', JSON.stringify(account));
   }
 
   return data;

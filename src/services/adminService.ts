@@ -179,6 +179,13 @@ export async function createUser(userData: {
   password: string;
   role: string;
   status?: string;
+  // Only required/used when role === 'admin' — matches admin_users columns.
+  // The backend now rejects admin creation unless the caller is super_admin
+  // and admin_role is one of the valid ENUM values.
+  admin_role?: 'super_admin' | 'operations_admin' | 'finance_admin' | 'support_admin' | 'marketing_admin';
+  employee_id?: string;
+  department?: string;
+  permissions?: Record<string, string[]>;
 }): Promise<ApiResponse<User>> {
   try {
     const res = await api.post('/v1/admin/users', {
@@ -629,7 +636,88 @@ export async function closeSupportTicket(
 }
 
 // ============================================
+// ADMIN MANAGEMENT (super_admin only)
+//
+// These call the real endpoints added to routes/admin.js. Unlike
+// listRoles/createRole/etc below — which hit /v1/admin/roles and
+// /v1/admin/users/:id/assign-role, neither of which exist on the backend —
+// these are wired to controllers/adminController.js's listAdmins/
+// getAdminDetails/updateAdminRole/updateAdminStatus.
+// ============================================
+
+export interface AdminUser {
+  admin_id: string;
+  account_id?: string;
+  email?: string;
+  phone_number?: string;
+  admin_role: 'super_admin' | 'operations_admin' | 'finance_admin' | 'support_admin' | 'marketing_admin';
+  employee_id?: string | null;
+  department?: string | null;
+  permissions?: Record<string, string[]>;
+  is_active: boolean;
+  account_is_active?: boolean;
+  last_active_at?: string | null;
+  last_login_at?: string | null;
+  created_at?: string;
+}
+
+export async function listAdmins(): Promise<ApiResponse<AdminUser[]>> {
+  try {
+    const res = await api.get('/v1/admin/admins');
+    return res.data;
+  } catch (err: any) {
+    throw new Error(err?.response?.data?.error || 'Failed to fetch admins');
+  }
+}
+
+export async function getAdminDetails(adminId: string): Promise<ApiResponse<AdminUser>> {
+  try {
+    const res = await api.get(`/v1/admin/admins/${adminId}`);
+    return res.data;
+  } catch (err: any) {
+    throw new Error(err?.response?.data?.error || 'Failed to fetch admin details');
+  }
+}
+
+export async function updateAdminRole(
+  adminId: string,
+  updates: Partial<{
+    admin_role: string;
+    permissions: Record<string, string[]>;
+    department: string;
+    employee_id: string;
+  }>
+): Promise<ApiResponse<AdminUser>> {
+  try {
+    const res = await api.put(`/v1/admin/admins/${adminId}`, updates);
+    return res.data;
+  } catch (err: any) {
+    throw new Error(err?.response?.data?.error || 'Failed to update admin');
+  }
+}
+
+export async function updateAdminStatus(
+  adminId: string,
+  is_active: boolean
+): Promise<ApiResponse<AdminUser>> {
+  try {
+    const res = await api.put(`/v1/admin/admins/${adminId}/status`, { is_active });
+    return res.data;
+  } catch (err: any) {
+    throw new Error(err?.response?.data?.error || 'Failed to update admin status');
+  }
+}
+
+// ============================================
 // ROLES & PERMISSIONS
+//
+// ⚠️ Dead code — nothing in the UI calls these, and none of these routes
+// exist on the backend (/v1/admin/roles, /v1/admin/users/:id/assign-role,
+// /v1/admin/users/:id/permissions all 404). Left in place rather than
+// deleted in case something external depends on the exports, but use the
+// Admin Management functions above instead — they're wired to real
+// endpoints. See adminController.js's admin_role ENUM system, which this
+// generic "roles" concept doesn't map onto.
 // ============================================
 
 export async function listRoles(): Promise<ApiResponse> {
@@ -1069,6 +1157,12 @@ export default {
   deleteRole,
   assignRoleToUser,
   updateUserPermissions,
+
+  // Admin Management (super_admin only, real endpoints)
+  listAdmins,
+  getAdminDetails,
+  updateAdminRole,
+  updateAdminStatus,
   
   // Finance
   getTransactions,
