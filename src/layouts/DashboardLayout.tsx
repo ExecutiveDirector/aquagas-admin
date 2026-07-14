@@ -47,7 +47,10 @@ import {
   getAccount,
   logout,
   isSuperAdmin,
+  getAdminRole,
+  getPermissions,
 } from "../services/authService";
+import { canAccess, roleLabel } from "../config/rolePermissions";
 
 // ======================================================
 // NAVIGATION
@@ -160,11 +163,18 @@ export default function DashboardLayout() {
     }
   }, [navigate]);
 
-  // Admins entry only shows for super_admin — everyone else can't use
-  // those endpoints anyway (backend returns 403), so hiding it avoids a
-  // dead-end nav item.
-  const navSystem = isSuperAdmin() ? [...NAV_SYSTEM, NAV_ADMINS] : NAV_SYSTEM;
-  const allNav = [...NAV_MAIN, ...navSystem];
+  // Every nav item is filtered against the logged-in admin's sub-role via
+  // the shared rolePermissions map (kept in sync with the backend's route
+  // guards) — not just the "Admins" entry. A support_admin, for instance,
+  // shouldn't see Vendors/Riders/Products any more than a non-super-admin
+  // should see Admins; all of it 403s on the backend anyway, so hiding it
+  // avoids dead-end nav items for every role, not just one.
+  const adminRole = getAdminRole();
+  const mySections = getPermissions().sections;
+  const navMain = NAV_MAIN.filter((item) => canAccess(item.href, adminRole, mySections));
+  const navSystemBase = [...NAV_SYSTEM, ...(isSuperAdmin() ? [NAV_ADMINS] : [])];
+  const navSystem = navSystemBase.filter((item) => canAccess(item.href, adminRole, mySections));
+  const allNav = [...navMain, ...navSystem];
 
   const isActive = (href: string) =>
     href === "/"
@@ -194,6 +204,28 @@ export default function DashboardLayout() {
   };
 
   const renderPage = () => {
+    // Nav hides restricted items, but someone can still type the URL
+    // directly. Same permission map the nav uses — if the API would 403 it,
+    // don't render the page at all.
+    if (!canAccess(location.pathname, adminRole, mySections)) {
+      return (
+        <div className="h-full flex items-center justify-center">
+          <div className="max-w-sm text-center space-y-3">
+            <div className="w-12 h-12 rounded-2xl bg-slate-100 flex items-center justify-center mx-auto">
+              <Shield className="w-5 h-5 text-slate-400" />
+            </div>
+            <p className="text-sm font-semibold text-slate-700">
+              Access restricted
+            </p>
+            <p className="text-[13px] text-slate-400 leading-relaxed">
+              Your role ({roleLabel(adminRole)}) doesn't have access to this
+              section. Contact a super admin if you think this is a mistake.
+            </p>
+          </div>
+        </div>
+      );
+    }
+
     switch (location.pathname) {
       case "/":
         return <AdminHome />;
@@ -362,7 +394,7 @@ export default function DashboardLayout() {
               Main
             </p>
 
-            {NAV_MAIN.map(({ name, href, icon }) => (
+            {navMain.map(({ name, href, icon }) => (
               <NavItem
                 key={href}
                 name={name}

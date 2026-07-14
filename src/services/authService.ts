@@ -135,6 +135,19 @@ export function getAdminRole(): string | null {
   }
 }
 
+export function getPermissions(): { sections?: Record<string, boolean>; [key: string]: any } {
+  try {
+    const userInfo =
+      localStorage.getItem('userInfo') ||
+      sessionStorage.getItem('userInfo');
+    if (!userInfo) return {};
+    const parsed = JSON.parse(userInfo);
+    return parsed.permissions || {};
+  } catch {
+    return {};
+  }
+}
+
 export function isSuperAdmin(): boolean {
   return isAdmin() && getAdminRole() === 'super_admin';
 }

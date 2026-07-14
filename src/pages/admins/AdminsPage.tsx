@@ -11,6 +11,7 @@ import {
   type AdminUser,
 } from "../../services/adminService";
 import { isSuperAdmin, getAdminRole } from "../../services/authService";
+import { OVERRIDABLE_SECTIONS, PAGE_ACCESS } from "../../config/rolePermissions";
 
 const ADMIN_ROLES = [
   "super_admin",
@@ -139,28 +140,59 @@ function CreateAdminModal({
 }
 
 /* ─── Edit Role/Permissions modal ────────────────────── */
+type OverrideState = "default" | "grant" | "withdraw";
+
 function EditAdminModal({
   admin, onClose, onSaved,
 }: { admin: AdminUser; onClose: () => void; onSaved: () => void }) {
   const [admin_role, setAdminRole] = useState(admin.admin_role);
   const [department, setDepartment] = useState(admin.department || "");
   const [employee_id, setEmployeeId] = useState(admin.employee_id || "");
-  const [permsText, setPermsText] = useState(
-    admin.permissions ? JSON.stringify(admin.permissions, null, 2) : "{}"
-  );
   const [saving, setSaving] = useState(false);
+
+  const existingSections = admin.permissions?.sections || {};
+  const [overrides, setOverrides] = useState<Record<string, OverrideState>>(() => {
+    const initial: Record<string, OverrideState> = {};
+    for (const s of OVERRIDABLE_SECTIONS) {
+      const v = existingSections[s.key];
+      initial[s.key] = v === true ? "grant" : v === false ? "withdraw" : "default";
+    }
+    return initial;
+  });
+
+  const setOverride = (key: string, state: OverrideState) =>
+    setOverrides((prev) => ({ ...prev, [key]: state }));
+
+  // Whether the CURRENTLY SELECTED admin_role (may differ from admin's
+  // original role if changed in this form) includes this section by
+  // default — used only to label "Included by role" / "Not included by
+  // role" next to each toggle, recalculated live as the dropdown changes.
+  const roleIncludesSection = (sectionKey: string) => {
+    const section = OVERRIDABLE_SECTIONS.find((s) => s.key === sectionKey);
+    if (!section) return false;
+    return (PAGE_ACCESS[section.path] || []).includes(admin_role as any);
+  };
+
+  const isEditingSuperAdmin = admin_role === "super_admin";
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
-    let permissions: Record<string, string[]>;
-    try {
-      permissions = JSON.parse(permsText || "{}");
-    } catch {
-      toast.error('Permissions must be valid JSON, e.g. {"vendors": ["approve"]}');
-      return;
-    }
     setSaving(true);
     try {
+      // Only "grant"/"withdraw" become explicit true/false entries — a
+      // section left on "Default" is omitted entirely so it keeps
+      // following whatever the role normally includes, even if the role
+      // itself changes later.
+      const sections: Record<string, boolean> = {};
+      for (const [key, state] of Object.entries(overrides)) {
+        if (state === "grant") sections[key] = true;
+        else if (state === "withdraw") sections[key] = false;
+      }
+      // Preserve any other permission keys (e.g. legacy resource:[action]
+      // grants used elsewhere by requirePermission) instead of clobbering
+      // them — only `sections` is being edited here.
+      const permissions = { ...(admin.permissions || {}), sections };
+
       await updateAdminRole(admin.admin_id, { admin_role, department, employee_id, permissions });
       toast.success("Admin updated");
       onSaved();
@@ -174,10 +206,10 @@ function EditAdminModal({
 
   return (
     <div className="fixed inset-0 bg-black/30 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-      <div className="bg-white rounded-2xl shadow-xl w-full max-w-md p-6">
+      <div className="bg-white rounded-2xl shadow-xl w-full max-w-lg p-6 max-h-[90vh] overflow-y-auto">
         <h2 className="text-lg font-bold text-slate-800 mb-1">Edit Admin</h2>
         <p className="text-xs text-slate-400 mb-4">{admin.email}</p>
-        <form onSubmit={submit} className="space-y-3">
+        <form onSubmit={submit} className="space-y-4">
           <select
             className="w-full px-3 py-2 rounded-xl border border-slate-200 text-sm"
             value={admin_role}
@@ -201,20 +233,79 @@ function EditAdminModal({
               onChange={(e) => setEmployeeId(e.target.value)}
             />
           </div>
-          <div>
-            <label className="text-xs font-medium text-slate-500 mb-1 block">
-              Permissions (JSON — resource: [actions])
-            </label>
-            <textarea
-              className="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs font-mono h-28"
-              value={permsText}
-              onChange={(e) => setPermsText(e.target.value)}
-              spellCheck={false}
-            />
-            <p className="text-[11px] text-slate-400 mt-1">
-              Ignored entirely for super_admin — they bypass permission checks.
+
+          {isEditingSuperAdmin ? (
+            <p className="text-[12px] text-slate-500 bg-slate-50 rounded-xl px-3 py-2.5">
+              Super admins always have access to every section — individual
+              sections can't be withdrawn from a super_admin.
             </p>
-          </div>
+          ) : (
+            <div>
+              <label className="text-xs font-medium text-slate-500 mb-1 block">
+                Section access
+              </label>
+              <p className="text-[11px] text-slate-400 mb-2 leading-relaxed">
+                Each section defaults to what {ROLE_LABEL[admin_role]} normally
+                includes. Grant a section this role wouldn't normally have,
+                or withdraw one it would — independent of the role above.
+              </p>
+              <div className="space-y-1.5">
+                {OVERRIDABLE_SECTIONS.map((s) => {
+                  const includedByRole = roleIncludesSection(s.key);
+                  const state = overrides[s.key];
+                  return (
+                    <div
+                      key={s.key}
+                      className="flex items-center justify-between px-3 py-2 rounded-xl border border-slate-200"
+                    >
+                      <div>
+                        <p className="text-[13px] font-medium text-slate-700">{s.label}</p>
+                        <p className="text-[10.5px] text-slate-400">
+                          {includedByRole ? "Included by role" : "Not included by role"}
+                        </p>
+                      </div>
+                      <div className="flex gap-1">
+                        <button
+                          type="button"
+                          onClick={() => setOverride(s.key, "withdraw")}
+                          className={`px-2.5 py-1 rounded-lg text-[11px] font-semibold transition ${
+                            state === "withdraw"
+                              ? "bg-rose-100 text-rose-700"
+                              : "text-slate-400 hover:bg-slate-100"
+                          }`}
+                        >
+                          Withdraw
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setOverride(s.key, "default")}
+                          className={`px-2.5 py-1 rounded-lg text-[11px] font-semibold transition ${
+                            state === "default"
+                              ? "bg-slate-200 text-slate-700"
+                              : "text-slate-400 hover:bg-slate-100"
+                          }`}
+                        >
+                          Default
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setOverride(s.key, "grant")}
+                          className={`px-2.5 py-1 rounded-lg text-[11px] font-semibold transition ${
+                            state === "grant"
+                              ? "bg-emerald-100 text-emerald-700"
+                              : "text-slate-400 hover:bg-slate-100"
+                          }`}
+                        >
+                          Grant
+                        </button>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
           <div className="flex justify-end gap-2 pt-2">
             <button type="button" onClick={onClose}
               className="px-4 py-2 rounded-xl text-sm font-medium text-slate-500 hover:bg-slate-100">
@@ -348,6 +439,16 @@ const AdminsPage: React.FC = () => {
                   <span className={`inline-block px-2.5 py-1 rounded-full text-xs font-semibold border ${ROLE_COLOR[a.admin_role] || "bg-slate-100 text-slate-600 border-slate-200"}`}>
                     {ROLE_LABEL[a.admin_role] || a.admin_role}
                   </span>
+                  {a.admin_role !== "super_admin" &&
+                    a.permissions?.sections &&
+                    Object.keys(a.permissions.sections).length > 0 && (
+                      <span
+                        title="This admin has section access overrides — see Edit"
+                        className="ml-1.5 inline-block px-2 py-1 rounded-full text-[10px] font-semibold bg-sky-100 text-sky-700 border border-sky-200"
+                      >
+                        Custom access
+                      </span>
+                  )}
                 </td>
                 <td className="px-5 py-3 text-slate-500">{a.department || "—"}</td>
                 <td className="px-5 py-3">

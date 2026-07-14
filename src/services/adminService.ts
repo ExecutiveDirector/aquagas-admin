@@ -645,6 +645,17 @@ export async function closeSupportTicket(
 // getAdminDetails/updateAdminRole/updateAdminStatus.
 // ============================================
 
+export interface AdminPermissions {
+  // Per-section dashboard access overrides — true grants a section this
+  // admin's admin_role wouldn't normally include; false withdraws a section
+  // it would. Absent = falls back to the admin_role default. See
+  // src/config/rolePermissions.ts and middleware/authMiddleware.js.
+  sections?: Record<string, boolean>;
+  // Legacy fine-grained resource:action permissions (e.g. { vendors: ["approve"] }),
+  // still honoured by requirePermission() on routes that use it directly.
+  [resource: string]: string[] | Record<string, boolean> | undefined;
+}
+
 export interface AdminUser {
   admin_id: string;
   account_id?: string;
@@ -653,7 +664,7 @@ export interface AdminUser {
   admin_role: 'super_admin' | 'operations_admin' | 'finance_admin' | 'support_admin' | 'marketing_admin';
   employee_id?: string | null;
   department?: string | null;
-  permissions?: Record<string, string[]>;
+  permissions?: AdminPermissions;
   is_active: boolean;
   account_is_active?: boolean;
   last_active_at?: string | null;
@@ -683,7 +694,7 @@ export async function updateAdminRole(
   adminId: string,
   updates: Partial<{
     admin_role: string;
-    permissions: Record<string, string[]>;
+    permissions: AdminPermissions;
     department: string;
     employee_id: string;
   }>
