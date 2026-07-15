@@ -18,6 +18,7 @@ import {
   Menu,
   ShoppingCart,
   CreditCard,
+  RefreshCw,
   Package,
   MessageSquare,
   Search,
@@ -41,6 +42,7 @@ import SupportPage from "../pages/support/SupportPage";
 import SettingPage from "../pages/settings/settings";
 import AdminAnalytics from "../pages/analytics/AnalyticsPage";
 import AdminsPage from "../pages/admins/AdminsPage";
+import WholesalerCatalogPage from "../pages/wholesaler/WholesalerCatalogPage";
 
 import {
   isAuthenticated,
@@ -69,6 +71,7 @@ const NAV_MAIN = [
 const NAV_SYSTEM = [
   { name: "Notifications", href: "/notifications", icon: Bell },
   { name: "Support", href: "/support", icon: MessageSquare },
+  { name: "Wholesaler Sync", href: "/wholesaler-sync", icon: RefreshCw },
   { name: "Analytics", href: "/analytics", icon: BarChart3 },
   { name: "Settings", href: "/settings", icon: Settings },
 ];
@@ -253,6 +256,9 @@ export default function DashboardLayout() {
 
       case "/support":
         return <SupportPage />;
+
+      case "/wholesaler-sync":
+        return <WholesalerCatalogPage />;
 
       case "/settings":
         return <SettingPage />;

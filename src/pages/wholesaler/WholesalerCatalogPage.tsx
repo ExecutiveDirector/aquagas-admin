@@ -1,0 +1,604 @@
+// src/pages/wholesaler/WholesalerCatalogPage.tsx
+//
+// Admin view for the WhatsApp wholesaler -> catalog automation:
+//   1. Pick a vendor.
+//   2. Manage which WhatsApp groups feed that vendor's catalog.
+//   3. Review/approve items the pipeline couldn't confidently auto-apply.
+//   4. Tune category margin rules (default/min/max %) — the actual pricing
+//      math still happens on the backend (services/marginEngine.js); this
+//      is just the config UI for it.
+
+import React, { useEffect, useState, useCallback } from 'react';
+import {
+  MessageSquare,
+  Plus,
+  Pause,
+  Play,
+  CheckCircle2,
+  XCircle,
+  RefreshCw,
+  Percent,
+  AlertTriangle,
+} from 'lucide-react';
+import toast from 'react-hot-toast';
+import { listVendors } from '../../services/vendorService';
+import type { Vendor } from '../../services/vendorService';
+import {
+  listWholesalerSources,
+  createWholesalerSource,
+  updateWholesalerSource,
+  listCatalogStagingItems,
+  approveCatalogStagingItem,
+  rejectCatalogStagingItem,
+} from '../../services/catalogSyncService';
+import type { WholesalerSource, CatalogStagingItem } from '../../services/catalogSyncService';
+import { listCategories, updateCategory } from '../../services/productService';
+import type { ProductCategory } from '../../services/productService';
+
+type Tab = 'sources' | 'review' | 'margins';
+
+export default function WholesalerCatalogPage() {
+  const [vendors, setVendors] = useState<Vendor[]>([]);
+  const [vendorId, setVendorId] = useState<string>('');
+  const [tab, setTab] = useState<Tab>('review');
+
+  useEffect(() => {
+    listVendors(1, 100)
+      .then((res) => setVendors(res.data || []))
+      .catch(() => toast.error('Failed to load vendors'));
+  }, []);
+
+  return (
+    <div className="space-y-6">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div>
+          <h1 className="text-xl font-bold text-gray-900 dark:text-white">
+            Wholesaler Catalog Sync
+          </h1>
+          <p className="text-sm text-gray-500 dark:text-gray-400">
+            Manage WhatsApp price-list sources and review auto-extracted catalog updates.
+          </p>
+        </div>
+
+        <select
+          value={vendorId}
+          onChange={(e) => setVendorId(e.target.value)}
+          className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white text-sm min-w-[240px]"
+        >
+          <option value="">Select a vendor…</option>
+          {vendors.map((v) => (
+            <option key={v.vendor_id} value={v.vendor_id}>
+              {v.business_name}
+            </option>
+          ))}
+        </select>
+      </div>
+
+      {!vendorId ? (
+        <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-12 text-center text-gray-500 dark:text-gray-400">
+          Select a vendor above to manage their wholesaler sync.
+        </div>
+      ) : (
+        <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
+          <div className="flex gap-2 mb-6 border-b border-gray-200 dark:border-gray-700">
+            {(
+              [
+                { id: 'review', label: 'Review Queue' },
+                { id: 'sources', label: 'WhatsApp Sources' },
+                { id: 'margins', label: 'Category Margins' },
+              ] as { id: Tab; label: string }[]
+            ).map((t) => (
+              <button
+                key={t.id}
+                onClick={() => setTab(t.id)}
+                className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${
+                  tab === t.id
+                    ? 'border-blue-500 text-blue-700 dark:text-blue-300'
+                    : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
+                }`}
+              >
+                {t.label}
+              </button>
+            ))}
+          </div>
+
+          {tab === 'review' && <ReviewQueueTab vendorId={vendorId} />}
+          {tab === 'sources' && <SourcesTab vendorId={vendorId} />}
+          {tab === 'margins' && <MarginsTab />}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ============================================================================
+// REVIEW QUEUE TAB
+// ============================================================================
+
+function ReviewQueueTab({ vendorId }: { vendorId: string }) {
+  const [items, setItems] = useState<CatalogStagingItem[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [busyId, setBusyId] = useState<string | null>(null);
+  const [categories, setCategories] = useState<ProductCategory[]>([]);
+  const [overrides, setOverrides] = useState<Record<string, { category_id?: number; margin_pct_override?: number }>>({});
+
+  const load = useCallback(async () => {
+    setLoading(true);
+    try {
+      const [staging, cats] = await Promise.all([
+        listCatalogStagingItems(vendorId, 'pending_review'),
+        listCategories(1, 100).then((r) => r.data || []),
+      ]);
+      setItems(staging);
+      setCategories(cats);
+    } catch {
+      toast.error('Failed to load review queue');
+    } finally {
+      setLoading(false);
+    }
+  }, [vendorId]);
+
+  useEffect(() => {
+    load();
+  }, [load]);
+
+  const handleApprove = async (item: CatalogStagingItem) => {
+    setBusyId(item.staging_id);
+    try {
+      const override = overrides[item.staging_id] || {};
+      const result = await approveCatalogStagingItem(vendorId, item.staging_id, override);
+      toast.success(`Approved — published at KES ${result.retail_price}`);
+      setItems((prev) => prev.filter((i) => i.staging_id !== item.staging_id));
+    } catch (err: any) {
+      toast.error(err.response?.data?.message || 'Failed to approve item');
+    } finally {
+      setBusyId(null);
+    }
+  };
+
+  const handleReject = async (item: CatalogStagingItem) => {
+    setBusyId(item.staging_id);
+    try {
+      await rejectCatalogStagingItem(vendorId, item.staging_id);
+      toast.success('Item rejected');
+      setItems((prev) => prev.filter((i) => i.staging_id !== item.staging_id));
+    } catch {
+      toast.error('Failed to reject item');
+    } finally {
+      setBusyId(null);
+    }
+  };
+
+  if (loading) {
+    return <div className="py-12 text-center text-gray-400">Loading review queue…</div>;
+  }
+
+  if (!items.length) {
+    return (
+      <div className="py-12 text-center text-gray-500 dark:text-gray-400">
+        <CheckCircle2 className="w-10 h-10 mx-auto mb-3 opacity-40" />
+        Nothing pending review — every wholesaler update either published automatically
+        or hasn't been ingested yet.
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-4">
+      <div className="flex justify-between items-center">
+        <p className="text-sm text-gray-500 dark:text-gray-400">{items.length} item(s) awaiting review</p>
+        <button onClick={load} className="text-sm text-blue-600 dark:text-blue-400 flex items-center gap-1">
+          <RefreshCw className="w-3.5 h-3.5" /> Refresh
+        </button>
+      </div>
+
+      {items.map((item) => {
+        const isNew = !item.matched_product_id;
+        const override = overrides[item.staging_id] || {};
+        return (
+          <div
+            key={item.staging_id}
+            className="border border-gray-200 dark:border-gray-700 rounded-lg p-4 flex flex-col gap-3"
+          >
+            <div className="flex items-start justify-between gap-4">
+              <div>
+                <div className="flex items-center gap-2">
+                  <p className="font-medium text-gray-900 dark:text-white">{item.extracted_name}</p>
+                  {isNew ? (
+                    <span className="text-xs px-2 py-0.5 rounded-full bg-amber-100 dark:bg-amber-900/30 text-amber-800 dark:text-amber-300">
+                      New product
+                    </span>
+                  ) : (
+                    <span className="text-xs px-2 py-0.5 rounded-full bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300">
+                      Existing — {item.matched_product?.product_name}
+                    </span>
+                  )}
+                </div>
+                <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                  {item.extracted_size || '—'} · Wholesale cost KES {item.wholesale_cost}
+                  {item.review_reason && (
+                    <span className="flex items-center gap-1 mt-1 text-amber-600 dark:text-amber-400">
+                      <AlertTriangle className="w-3 h-3" /> {formatReason(item.review_reason)}
+                    </span>
+                  )}
+                </p>
+              </div>
+              <div className="flex gap-2 shrink-0">
+                <button
+                  disabled={busyId === item.staging_id}
+                  onClick={() => handleApprove(item)}
+                  className="px-3 py-1.5 bg-green-600 text-white rounded-lg hover:bg-green-700 text-sm flex items-center gap-1 disabled:opacity-50"
+                >
+                  <CheckCircle2 className="w-4 h-4" /> Approve
+                </button>
+                <button
+                  disabled={busyId === item.staging_id}
+                  onClick={() => handleReject(item)}
+                  className="px-3 py-1.5 bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-300 rounded-lg hover:bg-red-100 text-sm flex items-center gap-1 disabled:opacity-50"
+                >
+                  <XCircle className="w-4 h-4" /> Reject
+                </button>
+              </div>
+            </div>
+
+            {isNew && (
+              <div className="flex flex-wrap gap-3 pt-2 border-t border-gray-100 dark:border-gray-700">
+                <div>
+                  <label className="text-xs text-gray-500 dark:text-gray-400 block mb-1">Category</label>
+                  <select
+                    value={override.category_id ?? item.suggested_category_id ?? ''}
+                    onChange={(e) =>
+                      setOverrides((prev) => ({
+                        ...prev,
+                        [item.staging_id]: { ...prev[item.staging_id], category_id: Number(e.target.value) },
+                      }))
+                    }
+                    className="px-2 py-1 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-800 text-sm"
+                  >
+                    {categories.map((c) => (
+                      <option key={c.category_id} value={c.category_id}>
+                        {c.category_name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="text-xs text-gray-500 dark:text-gray-400 block mb-1">Margin % override</label>
+                  <input
+                    type="number"
+                    placeholder="category default"
+                    value={override.margin_pct_override ?? ''}
+                    onChange={(e) =>
+                      setOverrides((prev) => ({
+                        ...prev,
+                        [item.staging_id]: {
+                          ...prev[item.staging_id],
+                          margin_pct_override: e.target.value ? Number(e.target.value) : undefined,
+                        },
+                      }))
+                    }
+                    className="w-32 px-2 py-1 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-800 text-sm"
+                  />
+                </div>
+              </div>
+            )}
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+function formatReason(reason: string) {
+  const map: Record<string, string> = {
+    new_or_unmatched_product: "Couldn't confidently match to an existing product",
+    auto_apply_disabled_for_source: 'Auto-apply is off for this WhatsApp source',
+  };
+  if (map[reason]) return map[reason];
+  if (reason.startsWith('price_jump_over_')) {
+    const pct = reason.replace('price_jump_over_', '').replace('pct', '');
+    return `Wholesale price jumped more than ${pct}% since last update — check for a typo`;
+  }
+  return reason;
+}
+
+// ============================================================================
+// SOURCES TAB
+// ============================================================================
+
+function SourcesTab({ vendorId }: { vendorId: string }) {
+  const [sources, setSources] = useState<WholesalerSource[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [showForm, setShowForm] = useState(false);
+  const [form, setForm] = useState({ whatsapp_group_jid: '', source_label: '', wholesaler_name: '' });
+  const [saving, setSaving] = useState(false);
+
+  const load = useCallback(async () => {
+    setLoading(true);
+    try {
+      setSources(await listWholesalerSources(vendorId));
+    } catch {
+      toast.error('Failed to load WhatsApp sources');
+    } finally {
+      setLoading(false);
+    }
+  }, [vendorId]);
+
+  useEffect(() => {
+    load();
+  }, [load]);
+
+  const handleCreate = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!form.whatsapp_group_jid.trim()) return;
+    setSaving(true);
+    try {
+      await createWholesalerSource(vendorId, { ...form, auto_apply_known_products: true });
+      toast.success('WhatsApp source registered');
+      setForm({ whatsapp_group_jid: '', source_label: '', wholesaler_name: '' });
+      setShowForm(false);
+      load();
+    } catch (err: any) {
+      toast.error(err.response?.data?.message || 'Failed to register source');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const toggleStatus = async (source: WholesalerSource) => {
+    const nextStatus = source.status === 'active' ? 'paused' : 'active';
+    try {
+      await updateWholesalerSource(vendorId, source.source_id, { status: nextStatus });
+      setSources((prev) => prev.map((s) => (s.source_id === source.source_id ? { ...s, status: nextStatus } : s)));
+    } catch {
+      toast.error('Failed to update source status');
+    }
+  };
+
+  const toggleAutoApply = async (source: WholesalerSource) => {
+    try {
+      await updateWholesalerSource(vendorId, source.source_id, {
+        auto_apply_known_products: !source.auto_apply_known_products,
+      });
+      setSources((prev) =>
+        prev.map((s) =>
+          s.source_id === source.source_id ? { ...s, auto_apply_known_products: !s.auto_apply_known_products } : s
+        )
+      );
+    } catch {
+      toast.error('Failed to update source');
+    }
+  };
+
+  return (
+    <div className="space-y-4">
+      <div className="flex justify-between items-center">
+        <p className="text-sm text-gray-500 dark:text-gray-400">
+          {sources.length} WhatsApp group(s) feeding this vendor's catalog
+        </p>
+        <button
+          onClick={() => setShowForm((s) => !s)}
+          className="px-3 py-1.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm flex items-center gap-1"
+        >
+          <Plus className="w-4 h-4" /> Register group
+        </button>
+      </div>
+
+      {showForm && (
+        <form onSubmit={handleCreate} className="border border-gray-200 dark:border-gray-700 rounded-lg p-4 space-y-3">
+          <div>
+            <label className="text-xs text-gray-500 dark:text-gray-400 block mb-1">
+              WhatsApp Group JID (e.g. 12345678901234-1234567890@g.us)
+            </label>
+            <input
+              value={form.whatsapp_group_jid}
+              onChange={(e) => setForm({ ...form, whatsapp_group_jid: e.target.value })}
+              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-sm"
+              placeholder="Find this in wholesaler_messages after the group sends its first message"
+              required
+            />
+          </div>
+          <div className="flex gap-3">
+            <div className="flex-1">
+              <label className="text-xs text-gray-500 dark:text-gray-400 block mb-1">Label</label>
+              <input
+                value={form.source_label}
+                onChange={(e) => setForm({ ...form, source_label: e.target.value })}
+                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-sm"
+                placeholder="Wakulima Wholesalers Group"
+              />
+            </div>
+            <div className="flex-1">
+              <label className="text-xs text-gray-500 dark:text-gray-400 block mb-1">Wholesaler name</label>
+              <input
+                value={form.wholesaler_name}
+                onChange={(e) => setForm({ ...form, wholesaler_name: e.target.value })}
+                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-sm"
+                placeholder="Wakulima Wholesalers Ltd"
+              />
+            </div>
+          </div>
+          <button
+            type="submit"
+            disabled={saving}
+            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm disabled:opacity-50"
+          >
+            {saving ? 'Saving…' : 'Save source'}
+          </button>
+        </form>
+      )}
+
+      {loading ? (
+        <div className="py-8 text-center text-gray-400">Loading…</div>
+      ) : !sources.length ? (
+        <div className="py-8 text-center text-gray-500 dark:text-gray-400">
+          <MessageSquare className="w-10 h-10 mx-auto mb-3 opacity-40" />
+          No WhatsApp groups registered yet for this vendor.
+        </div>
+      ) : (
+        <div className="space-y-2">
+          {sources.map((s) => (
+            <div
+              key={s.source_id}
+              className="flex items-center justify-between p-3 border border-gray-200 dark:border-gray-700 rounded-lg"
+            >
+              <div>
+                <p className="font-medium text-gray-900 dark:text-white text-sm">
+                  {s.source_label || s.whatsapp_group_jid}
+                </p>
+                <p className="text-xs text-gray-500 dark:text-gray-400">
+                  {s.wholesaler_name} · {s.whatsapp_group_jid}
+                </p>
+              </div>
+              <div className="flex items-center gap-3">
+                <label className="flex items-center gap-1.5 text-xs text-gray-500 dark:text-gray-400">
+                  <input
+                    type="checkbox"
+                    checked={s.auto_apply_known_products}
+                    onChange={() => toggleAutoApply(s)}
+                  />
+                  Auto-apply known items
+                </label>
+                <span
+                  className={`text-xs px-2 py-0.5 rounded-full ${
+                    s.status === 'active'
+                      ? 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300'
+                      : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300'
+                  }`}
+                >
+                  {s.status}
+                </span>
+                <button
+                  onClick={() => toggleStatus(s)}
+                  className="text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200"
+                  title={s.status === 'active' ? 'Pause' : 'Activate'}
+                >
+                  {s.status === 'active' ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4" />}
+                </button>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ============================================================================
+// MARGINS TAB — global category config, not vendor-scoped
+// ============================================================================
+
+interface CategoryWithMargins extends ProductCategory {
+  default_margin_pct?: number | string;
+  min_margin_pct?: number | string;
+  max_margin_pct?: number | string;
+}
+
+function MarginsTab() {
+  const [categories, setCategories] = useState<CategoryWithMargins[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [savingId, setSavingId] = useState<number | null>(null);
+  const [edits, setEdits] = useState<Record<number, Partial<CategoryWithMargins>>>({});
+
+  const load = useCallback(async () => {
+    setLoading(true);
+    try {
+      const res = await listCategories(1, 100);
+      setCategories((res.data || []) as CategoryWithMargins[]);
+    } catch {
+      toast.error('Failed to load categories');
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    load();
+  }, [load]);
+
+  const handleSave = async (cat: CategoryWithMargins) => {
+    const edit = edits[cat.category_id] || {};
+    setSavingId(cat.category_id);
+    try {
+      await updateCategory(String(cat.category_id), {
+        default_margin_pct: edit.default_margin_pct ?? cat.default_margin_pct,
+        min_margin_pct: edit.min_margin_pct ?? cat.min_margin_pct,
+        max_margin_pct: edit.max_margin_pct ?? cat.max_margin_pct,
+      } as any);
+      toast.success(`${cat.category_name} margins updated`);
+      setEdits((prev) => ({ ...prev, [cat.category_id]: {} }));
+      load();
+    } catch {
+      toast.error('Failed to update margins');
+    } finally {
+      setSavingId(null);
+    }
+  };
+
+  if (loading) return <div className="py-12 text-center text-gray-400">Loading categories…</div>;
+
+  return (
+    <div className="space-y-3">
+      <p className="text-sm text-gray-500 dark:text-gray-400 flex items-center gap-1.5">
+        <Percent className="w-4 h-4" /> These caps apply to every auto-computed price in this category —
+        the pipeline can never publish above the max or below the min, regardless of wholesaler cost.
+      </p>
+      <div className="overflow-x-auto">
+        <table className="w-full text-sm">
+          <thead className="bg-gray-50 dark:bg-gray-900/20">
+            <tr>
+              <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">
+                Category
+              </th>
+              <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">
+                Default %
+              </th>
+              <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">
+                Min %
+              </th>
+              <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">
+                Max %
+              </th>
+              <th className="px-3 py-2" />
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
+            {categories.map((cat) => {
+              const edit = edits[cat.category_id] || {};
+              return (
+                <tr key={cat.category_id}>
+                  <td className="px-3 py-2 font-medium text-gray-900 dark:text-white">{cat.category_name}</td>
+                  {(['default_margin_pct', 'min_margin_pct', 'max_margin_pct'] as const).map((field) => (
+                    <td key={field} className="px-3 py-2">
+                      <input
+                        type="number"
+                        step="0.5"
+                        value={edit[field] ?? cat[field] ?? ''}
+                        onChange={(e) =>
+                          setEdits((prev) => ({
+                            ...prev,
+                            [cat.category_id]: { ...prev[cat.category_id], [field]: Number(e.target.value) },
+                          }))
+                        }
+                        className="w-20 px-2 py-1 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-800"
+                      />
+                    </td>
+                  ))}
+                  <td className="px-3 py-2">
+                    <button
+                      onClick={() => handleSave(cat)}
+                      disabled={savingId === cat.category_id}
+                      className="px-3 py-1 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-xs disabled:opacity-50"
+                    >
+                      {savingId === cat.category_id ? 'Saving…' : 'Save'}
+                    </button>
+                  </td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+}
