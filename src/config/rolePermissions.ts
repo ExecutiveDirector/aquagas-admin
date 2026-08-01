@@ -40,6 +40,7 @@ export const PAGE_ACCESS: Record<string, AdminRole[]> = {
   '/products': ['super_admin', 'operations_admin'],
   '/transactions': ['super_admin', 'finance_admin'],
   '/notifications': ['super_admin', 'marketing_admin'],
+  '/outreach': ['super_admin', 'operations_admin', 'marketing_admin'],
   '/support': ['super_admin', 'support_admin'],
   '/analytics': ['super_admin', 'operations_admin', 'finance_admin', 'marketing_admin'],
   '/settings': ['super_admin'],
@@ -59,6 +60,7 @@ export const SECTION_KEYS: Record<string, string> = {
   '/products': 'products',
   '/transactions': 'transactions',
   '/notifications': 'notifications',
+  '/outreach': 'outreach',
   '/support': 'support',
   '/analytics': 'analytics',
 };
@@ -73,6 +75,7 @@ export const OVERRIDABLE_SECTIONS: { key: string; label: string; path: string }[
   { key: 'products', label: 'Products', path: '/products' },
   { key: 'transactions', label: 'Transactions', path: '/transactions' },
   { key: 'notifications', label: 'Notifications', path: '/notifications' },
+  { key: 'outreach', label: 'Vendor Outreach', path: '/outreach' },
   { key: 'support', label: 'Support', path: '/support' },
   { key: 'analytics', label: 'Analytics', path: '/analytics' },
 ];

@@ -26,6 +26,7 @@ import {
   ChevronRight,
   Sparkles,
   Shield,
+  Megaphone,
 } from "lucide-react";
 
 import { motion } from "framer-motion";
@@ -43,6 +44,7 @@ import SettingPage from "../pages/settings/settings";
 import AdminAnalytics from "../pages/analytics/AnalyticsPage";
 import AdminsPage from "../pages/admins/AdminsPage";
 import WholesalerCatalogPage from "../pages/wholesaler/WholesalerCatalogPage";
+import OutreachPage from "../pages/outreach/OutreachPage";
 
 import {
   isAuthenticated,
@@ -69,6 +71,7 @@ const NAV_MAIN = [
 ];
 
 const NAV_SYSTEM = [
+  { name: "Vendor Outreach", href: "/outreach", icon: Megaphone },
   { name: "Notifications", href: "/notifications", icon: Bell },
   { name: "Support", href: "/support", icon: MessageSquare },
   { name: "Wholesaler Sync", href: "/wholesaler-sync", icon: RefreshCw },
@@ -259,6 +262,9 @@ export default function DashboardLayout() {
 
       case "/wholesaler-sync":
         return <WholesalerCatalogPage />;
+
+      case "/outreach":
+        return <OutreachPage />;
 
       case "/settings":
         return <SettingPage />;
