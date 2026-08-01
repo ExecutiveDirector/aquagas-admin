@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { MessageCircle, Phone, Search, Users, TrendingUp, Handshake, Clock, AlertCircle } from "lucide-react";
+import { MessageCircle, Phone, Search, Users, TrendingUp, Handshake, Clock, AlertCircle, FileText, Download, Send, Reply, Sparkles } from "lucide-react";
 import { OUTREACH_LEADS } from "./outreachData";
 import type { OutreachLead } from "./outreachData";
 
@@ -24,6 +24,20 @@ const DEFAULT_TEMPLATE =
 
 const STORAGE_KEY = "aquagas-outreach-tracker";
 const TEMPLATE_KEY = "aquagas-outreach-template";
+
+const PROPOSAL_PDF_PATH = "/documents/AquaGas-Vendor-Partnership-Proposal.pdf";
+const APPLICATION_FORM_PDF_PATH = "/documents/AquaGas-Vendor-Application-Form.pdf";
+
+function proposalWaLink(lead: OutreachLead): string | null {
+  if (!lead.phone) return null;
+  const digits = lead.phone.replace(/[^0-9]/g, "");
+  if (digits.length < 9) return null;
+  const proposalUrl = `${window.location.origin}${PROPOSAL_PDF_PATH}`;
+  const msg = encodeURIComponent(
+    `Hi, this is [Your Name] from AquaGas 👋 Following up with our vendor partnership proposal for ${lead.name} — here it is: ${proposalUrl}. Happy to answer any questions on WhatsApp or a quick call.`
+  );
+  return `https://wa.me/${digits}?text=${msg}`;
+}
 
 const FIT_STYLES: Record<string, string> = {
   High: "bg-emerald-50 text-emerald-700 border-emerald-200",
@@ -187,6 +201,11 @@ export default function OutreachPage() {
     }
   };
 
+  const handleSendProposal = (lead: OutreachLead) => {
+    const link = proposalWaLink(lead);
+    if (link) window.open(link, "_blank");
+  };
+
   const handleStatusChange = (lead: OutreachLead, status: LeadStatus) => {
     const key = slug(lead.name);
     const r = getRow(lead);
@@ -218,19 +237,56 @@ export default function OutreachPage() {
         <div>
           <h1 className="text-xl font-bold text-slate-800">Vendor Outreach</h1>
           <p className="text-[13px] text-slate-500 mt-0.5">
-            Nairobi, Kajiado &amp; Kiambu · click-to-send WhatsApp outreach with follow-up tracking
+            Nairobi, Kiambu, Kajiado, Machakos &amp; Murang'a · click-to-send WhatsApp outreach with follow-up tracking
           </p>
         </div>
       </div>
 
+      {/* Resources */}
+      <div className="relative overflow-hidden bg-gradient-to-br from-indigo-600 to-indigo-700 rounded-2xl p-4 sm:p-5 shadow-sm">
+        <div className="absolute -right-6 -top-6 w-32 h-32 rounded-full bg-white/10" />
+        <div className="absolute -right-2 -bottom-10 w-24 h-24 rounded-full bg-white/10" />
+        <div className="relative flex items-start gap-2">
+          <Sparkles className="w-4 h-4 text-indigo-200 mt-0.5 shrink-0" />
+          <div>
+            <p className="text-xs font-semibold text-indigo-100 uppercase tracking-wide">Vendor Resources</p>
+            <p className="text-[12px] text-indigo-100/80 mt-0.5">
+              Share these with interested leads, or download for printing / in-person visits.
+            </p>
+          </div>
+        </div>
+        <div className="relative flex flex-wrap gap-2 mt-3">
+          <a
+            href={PROPOSAL_PDF_PATH}
+            download
+            className="flex items-center gap-1.5 bg-white text-indigo-700 text-[12px] font-semibold px-3 py-2 rounded-xl shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all"
+          >
+            <FileText className="w-4 h-4" /> Partnership Proposal
+            <Download className="w-3.5 h-3.5 opacity-50" />
+          </a>
+          <a
+            href={APPLICATION_FORM_PDF_PATH}
+            download
+            className="flex items-center gap-1.5 bg-white text-indigo-700 text-[12px] font-semibold px-3 py-2 rounded-xl shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all"
+          >
+            <FileText className="w-4 h-4" /> Vendor Application Form
+            <Download className="w-3.5 h-3.5 opacity-50" />
+          </a>
+        </div>
+        <p className="relative text-[11px] text-indigo-100/70 mt-2.5">
+          The application form has fillable fields — vendors can type directly into it (Acrobat / Preview / most
+          PDF apps) or print and fill by hand.
+        </p>
+      </div>
+
       {/* Stats */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-3">
+      <div className="grid grid-cols-2 sm:grid-cols-4 xl:grid-cols-8 gap-3">
         <StatCard icon={Users} label="Total Leads" value={OUTREACH_LEADS.length} />
         <StatCard icon={TrendingUp} label="Gas Dealers" value={stats.gasDealers} accent="text-orange-600" />
         <StatCard icon={Users} label="High Fit" value={stats.highFit} />
         <StatCard icon={MessageCircle} label="Contacted" value={stats.contacted} />
         <StatCard icon={Handshake} label="Interested" value={stats.interested} accent="text-emerald-600" />
-        <StatCard icon={MessageCircle} label="Replied" value={stats.replied} accent="text-sky-600" />
+        <StatCard icon={Reply} label="Replied" value={stats.replied} accent="text-sky-600" />
         <StatCard icon={Clock} label="Due Today" value={stats.dueToday} accent="text-amber-600" />
         <StatCard icon={AlertCircle} label="Overdue" value={stats.overdue} accent="text-rose-600" />
       </div>
@@ -286,6 +342,8 @@ export default function OutreachPage() {
           <option value="Nairobi">Nairobi</option>
           <option value="Kajiado">Kajiado</option>
           <option value="Kiambu">Kiambu</option>
+          <option value="Machakos">Machakos</option>
+          <option value="Murang'a">Murang'a</option>
         </Select>
         <Select value={fStatus} onChange={setFStatus} placeholder="All statuses">
           <option value="Not Contacted">Not Contacted</option>
@@ -385,6 +443,15 @@ export default function OutreachPage() {
                             <Phone className="w-3.5 h-3.5" /> Call
                           </a>
                         )}
+                        {wa && (
+                          <button
+                            onClick={() => handleSendProposal(lead)}
+                            title="Send the partnership proposal via WhatsApp"
+                            className="flex items-center gap-1 bg-slate-100 text-slate-700 text-[11px] font-semibold px-2.5 py-1.5 rounded-lg hover:bg-slate-200 border border-slate-200"
+                          >
+                            <Send className="w-3.5 h-3.5" /> Proposal
+                          </button>
+                        )}
                         {!wa && !tel && <span className="text-[11px] text-slate-400">Visit in person</span>}
                       </div>
                     </td>
@@ -435,8 +502,8 @@ export default function OutreachPage() {
       </div>
 
       <p className="text-[11px] text-slate-400 pb-4">
-        Data sourced from public business listings. WhatsApp/call actions open your own device's apps — nothing
-        is sent automatically or in bulk. Status and dates are saved to this browser.
+        Data sourced from public business listings. WhatsApp/call/proposal actions open your own device's apps —
+        nothing is sent automatically or in bulk. Status and dates are saved to this browser.
       </p>
     </div>
   );
@@ -458,7 +525,7 @@ function StatCard({
   accent?: string;
 }) {
   return (
-    <div className="bg-white border border-slate-200 rounded-2xl p-3.5">
+    <div className="bg-white border border-slate-200 rounded-2xl p-3.5 transition-shadow hover:shadow-sm">
       <div className="flex items-center justify-between">
         <span className={`text-xl font-bold ${accent}`}>{value}</span>
         <Icon className={`w-4 h-4 ${accent} opacity-60`} />

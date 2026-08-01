@@ -1,8 +1,10 @@
 // Auto-generated vendor outreach lead list.
-// Source: AquaGas_Vendor_Outreach_Nairobi_Kiambu_UPDATED.xlsx (352 leads:
-// 319 original + 33 Gas Dealer leads) plus 20 additional Fuel Station /
-// LPG Agent leads (TotalEnergies, Shell, Rubis, Ola Energy, National Oil
-// Corporation) added across Nairobi, Kajiado and Kiambu counties.
+// Source: AquaGas_Vendor_Outreach_Product_Fit_Aligned.xlsx (505 leads).
+// Fit scores re-aligned to AquaGas's actual product range (LPG, water,
+// kitchenware, household essentials, wholesale). Independent/local
+// retailers prioritized over big supermarket chains; M-Gas (a direct
+// competitor) excluded. Spans Nairobi, Kiambu, Kajiado, Machakos and
+// Murang'a counties.
 
 export interface OutreachLead {
   name: string;
@@ -11,7 +13,7 @@ export interface OutreachLead {
   phone: string;
   fit: 'High' | 'Medium-High' | 'Medium' | 'Low';
   fitNote: string;
-  county: 'Nairobi' | 'Kiambu' | 'Kajiado';
+  county: 'Nairobi' | 'Kiambu' | 'Kajiado' | 'Machakos' | "Murang'a";
 }
 
 export const OUTREACH_LEADS: OutreachLead[] = [
@@ -21,7 +23,7 @@ export const OUTREACH_LEADS: OutreachLead[] = [
     "location": "Parklands, Nairobi",
     "phone": "+254 722 786521",
     "fit": "Medium",
-    "fitNote": "General hardware store - verify in person if it stocks household/electrical items",
+    "fitNote": "General hardware store - verify in person if it stocks household/water/gas accessories",
     "county": "Nairobi"
   },
   {
@@ -29,8 +31,8 @@ export const OUTREACH_LEADS: OutreachLead[] = [
     "category": "Hardware",
     "location": "Pumwani Rd, Nairobi",
     "phone": "+254 797 847081",
-    "fit": "High",
-    "fitNote": "Water/plumbing/electrical hardware - adjacent to gas & water delivery (Davis & Shirtliff-type fit)",
+    "fit": "Medium",
+    "fitNote": "General hardware store - verify in person if it stocks household/water/gas accessories",
     "county": "Nairobi"
   },
   {
@@ -39,7 +41,7 @@ export const OUTREACH_LEADS: OutreachLead[] = [
     "location": "Lusaka Rd, Nairobi",
     "phone": "+254 20 6983000",
     "fit": "Medium",
-    "fitNote": "General hardware store - verify in person if it stocks household/electrical items",
+    "fitNote": "General hardware store - verify in person if it stocks household/water/gas accessories",
     "county": "Nairobi"
   },
   {
@@ -48,7 +50,7 @@ export const OUTREACH_LEADS: OutreachLead[] = [
     "location": "Yaya Centre, Nairobi",
     "phone": "+254 724 584071",
     "fit": "Medium",
-    "fitNote": "General hardware store - verify in person if it stocks household/electrical items",
+    "fitNote": "General hardware store - verify in person if it stocks household/water/gas accessories",
     "county": "Nairobi"
   },
   {
@@ -57,7 +59,7 @@ export const OUTREACH_LEADS: OutreachLead[] = [
     "location": "Kombo Munyiri Rd, Nairobi",
     "phone": "+254 722 425414",
     "fit": "Medium",
-    "fitNote": "General hardware store - verify in person if it stocks household/electrical items",
+    "fitNote": "General hardware store - verify in person if it stocks household/water/gas accessories",
     "county": "Nairobi"
   },
   {
@@ -65,8 +67,8 @@ export const OUTREACH_LEADS: OutreachLead[] = [
     "category": "Hardware",
     "location": "Westlands Arcade, Nairobi",
     "phone": "+254 721 705549",
-    "fit": "High",
-    "fitNote": "Water/plumbing/electrical hardware - adjacent to gas & water delivery (Davis & Shirtliff-type fit)",
+    "fit": "Medium",
+    "fitNote": "General hardware store - verify in person if it stocks household/water/gas accessories",
     "county": "Nairobi"
   },
   {
@@ -75,7 +77,7 @@ export const OUTREACH_LEADS: OutreachLead[] = [
     "location": "Ruaraka Industrial Area, Nairobi",
     "phone": "+254 704 656651",
     "fit": "Medium",
-    "fitNote": "General hardware store - verify in person if it stocks household/electrical items",
+    "fitNote": "General hardware store - verify in person if it stocks household/water/gas accessories",
     "county": "Nairobi"
   },
   {
@@ -84,70 +86,7 @@ export const OUTREACH_LEADS: OutreachLead[] = [
     "location": "Kombo Munyiri Rd, Nairobi",
     "phone": "+254 715 057649",
     "fit": "Medium",
-    "fitNote": "General hardware store - verify in person if it stocks household/electrical items",
-    "county": "Nairobi"
-  },
-  {
-    "name": "Naivas Supermarket - Moi Avenue",
-    "category": "Supermarket",
-    "location": "Moi Ave, Nairobi",
-    "phone": "+254 719 189037",
-    "fit": "High",
-    "fitNote": "Retail shelf space for gas refills, bottled water & kitchenware - direct fit",
-    "county": "Nairobi"
-  },
-  {
-    "name": "Carrefour Sarit Center",
-    "category": "Supermarket",
-    "location": "Sarit Centre, Nairobi",
-    "phone": "+254 800 221 322",
-    "fit": "High",
-    "fitNote": "Retail shelf space for gas refills, bottled water & kitchenware - direct fit",
-    "county": "Nairobi"
-  },
-  {
-    "name": "Naivas Foodmarket - Westlands",
-    "category": "Supermarket",
-    "location": "Waiyaki Wy, Nairobi",
-    "phone": "+254 20 2690680",
-    "fit": "High",
-    "fitNote": "Retail shelf space for gas refills, bottled water & kitchenware - direct fit",
-    "county": "Nairobi"
-  },
-  {
-    "name": "Carrefour Two Rivers",
-    "category": "Supermarket",
-    "location": "Off Limuru Rd, Nairobi",
-    "phone": "+254 800 221 322",
-    "fit": "High",
-    "fitNote": "Retail shelf space for gas refills, bottled water & kitchenware - direct fit",
-    "county": "Kiambu"
-  },
-  {
-    "name": "Chandarana Foodplus Supermarket (Yaya)",
-    "category": "Supermarket",
-    "location": "Yaya Centre, Nairobi",
-    "phone": "+254 720 600333",
-    "fit": "High",
-    "fitNote": "Retail shelf space for gas refills, bottled water & kitchenware - direct fit",
-    "county": "Nairobi"
-  },
-  {
-    "name": "Naivas Foodmarket - Lifestyle Nairobi",
-    "category": "Supermarket",
-    "location": "Monrovia St, Nairobi",
-    "phone": "+254 20 8000492",
-    "fit": "High",
-    "fitNote": "Retail shelf space for gas refills, bottled water & kitchenware - direct fit",
-    "county": "Nairobi"
-  },
-  {
-    "name": "Carrefour Mega",
-    "category": "Supermarket",
-    "location": "Uhuru Hwy, Nairobi",
-    "phone": "+254 800 221 322",
-    "fit": "High",
-    "fitNote": "Retail shelf space for gas refills, bottled water & kitchenware - direct fit",
+    "fitNote": "General hardware store - verify in person if it stocks household/water/gas accessories",
     "county": "Nairobi"
   },
   {
@@ -155,8 +94,8 @@ export const OUTREACH_LEADS: OutreachLead[] = [
     "category": "Supermarket",
     "location": "Eastleigh, Nairobi",
     "phone": "+254 729 980811",
-    "fit": "High",
-    "fitNote": "Retail shelf space for gas refills, bottled water & kitchenware - direct fit",
+    "fit": "Medium",
+    "fitNote": "Independent supermarket/minimart - potential retail shelf space for household items",
     "county": "Nairobi"
   },
   {
@@ -165,7 +104,7 @@ export const OUTREACH_LEADS: OutreachLead[] = [
     "location": "Nairobi",
     "phone": "+254 711 277158",
     "fit": "High",
-    "fitNote": "Direct category match (kitchenware/household essentials)",
+    "fitNote": "Kitchenware retailer - direct product-line fit for AquaGas household items",
     "county": "Nairobi"
   },
   {
@@ -174,7 +113,7 @@ export const OUTREACH_LEADS: OutreachLead[] = [
     "location": "Luthuli Ave, Nairobi",
     "phone": "+254 748 105006",
     "fit": "High",
-    "fitNote": "Direct category match (kitchenware/household essentials)",
+    "fitNote": "Kitchenware retailer - direct product-line fit for AquaGas household items",
     "county": "Nairobi"
   },
   {
@@ -183,7 +122,7 @@ export const OUTREACH_LEADS: OutreachLead[] = [
     "location": "Village Market, Nairobi",
     "phone": "+254 794 518322",
     "fit": "High",
-    "fitNote": "Direct category match (kitchenware/household essentials)",
+    "fitNote": "Kitchenware retailer - direct product-line fit for AquaGas household items",
     "county": "Nairobi"
   },
   {
@@ -192,8 +131,8 @@ export const OUTREACH_LEADS: OutreachLead[] = [
     "location": "Ngong Rd, Nairobi",
     "phone": "+254 115 484336",
     "fit": "High",
-    "fitNote": "Direct category match (kitchenware/household essentials)",
-    "county": "Kajiado"
+    "fitNote": "Kitchenware retailer - direct product-line fit for AquaGas household items",
+    "county": "Nairobi"
   },
   {
     "name": "VIBE COLLECTIONS",
@@ -201,7 +140,7 @@ export const OUTREACH_LEADS: OutreachLead[] = [
     "location": "Kamukunji, Nairobi",
     "phone": "+254 746 239226",
     "fit": "High",
-    "fitNote": "Direct category match (kitchenware/household essentials)",
+    "fitNote": "Kitchenware retailer - direct product-line fit for AquaGas household items",
     "county": "Nairobi"
   },
   {
@@ -210,7 +149,7 @@ export const OUTREACH_LEADS: OutreachLead[] = [
     "location": "Moi Avenue, Nairobi",
     "phone": "+254 704 525828",
     "fit": "High",
-    "fitNote": "Direct category match (kitchenware/household essentials)",
+    "fitNote": "Kitchenware retailer - direct product-line fit for AquaGas household items",
     "county": "Nairobi"
   },
   {
@@ -219,7 +158,7 @@ export const OUTREACH_LEADS: OutreachLead[] = [
     "location": "Opp The Oval, Nairobi",
     "phone": "+254 724 483887",
     "fit": "High",
-    "fitNote": "Direct category match (kitchenware/household essentials)",
+    "fitNote": "Kitchenware retailer - direct product-line fit for AquaGas household items",
     "county": "Nairobi"
   },
   {
@@ -228,7 +167,7 @@ export const OUTREACH_LEADS: OutreachLead[] = [
     "location": "Tom Mboya St, Nairobi",
     "phone": "+254 711 850850",
     "fit": "High",
-    "fitNote": "Direct category match (kitchenware/household essentials)",
+    "fitNote": "Kitchenware retailer - direct product-line fit for AquaGas household items",
     "county": "Nairobi"
   },
   {
@@ -237,7 +176,7 @@ export const OUTREACH_LEADS: OutreachLead[] = [
     "location": "Nairobi",
     "phone": "+254 797 673818",
     "fit": "High",
-    "fitNote": "Already sells cooking gas - target for bulk/wholesale supply or delivery-partner deal, not retail diversification",
+    "fitNote": "Gas dealer - direct product-line fit for AquaGas cooking gas partnership",
     "county": "Nairobi"
   },
   {
@@ -246,7 +185,7 @@ export const OUTREACH_LEADS: OutreachLead[] = [
     "location": "Amboseli Rd, Nairobi",
     "phone": "+254 791 729333",
     "fit": "High",
-    "fitNote": "Already sells cooking gas - target for bulk/wholesale supply or delivery-partner deal, not retail diversification",
+    "fitNote": "Gas dealer - direct product-line fit for AquaGas cooking gas partnership",
     "county": "Nairobi"
   },
   {
@@ -255,7 +194,7 @@ export const OUTREACH_LEADS: OutreachLead[] = [
     "location": "Nyeri Rd, Nairobi",
     "phone": "+254 790 110889",
     "fit": "High",
-    "fitNote": "Already sells cooking gas - target for bulk/wholesale supply or delivery-partner deal, not retail diversification",
+    "fitNote": "Gas dealer - direct product-line fit for AquaGas cooking gas partnership",
     "county": "Nairobi"
   },
   {
@@ -264,7 +203,7 @@ export const OUTREACH_LEADS: OutreachLead[] = [
     "location": "Kilimani, Nairobi",
     "phone": "+254 740 570180",
     "fit": "High",
-    "fitNote": "Already sells cooking gas - target for bulk/wholesale supply or delivery-partner deal, not retail diversification",
+    "fitNote": "Gas dealer - direct product-line fit for AquaGas cooking gas partnership",
     "county": "Nairobi"
   },
   {
@@ -273,7 +212,7 @@ export const OUTREACH_LEADS: OutreachLead[] = [
     "location": "Nairobi",
     "phone": "+254 742 433449",
     "fit": "High",
-    "fitNote": "Already sells cooking gas - target for bulk/wholesale supply or delivery-partner deal, not retail diversification",
+    "fitNote": "Gas dealer - direct product-line fit for AquaGas cooking gas partnership",
     "county": "Nairobi"
   },
   {
@@ -282,7 +221,7 @@ export const OUTREACH_LEADS: OutreachLead[] = [
     "location": "Kileleshwa, Nairobi",
     "phone": "+254 727 588643",
     "fit": "High",
-    "fitNote": "Already sells cooking gas - target for bulk/wholesale supply or delivery-partner deal, not retail diversification",
+    "fitNote": "Gas dealer - direct product-line fit for AquaGas cooking gas partnership",
     "county": "Nairobi"
   },
   {
@@ -291,7 +230,7 @@ export const OUTREACH_LEADS: OutreachLead[] = [
     "location": "Muhoho Ave, Nairobi",
     "phone": "+254 700 207859",
     "fit": "High",
-    "fitNote": "Already sells cooking gas - target for bulk/wholesale supply or delivery-partner deal, not retail diversification",
+    "fitNote": "Gas dealer - direct product-line fit for AquaGas cooking gas partnership",
     "county": "Nairobi"
   },
   {
@@ -300,7 +239,7 @@ export const OUTREACH_LEADS: OutreachLead[] = [
     "location": "Ongata Rongai",
     "phone": "+254 758 121569",
     "fit": "High",
-    "fitNote": "Already sells cooking gas - target for bulk/wholesale supply or delivery-partner deal, not retail diversification",
+    "fitNote": "Gas dealer - direct product-line fit for AquaGas cooking gas partnership",
     "county": "Kajiado"
   },
   {
@@ -308,8 +247,8 @@ export const OUTREACH_LEADS: OutreachLead[] = [
     "category": "Wholesaler",
     "location": "Park Arcade, Nairobi",
     "phone": "+254 703 558165",
-    "fit": "Medium-High",
-    "fitNote": "General/FMCG wholesaler - possible bulk stocking channel",
+    "fit": "Medium",
+    "fitNote": "Bulk retailer - good fit for gas/water/household FMCG distribution",
     "county": "Nairobi"
   },
   {
@@ -317,8 +256,8 @@ export const OUTREACH_LEADS: OutreachLead[] = [
     "category": "Wholesaler",
     "location": "Muthaiga Ave, Nairobi",
     "phone": "+254 722 524300",
-    "fit": "Medium-High",
-    "fitNote": "General/FMCG wholesaler - possible bulk stocking channel",
+    "fit": "Medium",
+    "fitNote": "Bulk retailer - good fit for gas/water/household FMCG distribution",
     "county": "Nairobi"
   },
   {
@@ -326,8 +265,8 @@ export const OUTREACH_LEADS: OutreachLead[] = [
     "category": "Wholesaler",
     "location": "Dagoretti Rd, Nairobi",
     "phone": "+254 722 899112",
-    "fit": "Medium-High",
-    "fitNote": "General/FMCG wholesaler - possible bulk stocking channel",
+    "fit": "Medium",
+    "fitNote": "Bulk retailer - good fit for gas/water/household FMCG distribution",
     "county": "Nairobi"
   },
   {
@@ -335,8 +274,8 @@ export const OUTREACH_LEADS: OutreachLead[] = [
     "category": "Wholesaler",
     "location": "Mombasa Road, Nairobi",
     "phone": "+254 748 378282",
-    "fit": "Medium-High",
-    "fitNote": "General/FMCG wholesaler - possible bulk stocking channel",
+    "fit": "Medium",
+    "fitNote": "Bulk retailer - good fit for gas/water/household FMCG distribution",
     "county": "Nairobi"
   },
   {
@@ -344,8 +283,8 @@ export const OUTREACH_LEADS: OutreachLead[] = [
     "category": "Wholesaler",
     "location": "Keekorok Rd, Nairobi",
     "phone": "+254 772 766615",
-    "fit": "Medium-High",
-    "fitNote": "General/FMCG wholesaler - possible bulk stocking channel",
+    "fit": "Medium",
+    "fitNote": "Bulk retailer - good fit for gas/water/household FMCG distribution",
     "county": "Nairobi"
   },
   {
@@ -353,8 +292,8 @@ export const OUTREACH_LEADS: OutreachLead[] = [
     "category": "Wholesaler",
     "location": "Nairobi",
     "phone": "+254 726 601893",
-    "fit": "Medium-High",
-    "fitNote": "General/FMCG wholesaler - possible bulk stocking channel",
+    "fit": "Medium",
+    "fitNote": "Bulk retailer - good fit for gas/water/household FMCG distribution",
     "county": "Nairobi"
   },
   {
@@ -362,8 +301,8 @@ export const OUTREACH_LEADS: OutreachLead[] = [
     "category": "Wholesaler",
     "location": "Mchumbi Rd, Nairobi",
     "phone": "+254 722 773063",
-    "fit": "Medium-High",
-    "fitNote": "General/FMCG wholesaler - possible bulk stocking channel",
+    "fit": "Medium",
+    "fitNote": "Bulk retailer - good fit for gas/water/household FMCG distribution",
     "county": "Nairobi"
   },
   {
@@ -371,8 +310,8 @@ export const OUTREACH_LEADS: OutreachLead[] = [
     "category": "Wholesaler",
     "location": "Gandhi Ave, Nairobi",
     "phone": "+254 729 652324",
-    "fit": "Medium-High",
-    "fitNote": "General/FMCG wholesaler - possible bulk stocking channel",
+    "fit": "Medium",
+    "fitNote": "Bulk retailer - good fit for gas/water/household FMCG distribution",
     "county": "Nairobi"
   },
   {
@@ -380,8 +319,8 @@ export const OUTREACH_LEADS: OutreachLead[] = [
     "category": "Hardware",
     "location": "Kiambu Rd, Kiambu",
     "phone": "+254 728 347504",
-    "fit": "Low",
-    "fitNote": "Pure construction/building-materials hardware - weak fit",
+    "fit": "Medium",
+    "fitNote": "General hardware store - verify in person if it stocks household/water/gas accessories",
     "county": "Kiambu"
   },
   {
@@ -390,7 +329,7 @@ export const OUTREACH_LEADS: OutreachLead[] = [
     "location": "Kiambu",
     "phone": "+254 725 222246",
     "fit": "Medium",
-    "fitNote": "General hardware store - verify in person if it stocks household/electrical items",
+    "fitNote": "General hardware store - verify in person if it stocks household/water/gas accessories",
     "county": "Kiambu"
   },
   {
@@ -398,8 +337,8 @@ export const OUTREACH_LEADS: OutreachLead[] = [
     "category": "Hardware",
     "location": "Kiambu Rd, Kiambu",
     "phone": "+254 701 636662",
-    "fit": "Low",
-    "fitNote": "Pure construction/building-materials hardware - weak fit",
+    "fit": "Medium",
+    "fitNote": "General hardware store - verify in person if it stocks household/water/gas accessories",
     "county": "Kiambu"
   },
   {
@@ -408,7 +347,7 @@ export const OUTREACH_LEADS: OutreachLead[] = [
     "location": "Kiambu",
     "phone": "Not listed - visit in person",
     "fit": "Medium",
-    "fitNote": "General hardware store - verify in person if it stocks household/electrical items",
+    "fitNote": "General hardware store - verify in person if it stocks household/water/gas accessories",
     "county": "Kiambu"
   },
   {
@@ -416,8 +355,8 @@ export const OUTREACH_LEADS: OutreachLead[] = [
     "category": "Hardware",
     "location": "Kiambu Rd, Kiambu",
     "phone": "+254 703 126964",
-    "fit": "Low",
-    "fitNote": "Pure construction/building-materials hardware - weak fit",
+    "fit": "Medium",
+    "fitNote": "General hardware store - verify in person if it stocks household/water/gas accessories",
     "county": "Kiambu"
   },
   {
@@ -425,8 +364,8 @@ export const OUTREACH_LEADS: OutreachLead[] = [
     "category": "Hardware",
     "location": "Kiambu",
     "phone": "+254 796 150333",
-    "fit": "Low",
-    "fitNote": "Pure construction/building-materials hardware - weak fit",
+    "fit": "Medium",
+    "fitNote": "General hardware store - verify in person if it stocks household/water/gas accessories",
     "county": "Kiambu"
   },
   {
@@ -434,8 +373,8 @@ export const OUTREACH_LEADS: OutreachLead[] = [
     "category": "Hardware",
     "location": "Kiambu Rd, Kiambu",
     "phone": "Not listed - visit in person",
-    "fit": "High",
-    "fitNote": "Water/plumbing/electrical hardware - adjacent to gas & water delivery (Davis & Shirtliff-type fit)",
+    "fit": "Medium",
+    "fitNote": "General hardware store - verify in person if it stocks household/water/gas accessories",
     "county": "Kiambu"
   },
   {
@@ -443,26 +382,8 @@ export const OUTREACH_LEADS: OutreachLead[] = [
     "category": "Hardware",
     "location": "Biashara St, Kiambu",
     "phone": "+254 714 591767",
-    "fit": "Low",
-    "fitNote": "Pure construction/building-materials hardware - weak fit",
-    "county": "Kiambu"
-  },
-  {
-    "name": "Naivas Supermarket - Kiambu Mall",
-    "category": "Supermarket",
-    "location": "Kiambu Rd, Kiambu",
-    "phone": "+254 20 8000894",
-    "fit": "High",
-    "fitNote": "Retail shelf space for gas refills, bottled water & kitchenware - direct fit",
-    "county": "Kiambu"
-  },
-  {
-    "name": "Quickmart - Thindigua",
-    "category": "Supermarket",
-    "location": "Kiambu",
-    "phone": "+254 706 454545",
-    "fit": "High",
-    "fitNote": "Retail shelf space for gas refills, bottled water & kitchenware - direct fit",
+    "fit": "Medium",
+    "fitNote": "General hardware store - verify in person if it stocks household/water/gas accessories",
     "county": "Kiambu"
   },
   {
@@ -470,26 +391,8 @@ export const OUTREACH_LEADS: OutreachLead[] = [
     "category": "Supermarket",
     "location": "Biashara Rd, Kiambu",
     "phone": "+254 110 090582",
-    "fit": "High",
-    "fitNote": "Retail shelf space for gas refills, bottled water & kitchenware - direct fit",
-    "county": "Kiambu"
-  },
-  {
-    "name": "Naivas Foodmarket - Thindigua",
-    "category": "Supermarket",
-    "location": "Kiambu Rd, Kiambu",
-    "phone": "+254 20 8000011",
-    "fit": "High",
-    "fitNote": "Retail shelf space for gas refills, bottled water & kitchenware - direct fit",
-    "county": "Kiambu"
-  },
-  {
-    "name": "Naivas Foodmarket - Ciata Mall",
-    "category": "Supermarket",
-    "location": "Ciata Mall, Kiambu Rd",
-    "phone": "+254 113 464118",
-    "fit": "High",
-    "fitNote": "Retail shelf space for gas refills, bottled water & kitchenware - direct fit",
+    "fit": "Medium",
+    "fitNote": "Independent supermarket/minimart - potential retail shelf space for household items",
     "county": "Kiambu"
   },
   {
@@ -498,7 +401,7 @@ export const OUTREACH_LEADS: OutreachLead[] = [
     "location": "Kiambu",
     "phone": "+254 726 115898",
     "fit": "High",
-    "fitNote": "Already sells cooking gas - target for bulk/wholesale supply or delivery-partner deal, not retail diversification",
+    "fitNote": "Gas dealer - direct product-line fit for AquaGas cooking gas partnership",
     "county": "Kiambu"
   },
   {
@@ -507,7 +410,7 @@ export const OUTREACH_LEADS: OutreachLead[] = [
     "location": "Kirigiti, Kiambu",
     "phone": "+254 708 982623",
     "fit": "High",
-    "fitNote": "Already sells cooking gas - target for bulk/wholesale supply or delivery-partner deal, not retail diversification",
+    "fitNote": "Gas dealer - direct product-line fit for AquaGas cooking gas partnership",
     "county": "Kiambu"
   },
   {
@@ -516,7 +419,7 @@ export const OUTREACH_LEADS: OutreachLead[] = [
     "location": "Kiambu Rd, Kiambu",
     "phone": "Not listed - visit in person",
     "fit": "High",
-    "fitNote": "Already sells cooking gas - target for bulk/wholesale supply or delivery-partner deal, not retail diversification",
+    "fitNote": "Gas dealer - direct product-line fit for AquaGas cooking gas partnership",
     "county": "Kiambu"
   },
   {
@@ -525,7 +428,7 @@ export const OUTREACH_LEADS: OutreachLead[] = [
     "location": "Kiambu Township",
     "phone": "+254 755 190133",
     "fit": "High",
-    "fitNote": "Already sells cooking gas - target for bulk/wholesale supply or delivery-partner deal, not retail diversification",
+    "fitNote": "Gas dealer - direct product-line fit for AquaGas cooking gas partnership",
     "county": "Kiambu"
   },
   {
@@ -534,16 +437,7 @@ export const OUTREACH_LEADS: OutreachLead[] = [
     "location": "Kiambu",
     "phone": "+254 724 263850",
     "fit": "High",
-    "fitNote": "Already sells cooking gas - target for bulk/wholesale supply or delivery-partner deal, not retail diversification",
-    "county": "Kiambu"
-  },
-  {
-    "name": "M-Gas Kiambu Town Depot",
-    "category": "Gas Dealer",
-    "location": "Kiambu",
-    "phone": "+254 800 721 148",
-    "fit": "High",
-    "fitNote": "Already sells cooking gas - target for bulk/wholesale supply or delivery-partner deal, not retail diversification",
+    "fitNote": "Gas dealer - direct product-line fit for AquaGas cooking gas partnership",
     "county": "Kiambu"
   },
   {
@@ -552,7 +446,7 @@ export const OUTREACH_LEADS: OutreachLead[] = [
     "location": "Kiambu Rd, Kiambu",
     "phone": "Not listed - visit in person",
     "fit": "High",
-    "fitNote": "Already sells cooking gas - target for bulk/wholesale supply or delivery-partner deal, not retail diversification",
+    "fitNote": "Gas dealer - direct product-line fit for AquaGas cooking gas partnership",
     "county": "Kiambu"
   },
   {
@@ -561,7 +455,7 @@ export const OUTREACH_LEADS: OutreachLead[] = [
     "location": "Eastern Bypass, Ruiru",
     "phone": "+254 720 090566",
     "fit": "Medium",
-    "fitNote": "General hardware store - verify in person if it stocks household/electrical items",
+    "fitNote": "General hardware store - verify in person if it stocks household/water/gas accessories",
     "county": "Kiambu"
   },
   {
@@ -570,7 +464,7 @@ export const OUTREACH_LEADS: OutreachLead[] = [
     "location": "Eastern Bypass, Ruiru",
     "phone": "+254 703 404030",
     "fit": "Medium",
-    "fitNote": "General hardware store - verify in person if it stocks household/electrical items",
+    "fitNote": "General hardware store - verify in person if it stocks household/water/gas accessories",
     "county": "Kiambu"
   },
   {
@@ -579,7 +473,7 @@ export const OUTREACH_LEADS: OutreachLead[] = [
     "location": "Eastern Bypass, Ruiru",
     "phone": "+254 720 839474",
     "fit": "Medium",
-    "fitNote": "General hardware store - verify in person if it stocks household/electrical items",
+    "fitNote": "General hardware store - verify in person if it stocks household/water/gas accessories",
     "county": "Kiambu"
   },
   {
@@ -588,7 +482,7 @@ export const OUTREACH_LEADS: OutreachLead[] = [
     "location": "Ruiru Kamiti Rd, Ruiru",
     "phone": "+254 733 779673",
     "fit": "Medium",
-    "fitNote": "General hardware store - verify in person if it stocks household/electrical items",
+    "fitNote": "General hardware store - verify in person if it stocks household/water/gas accessories",
     "county": "Kiambu"
   },
   {
@@ -597,7 +491,7 @@ export const OUTREACH_LEADS: OutreachLead[] = [
     "location": "Eastern Bypass, Ruiru",
     "phone": "+254 701 685724",
     "fit": "Medium",
-    "fitNote": "General hardware store - verify in person if it stocks household/electrical items",
+    "fitNote": "General hardware store - verify in person if it stocks household/water/gas accessories",
     "county": "Kiambu"
   },
   {
@@ -606,7 +500,7 @@ export const OUTREACH_LEADS: OutreachLead[] = [
     "location": "A2, Ruiru",
     "phone": "+254 722 741957",
     "fit": "Medium",
-    "fitNote": "General hardware store - verify in person if it stocks household/electrical items",
+    "fitNote": "General hardware store - verify in person if it stocks household/water/gas accessories",
     "county": "Kiambu"
   },
   {
@@ -614,8 +508,8 @@ export const OUTREACH_LEADS: OutreachLead[] = [
     "category": "Hardware",
     "location": "Langata Rd, Nairobi",
     "phone": "+254 736 614770",
-    "fit": "Low",
-    "fitNote": "Pure construction/building-materials hardware - weak fit",
+    "fit": "Medium",
+    "fitNote": "General hardware store - verify in person if it stocks household/water/gas accessories",
     "county": "Nairobi"
   },
   {
@@ -623,17 +517,17 @@ export const OUTREACH_LEADS: OutreachLead[] = [
     "category": "Hardware",
     "location": "Ngong Rd, Nairobi",
     "phone": "+254 722 344671",
-    "fit": "Low",
-    "fitNote": "Pure construction/building-materials hardware - weak fit",
-    "county": "Kajiado"
+    "fit": "Medium",
+    "fitNote": "General hardware store - verify in person if it stocks household/water/gas accessories",
+    "county": "Nairobi"
   },
   {
     "name": "Chettah Builders And Renovators (Hardware) Ltd.",
     "category": "Hardware",
     "location": "Karen Rd, Nairobi",
     "phone": "+254 722 836349",
-    "fit": "Low",
-    "fitNote": "Pure construction/building-materials hardware - weak fit",
+    "fit": "Medium",
+    "fitNote": "General hardware store - verify in person if it stocks household/water/gas accessories",
     "county": "Nairobi"
   },
   {
@@ -642,7 +536,7 @@ export const OUTREACH_LEADS: OutreachLead[] = [
     "location": "Nairobi (Karen area)",
     "phone": "+254 733 258419",
     "fit": "Medium",
-    "fitNote": "General hardware store - verify in person if it stocks household/electrical items",
+    "fitNote": "General hardware store - verify in person if it stocks household/water/gas accessories",
     "county": "Nairobi"
   },
   {
@@ -651,7 +545,7 @@ export const OUTREACH_LEADS: OutreachLead[] = [
     "location": "Kasarani, Nairobi",
     "phone": "+254 791 479394",
     "fit": "Medium",
-    "fitNote": "General hardware store - verify in person if it stocks household/electrical items",
+    "fitNote": "General hardware store - verify in person if it stocks household/water/gas accessories",
     "county": "Nairobi"
   },
   {
@@ -660,7 +554,7 @@ export const OUTREACH_LEADS: OutreachLead[] = [
     "location": "Kasarani Mwiki Rd, Nairobi",
     "phone": "+254 714 391442",
     "fit": "Medium",
-    "fitNote": "General hardware store - verify in person if it stocks household/electrical items",
+    "fitNote": "General hardware store - verify in person if it stocks household/water/gas accessories",
     "county": "Nairobi"
   },
   {
@@ -668,8 +562,8 @@ export const OUTREACH_LEADS: OutreachLead[] = [
     "category": "Hardware",
     "location": "Kasarani Mwiki Rd, Nairobi",
     "phone": "+254 721 853612",
-    "fit": "High",
-    "fitNote": "Water/plumbing/electrical hardware - adjacent to gas & water delivery (Davis & Shirtliff-type fit)",
+    "fit": "Medium",
+    "fitNote": "General hardware store - verify in person if it stocks household/water/gas accessories",
     "county": "Nairobi"
   },
   {
@@ -678,7 +572,7 @@ export const OUTREACH_LEADS: OutreachLead[] = [
     "location": "Kasarani-Mwiki Rd, Nairobi",
     "phone": "+254 115 647154",
     "fit": "Medium",
-    "fitNote": "General hardware store - verify in person if it stocks household/electrical items",
+    "fitNote": "General hardware store - verify in person if it stocks household/water/gas accessories",
     "county": "Nairobi"
   },
   {
@@ -686,8 +580,8 @@ export const OUTREACH_LEADS: OutreachLead[] = [
     "category": "Hardware",
     "location": "Kasarani, Nairobi",
     "phone": "+254 722 834599",
-    "fit": "Low",
-    "fitNote": "Pure construction/building-materials hardware - weak fit",
+    "fit": "Medium",
+    "fitNote": "General hardware store - verify in person if it stocks household/water/gas accessories",
     "county": "Nairobi"
   },
   {
@@ -696,7 +590,7 @@ export const OUTREACH_LEADS: OutreachLead[] = [
     "location": "Nairobi",
     "phone": "+254 714 375183",
     "fit": "Medium",
-    "fitNote": "General hardware store - verify in person if it stocks household/electrical items",
+    "fitNote": "General hardware store - verify in person if it stocks household/water/gas accessories",
     "county": "Nairobi"
   },
   {
@@ -705,7 +599,7 @@ export const OUTREACH_LEADS: OutreachLead[] = [
     "location": "Pipeline, Embakasi South, Nairobi",
     "phone": "+254 753 688797",
     "fit": "Medium",
-    "fitNote": "General hardware store - verify in person if it stocks household/electrical items",
+    "fitNote": "General hardware store - verify in person if it stocks household/water/gas accessories",
     "county": "Nairobi"
   },
   {
@@ -714,7 +608,7 @@ export const OUTREACH_LEADS: OutreachLead[] = [
     "location": "Embakasi, Nairobi",
     "phone": "+254 723 450304",
     "fit": "Medium",
-    "fitNote": "General hardware store - verify in person if it stocks household/electrical items",
+    "fitNote": "General hardware store - verify in person if it stocks household/water/gas accessories",
     "county": "Nairobi"
   },
   {
@@ -723,7 +617,7 @@ export const OUTREACH_LEADS: OutreachLead[] = [
     "location": "Airport North Rd, Nairobi",
     "phone": "+254 719 616879",
     "fit": "Medium",
-    "fitNote": "General hardware store - verify in person if it stocks household/electrical items",
+    "fitNote": "General hardware store - verify in person if it stocks household/water/gas accessories",
     "county": "Nairobi"
   },
   {
@@ -732,7 +626,7 @@ export const OUTREACH_LEADS: OutreachLead[] = [
     "location": "Tassia, Outering Rd, Nairobi",
     "phone": "+254 726 517522",
     "fit": "Medium",
-    "fitNote": "General hardware store - verify in person if it stocks household/electrical items",
+    "fitNote": "General hardware store - verify in person if it stocks household/water/gas accessories",
     "county": "Nairobi"
   },
   {
@@ -741,7 +635,7 @@ export const OUTREACH_LEADS: OutreachLead[] = [
     "location": "Embakasi, Nairobi",
     "phone": "+254 723 313131",
     "fit": "Medium",
-    "fitNote": "General hardware store - verify in person if it stocks household/electrical items",
+    "fitNote": "General hardware store - verify in person if it stocks household/water/gas accessories",
     "county": "Nairobi"
   },
   {
@@ -750,7 +644,7 @@ export const OUTREACH_LEADS: OutreachLead[] = [
     "location": "Mugoya Shopping Centre, Nairobi",
     "phone": "+254 795 002232",
     "fit": "Medium",
-    "fitNote": "General hardware store - verify in person if it stocks household/electrical items",
+    "fitNote": "General hardware store - verify in person if it stocks household/water/gas accessories",
     "county": "Nairobi"
   },
   {
@@ -759,7 +653,7 @@ export const OUTREACH_LEADS: OutreachLead[] = [
     "location": "Muhoho Ave, Nairobi",
     "phone": "+254 705 701900",
     "fit": "Medium",
-    "fitNote": "General hardware store - verify in person if it stocks household/electrical items",
+    "fitNote": "General hardware store - verify in person if it stocks household/water/gas accessories",
     "county": "Nairobi"
   },
   {
@@ -768,7 +662,7 @@ export const OUTREACH_LEADS: OutreachLead[] = [
     "location": "Bandari Rd, Nairobi",
     "phone": "+254 20 6534776",
     "fit": "Medium",
-    "fitNote": "General hardware store - verify in person if it stocks household/electrical items",
+    "fitNote": "General hardware store - verify in person if it stocks household/water/gas accessories",
     "county": "Nairobi"
   },
   {
@@ -777,7 +671,7 @@ export const OUTREACH_LEADS: OutreachLead[] = [
     "location": "Gigiri, Nairobi",
     "phone": "+254 736 855400",
     "fit": "Medium",
-    "fitNote": "General hardware store - verify in person if it stocks household/electrical items",
+    "fitNote": "General hardware store - verify in person if it stocks household/water/gas accessories",
     "county": "Nairobi"
   },
   {
@@ -786,7 +680,7 @@ export const OUTREACH_LEADS: OutreachLead[] = [
     "location": "Sarit Centre, Nairobi",
     "phone": "+254 796 619393",
     "fit": "Medium",
-    "fitNote": "General hardware store - verify in person if it stocks household/electrical items",
+    "fitNote": "General hardware store - verify in person if it stocks household/water/gas accessories",
     "county": "Nairobi"
   },
   {
@@ -795,7 +689,7 @@ export const OUTREACH_LEADS: OutreachLead[] = [
     "location": "Kayole Rd, Nairobi",
     "phone": "+254 721 956101",
     "fit": "Medium",
-    "fitNote": "General hardware store - verify in person if it stocks household/electrical items",
+    "fitNote": "General hardware store - verify in person if it stocks household/water/gas accessories",
     "county": "Nairobi"
   },
   {
@@ -804,7 +698,7 @@ export const OUTREACH_LEADS: OutreachLead[] = [
     "location": "Kayole Spine Rd, Nairobi",
     "phone": "+254 706 700693",
     "fit": "Medium",
-    "fitNote": "General hardware store - verify in person if it stocks household/electrical items",
+    "fitNote": "General hardware store - verify in person if it stocks household/water/gas accessories",
     "county": "Nairobi"
   },
   {
@@ -812,8 +706,8 @@ export const OUTREACH_LEADS: OutreachLead[] = [
     "category": "Hardware",
     "location": "Masima Rd, Nairobi",
     "phone": "Not listed - visit in person",
-    "fit": "High",
-    "fitNote": "Water/plumbing/electrical hardware - adjacent to gas & water delivery (Davis & Shirtliff-type fit)",
+    "fit": "Medium",
+    "fitNote": "General hardware store - verify in person if it stocks household/water/gas accessories",
     "county": "Nairobi"
   },
   {
@@ -822,7 +716,7 @@ export const OUTREACH_LEADS: OutreachLead[] = [
     "location": "Kayole, Nairobi",
     "phone": "+254 728 411537",
     "fit": "Medium",
-    "fitNote": "General hardware store - verify in person if it stocks household/electrical items",
+    "fitNote": "General hardware store - verify in person if it stocks household/water/gas accessories",
     "county": "Nairobi"
   },
   {
@@ -830,8 +724,8 @@ export const OUTREACH_LEADS: OutreachLead[] = [
     "category": "Hardware",
     "location": "Nairobi",
     "phone": "Not listed - visit in person",
-    "fit": "Low",
-    "fitNote": "Pure construction/building-materials hardware - weak fit",
+    "fit": "Medium",
+    "fitNote": "General hardware store - verify in person if it stocks household/water/gas accessories",
     "county": "Nairobi"
   },
   {
@@ -839,8 +733,8 @@ export const OUTREACH_LEADS: OutreachLead[] = [
     "category": "Hardware",
     "location": "Kayole Spine Rd, Nairobi",
     "phone": "+254 728 043048",
-    "fit": "High",
-    "fitNote": "Water/plumbing/electrical hardware - adjacent to gas & water delivery (Davis & Shirtliff-type fit)",
+    "fit": "Medium",
+    "fitNote": "General hardware store - verify in person if it stocks household/water/gas accessories",
     "county": "Nairobi"
   },
   {
@@ -848,8 +742,8 @@ export const OUTREACH_LEADS: OutreachLead[] = [
     "category": "Hardware",
     "location": "Kamiti Rd, Nairobi",
     "phone": "+254 720 277999",
-    "fit": "High",
-    "fitNote": "Water/plumbing/electrical hardware - adjacent to gas & water delivery (Davis & Shirtliff-type fit)",
+    "fit": "Medium",
+    "fitNote": "General hardware store - verify in person if it stocks household/water/gas accessories",
     "county": "Nairobi"
   },
   {
@@ -857,8 +751,8 @@ export const OUTREACH_LEADS: OutreachLead[] = [
     "category": "Hardware",
     "location": "Lumumba Dr, Nairobi",
     "phone": "+254 708 105978",
-    "fit": "High",
-    "fitNote": "Water/plumbing/electrical hardware - adjacent to gas & water delivery (Davis & Shirtliff-type fit)",
+    "fit": "Medium",
+    "fitNote": "General hardware store - verify in person if it stocks household/water/gas accessories",
     "county": "Nairobi"
   },
   {
@@ -866,8 +760,8 @@ export const OUTREACH_LEADS: OutreachLead[] = [
     "category": "Hardware",
     "location": "Kamiti Rd, Nairobi",
     "phone": "+254 711 612924",
-    "fit": "Low",
-    "fitNote": "Pure construction/building-materials hardware - weak fit",
+    "fit": "Medium",
+    "fitNote": "General hardware store - verify in person if it stocks household/water/gas accessories",
     "county": "Nairobi"
   },
   {
@@ -875,8 +769,8 @@ export const OUTREACH_LEADS: OutreachLead[] = [
     "category": "Hardware",
     "location": "Lumumba Dr, Nairobi",
     "phone": "Not listed - visit in person",
-    "fit": "Low",
-    "fitNote": "Pure construction/building-materials hardware - weak fit",
+    "fit": "Medium",
+    "fitNote": "General hardware store - verify in person if it stocks household/water/gas accessories",
     "county": "Nairobi"
   },
   {
@@ -885,7 +779,7 @@ export const OUTREACH_LEADS: OutreachLead[] = [
     "location": "Kamiti Rd, Zimmerman, Nairobi",
     "phone": "+254 731 302800",
     "fit": "Medium",
-    "fitNote": "General hardware store - verify in person if it stocks household/electrical items",
+    "fitNote": "General hardware store - verify in person if it stocks household/water/gas accessories",
     "county": "Nairobi"
   },
   {
@@ -894,7 +788,7 @@ export const OUTREACH_LEADS: OutreachLead[] = [
     "location": "Ngong",
     "phone": "+254 715 974811",
     "fit": "Medium",
-    "fitNote": "General hardware store - verify in person if it stocks household/electrical items",
+    "fitNote": "General hardware store - verify in person if it stocks household/water/gas accessories",
     "county": "Kajiado"
   },
   {
@@ -903,8 +797,8 @@ export const OUTREACH_LEADS: OutreachLead[] = [
     "location": "Ngong Rd, Nairobi",
     "phone": "+254 720 460388",
     "fit": "Medium",
-    "fitNote": "General hardware store - verify in person if it stocks household/electrical items",
-    "county": "Kajiado"
+    "fitNote": "General hardware store - verify in person if it stocks household/water/gas accessories",
+    "county": "Nairobi"
   },
   {
     "name": "CTM Ngong Road",
@@ -912,8 +806,8 @@ export const OUTREACH_LEADS: OutreachLead[] = [
     "location": "Ngong Rd, Nairobi",
     "phone": "+254 735 177700",
     "fit": "Medium",
-    "fitNote": "General hardware store - verify in person if it stocks household/electrical items",
-    "county": "Kajiado"
+    "fitNote": "General hardware store - verify in person if it stocks household/water/gas accessories",
+    "county": "Nairobi"
   },
   {
     "name": "Olepolos Hardware Investments",
@@ -921,17 +815,17 @@ export const OUTREACH_LEADS: OutreachLead[] = [
     "location": "Ngong Rd, Nairobi",
     "phone": "+254 722 865894",
     "fit": "Medium",
-    "fitNote": "General hardware store - verify in person if it stocks household/electrical items",
-    "county": "Kajiado"
+    "fitNote": "General hardware store - verify in person if it stocks household/water/gas accessories",
+    "county": "Nairobi"
   },
   {
     "name": "Out of Box Tools and Hardware",
     "category": "Hardware",
     "location": "Ngong Rd, Nairobi",
     "phone": "+254 110 264532",
-    "fit": "Low",
-    "fitNote": "Pure construction/building-materials hardware - weak fit",
-    "county": "Kajiado"
+    "fit": "Medium",
+    "fitNote": "General hardware store - verify in person if it stocks household/water/gas accessories",
+    "county": "Nairobi"
   },
   {
     "name": "SPLINTER HARDWARE",
@@ -939,7 +833,7 @@ export const OUTREACH_LEADS: OutreachLead[] = [
     "location": "Ngong Hills",
     "phone": "+254 721 498867",
     "fit": "Medium",
-    "fitNote": "General hardware store - verify in person if it stocks household/electrical items",
+    "fitNote": "General hardware store - verify in person if it stocks household/water/gas accessories",
     "county": "Kajiado"
   },
   {
@@ -948,7 +842,7 @@ export const OUTREACH_LEADS: OutreachLead[] = [
     "location": "Sinai, Nairobi",
     "phone": "+254 745 439444",
     "fit": "Medium",
-    "fitNote": "General hardware store - verify in person if it stocks household/electrical items",
+    "fitNote": "General hardware store - verify in person if it stocks household/water/gas accessories",
     "county": "Nairobi"
   },
   {
@@ -956,8 +850,8 @@ export const OUTREACH_LEADS: OutreachLead[] = [
     "category": "Hardware",
     "location": "Industrial Area, Nairobi",
     "phone": "+254 20 6558288",
-    "fit": "Low",
-    "fitNote": "Pure construction/building-materials hardware - weak fit",
+    "fit": "Medium",
+    "fitNote": "General hardware store - verify in person if it stocks household/water/gas accessories",
     "county": "Nairobi"
   },
   {
@@ -965,8 +859,8 @@ export const OUTREACH_LEADS: OutreachLead[] = [
     "category": "Wholesaler",
     "location": "Tetrapark, Nairobi",
     "phone": "+254 728 744444",
-    "fit": "Medium-High",
-    "fitNote": "General/FMCG wholesaler - possible bulk stocking channel",
+    "fit": "Medium",
+    "fitNote": "Bulk retailer - good fit for gas/water/household FMCG distribution",
     "county": "Nairobi"
   },
   {
@@ -975,16 +869,7 @@ export const OUTREACH_LEADS: OutreachLead[] = [
     "location": "Addis Ababa Rd, Nairobi",
     "phone": "+254 701 186466",
     "fit": "Medium",
-    "fitNote": "General hardware store - verify in person if it stocks household/electrical items",
-    "county": "Nairobi"
-  },
-  {
-    "name": "Naivas Supermarket - Kasarani",
-    "category": "Supermarket",
-    "location": "Kasarani, Nairobi",
-    "phone": "+254 20 2463320",
-    "fit": "High",
-    "fitNote": "Retail shelf space for gas refills, bottled water & kitchenware - direct fit",
+    "fitNote": "General hardware store - verify in person if it stocks household/water/gas accessories",
     "county": "Nairobi"
   },
   {
@@ -992,8 +877,8 @@ export const OUTREACH_LEADS: OutreachLead[] = [
     "category": "Supermarket",
     "location": "Zimmerman, Nairobi",
     "phone": "+254 707 881200",
-    "fit": "High",
-    "fitNote": "Retail shelf space for gas refills, bottled water & kitchenware - direct fit",
+    "fit": "Medium",
+    "fitNote": "Independent supermarket/minimart - potential retail shelf space for household items",
     "county": "Nairobi"
   },
   {
@@ -1001,26 +886,17 @@ export const OUTREACH_LEADS: OutreachLead[] = [
     "category": "Supermarket",
     "location": "Kasarani Mwiki Rd, Nairobi",
     "phone": "+254 721 263743",
-    "fit": "High",
-    "fitNote": "Retail shelf space for gas refills, bottled water & kitchenware - direct fit",
+    "fit": "Medium",
+    "fitNote": "Independent supermarket/minimart - potential retail shelf space for household items",
     "county": "Nairobi"
-  },
-  {
-    "name": "Carrefour Thika Road Mall",
-    "category": "Supermarket",
-    "location": "Thika Rd, Nairobi",
-    "phone": "+254 800 221 322",
-    "fit": "High",
-    "fitNote": "Retail shelf space for gas refills, bottled water & kitchenware - direct fit",
-    "county": "Kiambu"
   },
   {
     "name": "T-Mart Supermarket",
     "category": "Supermarket",
     "location": "Kasarani, Nairobi",
     "phone": "+254 726 992890",
-    "fit": "High",
-    "fitNote": "Retail shelf space for gas refills, bottled water & kitchenware - direct fit",
+    "fit": "Medium",
+    "fitNote": "Independent supermarket/minimart - potential retail shelf space for household items",
     "county": "Nairobi"
   },
   {
@@ -1028,107 +904,8 @@ export const OUTREACH_LEADS: OutreachLead[] = [
     "category": "Supermarket",
     "location": "Kasarani, Nairobi",
     "phone": "Not listed - visit in person",
-    "fit": "High",
-    "fitNote": "Retail shelf space for gas refills, bottled water & kitchenware - direct fit",
-    "county": "Nairobi"
-  },
-  {
-    "name": "Quick Mart Embakasi",
-    "category": "Supermarket",
-    "location": "Embakasi, Nairobi",
-    "phone": "+254 700 552222",
-    "fit": "High",
-    "fitNote": "Retail shelf space for gas refills, bottled water & kitchenware - direct fit",
-    "county": "Nairobi"
-  },
-  {
-    "name": "Naivas Supermarket -Nyayo Embakasi",
-    "category": "Supermarket",
-    "location": "Airport N Rd, Nairobi",
-    "phone": "+254 115 536824",
-    "fit": "High",
-    "fitNote": "Retail shelf space for gas refills, bottled water & kitchenware - direct fit",
-    "county": "Nairobi"
-  },
-  {
-    "name": "Naivas Supermarket-Tassia",
-    "category": "Supermarket",
-    "location": "Tassia Rd, Nairobi",
-    "phone": "+254 20 8000085",
-    "fit": "High",
-    "fitNote": "Retail shelf space for gas refills, bottled water & kitchenware - direct fit",
-    "county": "Nairobi"
-  },
-  {
-    "name": "Quick Mart Fedha",
-    "category": "Supermarket",
-    "location": "Fedha, Embakasi, Nairobi",
-    "phone": "+254 701 434343",
-    "fit": "High",
-    "fitNote": "Retail shelf space for gas refills, bottled water & kitchenware - direct fit",
-    "county": "Nairobi"
-  },
-  {
-    "name": "Naivas Supermarket - Kobil Embakasi",
-    "category": "Supermarket",
-    "location": "Embakasi, Nairobi",
-    "phone": "+254 20 8000793",
-    "fit": "High",
-    "fitNote": "Retail shelf space for gas refills, bottled water & kitchenware - direct fit",
-    "county": "Nairobi"
-  },
-  {
-    "name": "Naivas Foodmarket - One Stop Karen Mall",
-    "category": "Supermarket",
-    "location": "Langata Rd, Nairobi",
-    "phone": "Not listed - visit in person",
-    "fit": "High",
-    "fitNote": "Retail shelf space for gas refills, bottled water & kitchenware - direct fit",
-    "county": "Nairobi"
-  },
-  {
-    "name": "Carrefour The Hub",
-    "category": "Supermarket",
-    "location": "The Hub, Karen, Nairobi",
-    "phone": "+254 800 221 322",
-    "fit": "High",
-    "fitNote": "Retail shelf space for gas refills, bottled water & kitchenware - direct fit",
-    "county": "Nairobi"
-  },
-  {
-    "name": "Naivas Foodmarket - The Point Buruburu",
-    "category": "Supermarket",
-    "location": "Buruburu, Nairobi",
-    "phone": "+254 112 465484",
-    "fit": "High",
-    "fitNote": "Retail shelf space for gas refills, bottled water & kitchenware - direct fit",
-    "county": "Nairobi"
-  },
-  {
-    "name": "quick Mart (Buruburu)",
-    "category": "Supermarket",
-    "location": "Buruburu, Nairobi",
-    "phone": "Not listed - visit in person",
-    "fit": "High",
-    "fitNote": "Retail shelf space for gas refills, bottled water & kitchenware - direct fit",
-    "county": "Nairobi"
-  },
-  {
-    "name": "Naivas Supermarket - T-Square Mall Buruburu",
-    "category": "Supermarket",
-    "location": "Buruburu, Nairobi",
-    "phone": "Not listed - visit in person",
-    "fit": "High",
-    "fitNote": "Retail shelf space for gas refills, bottled water & kitchenware - direct fit",
-    "county": "Nairobi"
-  },
-  {
-    "name": "Naivas Supermarket - Komarock",
-    "category": "Supermarket",
-    "location": "Komarock, Nairobi",
-    "phone": "+254 110 844926",
-    "fit": "High",
-    "fitNote": "Retail shelf space for gas refills, bottled water & kitchenware - direct fit",
+    "fit": "Medium",
+    "fitNote": "Independent supermarket/minimart - potential retail shelf space for household items",
     "county": "Nairobi"
   },
   {
@@ -1136,8 +913,8 @@ export const OUTREACH_LEADS: OutreachLead[] = [
     "category": "Supermarket",
     "location": "Buruburu, Nairobi",
     "phone": "+254 740 002000",
-    "fit": "High",
-    "fitNote": "Retail shelf space for gas refills, bottled water & kitchenware - direct fit",
+    "fit": "Medium",
+    "fitNote": "Independent supermarket/minimart - potential retail shelf space for household items",
     "county": "Nairobi"
   },
   {
@@ -1146,7 +923,7 @@ export const OUTREACH_LEADS: OutreachLead[] = [
     "location": "Sportsview, Kasarani, Nairobi",
     "phone": "+254 798 105405",
     "fit": "High",
-    "fitNote": "Already sells cooking gas - target for bulk/wholesale supply or delivery-partner deal, not retail diversification",
+    "fitNote": "Gas dealer - direct product-line fit for AquaGas cooking gas partnership",
     "county": "Nairobi"
   },
   {
@@ -1155,7 +932,7 @@ export const OUTREACH_LEADS: OutreachLead[] = [
     "location": "Nairobi",
     "phone": "+254 758 507707",
     "fit": "High",
-    "fitNote": "Already sells cooking gas - target for bulk/wholesale supply or delivery-partner deal, not retail diversification",
+    "fitNote": "Gas dealer - direct product-line fit for AquaGas cooking gas partnership",
     "county": "Nairobi"
   },
   {
@@ -1164,8 +941,8 @@ export const OUTREACH_LEADS: OutreachLead[] = [
     "location": "Thika Rd, Nairobi",
     "phone": "+254 112 250250",
     "fit": "High",
-    "fitNote": "Already sells cooking gas - target for bulk/wholesale supply or delivery-partner deal, not retail diversification",
-    "county": "Kiambu"
+    "fitNote": "Gas dealer - direct product-line fit for AquaGas cooking gas partnership",
+    "county": "Nairobi"
   },
   {
     "name": "Gas Blue Flame Energy",
@@ -1173,7 +950,7 @@ export const OUTREACH_LEADS: OutreachLead[] = [
     "location": "Roysambu, Nairobi",
     "phone": "+254 722 645492",
     "fit": "High",
-    "fitNote": "Already sells cooking gas - target for bulk/wholesale supply or delivery-partner deal, not retail diversification",
+    "fitNote": "Gas dealer - direct product-line fit for AquaGas cooking gas partnership",
     "county": "Nairobi"
   },
   {
@@ -1182,7 +959,7 @@ export const OUTREACH_LEADS: OutreachLead[] = [
     "location": "Kasarani, Nairobi",
     "phone": "+254 716 727779",
     "fit": "High",
-    "fitNote": "Already sells cooking gas - target for bulk/wholesale supply or delivery-partner deal, not retail diversification",
+    "fitNote": "Gas dealer - direct product-line fit for AquaGas cooking gas partnership",
     "county": "Nairobi"
   },
   {
@@ -1191,25 +968,7 @@ export const OUTREACH_LEADS: OutreachLead[] = [
     "location": "Kasarani, Nairobi",
     "phone": "+254 706 641899",
     "fit": "High",
-    "fitNote": "Already sells cooking gas - target for bulk/wholesale supply or delivery-partner deal, not retail diversification",
-    "county": "Nairobi"
-  },
-  {
-    "name": "M-Gas Mukuru Depot",
-    "category": "Gas Dealer",
-    "location": "Mukuru, Nairobi",
-    "phone": "+254 792 556677",
-    "fit": "High",
-    "fitNote": "Already sells cooking gas - target for bulk/wholesale supply or delivery-partner deal, not retail diversification",
-    "county": "Nairobi"
-  },
-  {
-    "name": "M-Gas Tassia Depot",
-    "category": "Gas Dealer",
-    "location": "Airport North Rd, Nairobi",
-    "phone": "+254 800 724 440",
-    "fit": "High",
-    "fitNote": "Already sells cooking gas - target for bulk/wholesale supply or delivery-partner deal, not retail diversification",
+    "fitNote": "Gas dealer - direct product-line fit for AquaGas cooking gas partnership",
     "county": "Nairobi"
   },
   {
@@ -1218,7 +977,7 @@ export const OUTREACH_LEADS: OutreachLead[] = [
     "location": "Donholm, Nairobi",
     "phone": "+254 758 668129",
     "fit": "High",
-    "fitNote": "Already sells cooking gas - target for bulk/wholesale supply or delivery-partner deal, not retail diversification",
+    "fitNote": "Gas dealer - direct product-line fit for AquaGas cooking gas partnership",
     "county": "Nairobi"
   },
   {
@@ -1227,7 +986,7 @@ export const OUTREACH_LEADS: OutreachLead[] = [
     "location": "Outer Ring Rd, Nairobi",
     "phone": "+254 797 502116",
     "fit": "High",
-    "fitNote": "Already sells cooking gas - target for bulk/wholesale supply or delivery-partner deal, not retail diversification",
+    "fitNote": "Gas dealer - direct product-line fit for AquaGas cooking gas partnership",
     "county": "Nairobi"
   },
   {
@@ -1236,7 +995,7 @@ export const OUTREACH_LEADS: OutreachLead[] = [
     "location": "Nairobi (Tassia area)",
     "phone": "+254 796 048803",
     "fit": "High",
-    "fitNote": "Already sells cooking gas - target for bulk/wholesale supply or delivery-partner deal, not retail diversification",
+    "fitNote": "Gas dealer - direct product-line fit for AquaGas cooking gas partnership",
     "county": "Nairobi"
   },
   {
@@ -1245,7 +1004,7 @@ export const OUTREACH_LEADS: OutreachLead[] = [
     "location": "Langata/Karen, Nairobi",
     "phone": "+254 706 073607",
     "fit": "High",
-    "fitNote": "Already sells cooking gas - target for bulk/wholesale supply or delivery-partner deal, not retail diversification",
+    "fitNote": "Gas dealer - direct product-line fit for AquaGas cooking gas partnership",
     "county": "Nairobi"
   },
   {
@@ -1254,7 +1013,7 @@ export const OUTREACH_LEADS: OutreachLead[] = [
     "location": "Karen, Nairobi",
     "phone": "+254 706 073607",
     "fit": "High",
-    "fitNote": "Already sells cooking gas - target for bulk/wholesale supply or delivery-partner deal, not retail diversification",
+    "fitNote": "Gas dealer - direct product-line fit for AquaGas cooking gas partnership",
     "county": "Nairobi"
   },
   {
@@ -1263,7 +1022,7 @@ export const OUTREACH_LEADS: OutreachLead[] = [
     "location": "Karen Triangle Mall, Nairobi",
     "phone": "+254 727 430786",
     "fit": "High",
-    "fitNote": "Already sells cooking gas - target for bulk/wholesale supply or delivery-partner deal, not retail diversification",
+    "fitNote": "Gas dealer - direct product-line fit for AquaGas cooking gas partnership",
     "county": "Nairobi"
   },
   {
@@ -1271,8 +1030,8 @@ export const OUTREACH_LEADS: OutreachLead[] = [
     "category": "Wholesaler",
     "location": "Eastleigh, Nairobi",
     "phone": "Not listed - visit in person",
-    "fit": "Medium-High",
-    "fitNote": "General/FMCG wholesaler - possible bulk stocking channel",
+    "fit": "Medium",
+    "fitNote": "Bulk retailer - good fit for gas/water/household FMCG distribution",
     "county": "Nairobi"
   },
   {
@@ -1280,8 +1039,8 @@ export const OUTREACH_LEADS: OutreachLead[] = [
     "category": "Wholesaler",
     "location": "Eastleigh, Nairobi",
     "phone": "+254 716 133212",
-    "fit": "Medium-High",
-    "fitNote": "General/FMCG wholesaler - possible bulk stocking channel",
+    "fit": "Medium",
+    "fitNote": "Bulk retailer - good fit for gas/water/household FMCG distribution",
     "county": "Nairobi"
   },
   {
@@ -1289,8 +1048,8 @@ export const OUTREACH_LEADS: OutreachLead[] = [
     "category": "Wholesaler",
     "location": "Eastleigh, Nairobi",
     "phone": "+254 721 326614",
-    "fit": "Medium-High",
-    "fitNote": "General/FMCG wholesaler - possible bulk stocking channel",
+    "fit": "Medium",
+    "fitNote": "Bulk retailer - good fit for gas/water/household FMCG distribution",
     "county": "Nairobi"
   },
   {
@@ -1298,8 +1057,8 @@ export const OUTREACH_LEADS: OutreachLead[] = [
     "category": "Wholesaler",
     "location": "Eastleigh, Nairobi",
     "phone": "+254 110 582555",
-    "fit": "Low",
-    "fitNote": "Clothing/textile wholesaler - unrelated trade",
+    "fit": "Medium",
+    "fitNote": "Bulk retailer - good fit for gas/water/household FMCG distribution",
     "county": "Nairobi"
   },
   {
@@ -1307,8 +1066,8 @@ export const OUTREACH_LEADS: OutreachLead[] = [
     "category": "Wholesaler",
     "location": "Moyale Mall, Eastleigh, Nairobi",
     "phone": "+254 726 451741",
-    "fit": "Low",
-    "fitNote": "Clothing/textile wholesaler - unrelated trade",
+    "fit": "Medium",
+    "fitNote": "Bulk retailer - good fit for gas/water/household FMCG distribution",
     "county": "Nairobi"
   },
   {
@@ -1316,8 +1075,8 @@ export const OUTREACH_LEADS: OutreachLead[] = [
     "category": "Wholesaler",
     "location": "Eastleigh, Nairobi",
     "phone": "+254 101 365296",
-    "fit": "Medium-High",
-    "fitNote": "General/FMCG wholesaler - possible bulk stocking channel",
+    "fit": "Medium",
+    "fitNote": "Bulk retailer - good fit for gas/water/household FMCG distribution",
     "county": "Nairobi"
   },
   {
@@ -1325,8 +1084,8 @@ export const OUTREACH_LEADS: OutreachLead[] = [
     "category": "Wholesaler",
     "location": "Digo Rd, Gikomba, Nairobi",
     "phone": "+254 722 648796",
-    "fit": "Low",
-    "fitNote": "Clothing/textile wholesaler - unrelated trade",
+    "fit": "Medium",
+    "fitNote": "Bulk retailer - good fit for gas/water/household FMCG distribution",
     "county": "Nairobi"
   },
   {
@@ -1334,8 +1093,8 @@ export const OUTREACH_LEADS: OutreachLead[] = [
     "category": "Wholesaler",
     "location": "Gikomba, Nairobi",
     "phone": "+254 716 319161",
-    "fit": "Low",
-    "fitNote": "Clothing/textile wholesaler - unrelated trade",
+    "fit": "Medium",
+    "fitNote": "Bulk retailer - good fit for gas/water/household FMCG distribution",
     "county": "Nairobi"
   },
   {
@@ -1343,8 +1102,8 @@ export const OUTREACH_LEADS: OutreachLead[] = [
     "category": "Wholesaler",
     "location": "Gikomba, Nairobi",
     "phone": "+254 720 719064",
-    "fit": "Low",
-    "fitNote": "Clothing/textile wholesaler - unrelated trade",
+    "fit": "Medium",
+    "fitNote": "Bulk retailer - good fit for gas/water/household FMCG distribution",
     "county": "Nairobi"
   },
   {
@@ -1352,8 +1111,8 @@ export const OUTREACH_LEADS: OutreachLead[] = [
     "category": "Wholesaler",
     "location": "Gikomba, Nairobi",
     "phone": "Not listed - visit in person",
-    "fit": "Medium-High",
-    "fitNote": "General/FMCG wholesaler - possible bulk stocking channel",
+    "fit": "Medium",
+    "fitNote": "Bulk retailer - good fit for gas/water/household FMCG distribution",
     "county": "Nairobi"
   },
   {
@@ -1361,8 +1120,8 @@ export const OUTREACH_LEADS: OutreachLead[] = [
     "category": "Wholesaler",
     "location": "Gikomba, Nairobi",
     "phone": "+254 723 832253",
-    "fit": "Low",
-    "fitNote": "Clothing/textile wholesaler - unrelated trade",
+    "fit": "Medium",
+    "fitNote": "Bulk retailer - good fit for gas/water/household FMCG distribution",
     "county": "Nairobi"
   },
   {
@@ -1371,7 +1130,7 @@ export const OUTREACH_LEADS: OutreachLead[] = [
     "location": "Eastleigh, Nairobi",
     "phone": "+254 704 485989",
     "fit": "High",
-    "fitNote": "Direct category match (kitchenware/household essentials)",
+    "fitNote": "Kitchenware retailer - direct product-line fit for AquaGas household items",
     "county": "Nairobi"
   },
   {
@@ -1379,8 +1138,8 @@ export const OUTREACH_LEADS: OutreachLead[] = [
     "category": "Hardware",
     "location": "Thika",
     "phone": "+254 718 165971",
-    "fit": "Low",
-    "fitNote": "Pure construction/building-materials hardware - weak fit",
+    "fit": "Medium",
+    "fitNote": "General hardware store - verify in person if it stocks household/water/gas accessories",
     "county": "Kiambu"
   },
   {
@@ -1389,7 +1148,7 @@ export const OUTREACH_LEADS: OutreachLead[] = [
     "location": "Thika",
     "phone": "+254 720 645917",
     "fit": "Medium",
-    "fitNote": "General hardware store - verify in person if it stocks household/electrical items",
+    "fitNote": "General hardware store - verify in person if it stocks household/water/gas accessories",
     "county": "Kiambu"
   },
   {
@@ -1398,7 +1157,7 @@ export const OUTREACH_LEADS: OutreachLead[] = [
     "location": "Thika",
     "phone": "+254 716 526863",
     "fit": "Medium",
-    "fitNote": "General hardware store - verify in person if it stocks household/electrical items",
+    "fitNote": "General hardware store - verify in person if it stocks household/water/gas accessories",
     "county": "Kiambu"
   },
   {
@@ -1406,8 +1165,8 @@ export const OUTREACH_LEADS: OutreachLead[] = [
     "category": "Hardware",
     "location": "Thika",
     "phone": "+254 743 268873",
-    "fit": "Low",
-    "fitNote": "Pure construction/building-materials hardware - weak fit",
+    "fit": "Medium",
+    "fitNote": "General hardware store - verify in person if it stocks household/water/gas accessories",
     "county": "Kiambu"
   },
   {
@@ -1415,8 +1174,8 @@ export const OUTREACH_LEADS: OutreachLead[] = [
     "category": "Hardware",
     "location": "Thika",
     "phone": "+254 711 431680",
-    "fit": "Low",
-    "fitNote": "Pure construction/building-materials hardware - weak fit",
+    "fit": "Medium",
+    "fitNote": "General hardware store - verify in person if it stocks household/water/gas accessories",
     "county": "Kiambu"
   },
   {
@@ -1425,34 +1184,7 @@ export const OUTREACH_LEADS: OutreachLead[] = [
     "location": "Thika",
     "phone": "+254 722 327041",
     "fit": "Medium",
-    "fitNote": "General hardware store - verify in person if it stocks household/electrical items",
-    "county": "Kiambu"
-  },
-  {
-    "name": "Naivas Supermarket- Thika Town",
-    "category": "Supermarket",
-    "location": "Thika",
-    "phone": "+254 20 2499900",
-    "fit": "High",
-    "fitNote": "Retail shelf space for gas refills, bottled water & kitchenware - direct fit",
-    "county": "Kiambu"
-  },
-  {
-    "name": "Quick Mart Chania",
-    "category": "Supermarket",
-    "location": "Thika",
-    "phone": "+254 717 802802",
-    "fit": "High",
-    "fitNote": "Retail shelf space for gas refills, bottled water & kitchenware - direct fit",
-    "county": "Kiambu"
-  },
-  {
-    "name": "Naivas Foodmarket - Ananas Mall",
-    "category": "Supermarket",
-    "location": "Thika",
-    "phone": "+254 20 8000494",
-    "fit": "High",
-    "fitNote": "Retail shelf space for gas refills, bottled water & kitchenware - direct fit",
+    "fitNote": "General hardware store - verify in person if it stocks household/water/gas accessories",
     "county": "Kiambu"
   },
   {
@@ -1460,8 +1192,8 @@ export const OUTREACH_LEADS: OutreachLead[] = [
     "category": "Supermarket",
     "location": "Thika",
     "phone": "+254 725 083333",
-    "fit": "High",
-    "fitNote": "Retail shelf space for gas refills, bottled water & kitchenware - direct fit",
+    "fit": "Medium",
+    "fitNote": "Independent supermarket/minimart - potential retail shelf space for household items",
     "county": "Kiambu"
   },
   {
@@ -1469,8 +1201,8 @@ export const OUTREACH_LEADS: OutreachLead[] = [
     "category": "Supermarket",
     "location": "Thika",
     "phone": "+254 726 249492",
-    "fit": "High",
-    "fitNote": "Retail shelf space for gas refills, bottled water & kitchenware - direct fit",
+    "fit": "Medium",
+    "fitNote": "Independent supermarket/minimart - potential retail shelf space for household items",
     "county": "Kiambu"
   },
   {
@@ -1478,17 +1210,8 @@ export const OUTREACH_LEADS: OutreachLead[] = [
     "category": "Supermarket",
     "location": "Juja",
     "phone": "+254 723 119280",
-    "fit": "High",
-    "fitNote": "Retail shelf space for gas refills, bottled water & kitchenware - direct fit",
-    "county": "Kiambu"
-  },
-  {
-    "name": "Naivas Foodmarket - Juja City Mall",
-    "category": "Supermarket",
-    "location": "Juja",
-    "phone": "+254 115 536096",
-    "fit": "High",
-    "fitNote": "Retail shelf space for gas refills, bottled water & kitchenware - direct fit",
+    "fit": "Medium",
+    "fitNote": "Independent supermarket/minimart - potential retail shelf space for household items",
     "county": "Kiambu"
   },
   {
@@ -1496,8 +1219,8 @@ export const OUTREACH_LEADS: OutreachLead[] = [
     "category": "Supermarket",
     "location": "Juja",
     "phone": "Not listed - visit in person",
-    "fit": "High",
-    "fitNote": "Retail shelf space for gas refills, bottled water & kitchenware - direct fit",
+    "fit": "Medium",
+    "fitNote": "Independent supermarket/minimart - potential retail shelf space for household items",
     "county": "Kiambu"
   },
   {
@@ -1505,8 +1228,8 @@ export const OUTREACH_LEADS: OutreachLead[] = [
     "category": "Hardware",
     "location": "Gitaru, Kikuyu",
     "phone": "+254 708 883057",
-    "fit": "High",
-    "fitNote": "Water/plumbing/electrical hardware - adjacent to gas & water delivery (Davis & Shirtliff-type fit)",
+    "fit": "Medium",
+    "fitNote": "General hardware store - verify in person if it stocks household/water/gas accessories",
     "county": "Kiambu"
   },
   {
@@ -1514,8 +1237,8 @@ export const OUTREACH_LEADS: OutreachLead[] = [
     "category": "Hardware",
     "location": "Rungiri, Kikuyu",
     "phone": "+254 708 883057",
-    "fit": "High",
-    "fitNote": "Water/plumbing/electrical hardware - adjacent to gas & water delivery (Davis & Shirtliff-type fit)",
+    "fit": "Medium",
+    "fitNote": "General hardware store - verify in person if it stocks household/water/gas accessories",
     "county": "Kiambu"
   },
   {
@@ -1524,7 +1247,7 @@ export const OUTREACH_LEADS: OutreachLead[] = [
     "location": "Kikuyu",
     "phone": "+254 722 241606",
     "fit": "Medium",
-    "fitNote": "General hardware store - verify in person if it stocks household/electrical items",
+    "fitNote": "General hardware store - verify in person if it stocks household/water/gas accessories",
     "county": "Kiambu"
   },
   {
@@ -1533,7 +1256,7 @@ export const OUTREACH_LEADS: OutreachLead[] = [
     "location": "Kikuyu",
     "phone": "+254 720 938799",
     "fit": "Medium",
-    "fitNote": "General hardware store - verify in person if it stocks household/electrical items",
+    "fitNote": "General hardware store - verify in person if it stocks household/water/gas accessories",
     "county": "Kiambu"
   },
   {
@@ -1542,7 +1265,7 @@ export const OUTREACH_LEADS: OutreachLead[] = [
     "location": "Kikuyu",
     "phone": "+254 732 393909",
     "fit": "Medium",
-    "fitNote": "General hardware store - verify in person if it stocks household/electrical items",
+    "fitNote": "General hardware store - verify in person if it stocks household/water/gas accessories",
     "county": "Kiambu"
   },
   {
@@ -1551,25 +1274,7 @@ export const OUTREACH_LEADS: OutreachLead[] = [
     "location": "Kikuyu",
     "phone": "+254 702 718441",
     "fit": "Medium",
-    "fitNote": "General hardware store - verify in person if it stocks household/electrical items",
-    "county": "Kiambu"
-  },
-  {
-    "name": "Naivas Supermarket - Limuru",
-    "category": "Supermarket",
-    "location": "Limuru",
-    "phone": "+254 20 2329828",
-    "fit": "High",
-    "fitNote": "Retail shelf space for gas refills, bottled water & kitchenware - direct fit",
-    "county": "Kiambu"
-  },
-  {
-    "name": "Cleanshelf Supermarket Limuru",
-    "category": "Supermarket",
-    "location": "Limuru",
-    "phone": "+254 702 611346",
-    "fit": "High",
-    "fitNote": "Retail shelf space for gas refills, bottled water & kitchenware - direct fit",
+    "fitNote": "General hardware store - verify in person if it stocks household/water/gas accessories",
     "county": "Kiambu"
   },
   {
@@ -1577,8 +1282,8 @@ export const OUTREACH_LEADS: OutreachLead[] = [
     "category": "Supermarket",
     "location": "Limuru",
     "phone": "Not listed - visit in person",
-    "fit": "High",
-    "fitNote": "Retail shelf space for gas refills, bottled water & kitchenware - direct fit",
+    "fit": "Medium",
+    "fitNote": "Independent supermarket/minimart - potential retail shelf space for household items",
     "county": "Kiambu"
   },
   {
@@ -1587,7 +1292,7 @@ export const OUTREACH_LEADS: OutreachLead[] = [
     "location": "Ruiru",
     "phone": "+254 715 399020",
     "fit": "High",
-    "fitNote": "Already sells cooking gas - target for bulk/wholesale supply or delivery-partner deal, not retail diversification",
+    "fitNote": "Gas dealer - direct product-line fit for AquaGas cooking gas partnership",
     "county": "Kiambu"
   },
   {
@@ -1596,7 +1301,7 @@ export const OUTREACH_LEADS: OutreachLead[] = [
     "location": "Ruiru",
     "phone": "+254 798 871702",
     "fit": "High",
-    "fitNote": "Already sells cooking gas - target for bulk/wholesale supply or delivery-partner deal, not retail diversification",
+    "fitNote": "Gas dealer - direct product-line fit for AquaGas cooking gas partnership",
     "county": "Kiambu"
   },
   {
@@ -1605,16 +1310,7 @@ export const OUTREACH_LEADS: OutreachLead[] = [
     "location": "Ruiru",
     "phone": "+254 741 397530",
     "fit": "High",
-    "fitNote": "Already sells cooking gas - target for bulk/wholesale supply or delivery-partner deal, not retail diversification",
-    "county": "Kiambu"
-  },
-  {
-    "name": "M-Gas Ruiru Depot",
-    "category": "Gas Dealer",
-    "location": "Ruiru",
-    "phone": "+254 800 721 148",
-    "fit": "High",
-    "fitNote": "Already sells cooking gas - target for bulk/wholesale supply or delivery-partner deal, not retail diversification",
+    "fitNote": "Gas dealer - direct product-line fit for AquaGas cooking gas partnership",
     "county": "Kiambu"
   },
   {
@@ -1623,7 +1319,7 @@ export const OUTREACH_LEADS: OutreachLead[] = [
     "location": "Ruiru",
     "phone": "Not listed - visit in person",
     "fit": "High",
-    "fitNote": "Already sells cooking gas - target for bulk/wholesale supply or delivery-partner deal, not retail diversification",
+    "fitNote": "Gas dealer - direct product-line fit for AquaGas cooking gas partnership",
     "county": "Kiambu"
   },
   {
@@ -1631,8 +1327,8 @@ export const OUTREACH_LEADS: OutreachLead[] = [
     "category": "Wholesaler",
     "location": "Thika",
     "phone": "Not listed - visit in person",
-    "fit": "Medium-High",
-    "fitNote": "General/FMCG wholesaler - possible bulk stocking channel",
+    "fit": "Medium",
+    "fitNote": "Bulk retailer - good fit for gas/water/household FMCG distribution",
     "county": "Kiambu"
   },
   {
@@ -1640,8 +1336,8 @@ export const OUTREACH_LEADS: OutreachLead[] = [
     "category": "Wholesaler",
     "location": "Thika",
     "phone": "Not listed - visit in person",
-    "fit": "Medium-High",
-    "fitNote": "General/FMCG wholesaler - possible bulk stocking channel",
+    "fit": "Medium",
+    "fitNote": "Bulk retailer - good fit for gas/water/household FMCG distribution",
     "county": "Kiambu"
   },
   {
@@ -1649,8 +1345,8 @@ export const OUTREACH_LEADS: OutreachLead[] = [
     "category": "Wholesaler",
     "location": "Thika",
     "phone": "+254 737 372618",
-    "fit": "Medium-High",
-    "fitNote": "General/FMCG wholesaler - possible bulk stocking channel",
+    "fit": "Medium",
+    "fitNote": "Bulk retailer - good fit for gas/water/household FMCG distribution",
     "county": "Kiambu"
   },
   {
@@ -1658,8 +1354,8 @@ export const OUTREACH_LEADS: OutreachLead[] = [
     "category": "Wholesaler",
     "location": "Juja area",
     "phone": "Not listed - visit in person",
-    "fit": "Medium-High",
-    "fitNote": "General/FMCG wholesaler - possible bulk stocking channel",
+    "fit": "Medium",
+    "fitNote": "Bulk retailer - good fit for gas/water/household FMCG distribution",
     "county": "Kiambu"
   },
   {
@@ -1667,8 +1363,8 @@ export const OUTREACH_LEADS: OutreachLead[] = [
     "category": "Wholesaler",
     "location": "Thika",
     "phone": "+254 720 209716",
-    "fit": "Medium-High",
-    "fitNote": "General/FMCG wholesaler - possible bulk stocking channel",
+    "fit": "Medium",
+    "fitNote": "Bulk retailer - good fit for gas/water/household FMCG distribution",
     "county": "Kiambu"
   },
   {
@@ -1676,44 +1372,8 @@ export const OUTREACH_LEADS: OutreachLead[] = [
     "category": "Wholesaler",
     "location": "Thika",
     "phone": "Not listed - visit in person",
-    "fit": "Medium-High",
-    "fitNote": "General/FMCG wholesaler - possible bulk stocking channel",
-    "county": "Kiambu"
-  },
-  {
-    "name": "Quick Mart Ruaka",
-    "category": "Supermarket",
-    "location": "Ruaka",
-    "phone": "+254 708 600500",
-    "fit": "High",
-    "fitNote": "Retail shelf space for gas refills, bottled water & kitchenware - direct fit",
-    "county": "Kiambu"
-  },
-  {
-    "name": "Cleanshelf Ruaka",
-    "category": "Supermarket",
-    "location": "Ruaka",
-    "phone": "+254 702 611346",
-    "fit": "High",
-    "fitNote": "Retail shelf space for gas refills, bottled water & kitchenware - direct fit",
-    "county": "Kiambu"
-  },
-  {
-    "name": "Naivas Supermarket - Ruaka",
-    "category": "Supermarket",
-    "location": "Ruaka",
-    "phone": "Not listed - visit in person",
-    "fit": "High",
-    "fitNote": "Retail shelf space for gas refills, bottled water & kitchenware - direct fit",
-    "county": "Kiambu"
-  },
-  {
-    "name": "Chandarana Foodplus Supermarket (Rosslyn Branch)",
-    "category": "Supermarket",
-    "location": "Rosslyn, Limuru Rd",
-    "phone": "+254 796 088338",
-    "fit": "High",
-    "fitNote": "Retail shelf space for gas refills, bottled water & kitchenware - direct fit",
+    "fit": "Medium",
+    "fitNote": "Bulk retailer - good fit for gas/water/household FMCG distribution",
     "county": "Kiambu"
   },
   {
@@ -1722,7 +1382,7 @@ export const OUTREACH_LEADS: OutreachLead[] = [
     "location": "Magadi Rd, Ongata Rongai",
     "phone": "+254 745 554008",
     "fit": "Medium",
-    "fitNote": "General hardware store - verify in person if it stocks household/electrical items",
+    "fitNote": "General hardware store - verify in person if it stocks household/water/gas accessories",
     "county": "Kajiado"
   },
   {
@@ -1730,8 +1390,8 @@ export const OUTREACH_LEADS: OutreachLead[] = [
     "category": "Hardware",
     "location": "Magadi Rd, Ongata Rongai",
     "phone": "+254 721 926399",
-    "fit": "Low",
-    "fitNote": "Pure construction/building-materials hardware - weak fit",
+    "fit": "Medium",
+    "fitNote": "General hardware store - verify in person if it stocks household/water/gas accessories",
     "county": "Kajiado"
   },
   {
@@ -1740,7 +1400,7 @@ export const OUTREACH_LEADS: OutreachLead[] = [
     "location": "Ongata Rongai",
     "phone": "+254 722 734440",
     "fit": "Medium",
-    "fitNote": "General hardware store - verify in person if it stocks household/electrical items",
+    "fitNote": "General hardware store - verify in person if it stocks household/water/gas accessories",
     "county": "Kajiado"
   },
   {
@@ -1748,8 +1408,8 @@ export const OUTREACH_LEADS: OutreachLead[] = [
     "category": "Hardware",
     "location": "Magadi Rd, Ongata Rongai",
     "phone": "+254 704 311786",
-    "fit": "Low",
-    "fitNote": "Pure construction/building-materials hardware - weak fit",
+    "fit": "Medium",
+    "fitNote": "General hardware store - verify in person if it stocks household/water/gas accessories",
     "county": "Kajiado"
   },
   {
@@ -1758,7 +1418,7 @@ export const OUTREACH_LEADS: OutreachLead[] = [
     "location": "Magadi Rd, Ongata Rongai",
     "phone": "Not listed - visit in person",
     "fit": "Medium",
-    "fitNote": "General hardware store - verify in person if it stocks household/electrical items",
+    "fitNote": "General hardware store - verify in person if it stocks household/water/gas accessories",
     "county": "Kajiado"
   },
   {
@@ -1767,7 +1427,7 @@ export const OUTREACH_LEADS: OutreachLead[] = [
     "location": "Ongata Rongai",
     "phone": "+254 721 412981",
     "fit": "Medium",
-    "fitNote": "General hardware store - verify in person if it stocks household/electrical items",
+    "fitNote": "General hardware store - verify in person if it stocks household/water/gas accessories",
     "county": "Kajiado"
   },
   {
@@ -1776,7 +1436,7 @@ export const OUTREACH_LEADS: OutreachLead[] = [
     "location": "Magadi Rd, Ongata Rongai",
     "phone": "+254 725 261290",
     "fit": "Medium",
-    "fitNote": "General hardware store - verify in person if it stocks household/electrical items",
+    "fitNote": "General hardware store - verify in person if it stocks household/water/gas accessories",
     "county": "Kajiado"
   },
   {
@@ -1785,25 +1445,7 @@ export const OUTREACH_LEADS: OutreachLead[] = [
     "location": "Magadi Rd, Ongata Rongai",
     "phone": "+254 789 076146",
     "fit": "Medium",
-    "fitNote": "General hardware store - verify in person if it stocks household/electrical items",
-    "county": "Kajiado"
-  },
-  {
-    "name": "Naivas Foodmarket - Rongai",
-    "category": "Supermarket",
-    "location": "Magadi Rd, Ongata Rongai",
-    "phone": "+254 115 532861",
-    "fit": "High",
-    "fitNote": "Retail shelf space for gas refills, bottled water & kitchenware - direct fit",
-    "county": "Kajiado"
-  },
-  {
-    "name": "Quickmart - Rongai Main",
-    "category": "Supermarket",
-    "location": "Magadi Rd, Ongata Rongai",
-    "phone": "+254 799 212121",
-    "fit": "High",
-    "fitNote": "Retail shelf space for gas refills, bottled water & kitchenware - direct fit",
+    "fitNote": "General hardware store - verify in person if it stocks household/water/gas accessories",
     "county": "Kajiado"
   },
   {
@@ -1811,17 +1453,8 @@ export const OUTREACH_LEADS: OutreachLead[] = [
     "category": "Supermarket",
     "location": "Ongata Rongai",
     "phone": "+254 714 158155",
-    "fit": "High",
-    "fitNote": "Retail shelf space for gas refills, bottled water & kitchenware - direct fit",
-    "county": "Kajiado"
-  },
-  {
-    "name": "Cleanshelf Supermarket - Old Rongai",
-    "category": "Supermarket",
-    "location": "Magadi Rd, Ongata Rongai",
-    "phone": "+254 110 090583",
-    "fit": "High",
-    "fitNote": "Retail shelf space for gas refills, bottled water & kitchenware - direct fit",
+    "fit": "Medium",
+    "fitNote": "Independent supermarket/minimart - potential retail shelf space for household items",
     "county": "Kajiado"
   },
   {
@@ -1829,8 +1462,8 @@ export const OUTREACH_LEADS: OutreachLead[] = [
     "category": "Supermarket",
     "location": "Ongata Rongai",
     "phone": "Not listed - visit in person",
-    "fit": "High",
-    "fitNote": "Retail shelf space for gas refills, bottled water & kitchenware - direct fit",
+    "fit": "Medium",
+    "fitNote": "Independent supermarket/minimart - potential retail shelf space for household items",
     "county": "Kajiado"
   },
   {
@@ -1839,7 +1472,7 @@ export const OUTREACH_LEADS: OutreachLead[] = [
     "location": "Ongata Rongai",
     "phone": "+254 758 121569",
     "fit": "High",
-    "fitNote": "Already sells cooking gas - target for bulk/wholesale supply or delivery-partner deal, not retail diversification",
+    "fitNote": "Gas dealer - direct product-line fit for AquaGas cooking gas partnership",
     "county": "Kajiado"
   },
   {
@@ -1848,16 +1481,7 @@ export const OUTREACH_LEADS: OutreachLead[] = [
     "location": "Steadmark, Ongata Rongai",
     "phone": "+254 793 232399",
     "fit": "High",
-    "fitNote": "Already sells cooking gas - target for bulk/wholesale supply or delivery-partner deal, not retail diversification",
-    "county": "Kajiado"
-  },
-  {
-    "name": "M-Gas Rongai Depot",
-    "category": "Gas Dealer",
-    "location": "Ongata Rongai",
-    "phone": "+254 800 721 148",
-    "fit": "High",
-    "fitNote": "Already sells cooking gas - target for bulk/wholesale supply or delivery-partner deal, not retail diversification",
+    "fitNote": "Gas dealer - direct product-line fit for AquaGas cooking gas partnership",
     "county": "Kajiado"
   },
   {
@@ -1866,7 +1490,7 @@ export const OUTREACH_LEADS: OutreachLead[] = [
     "location": "Ongata Rongai",
     "phone": "+254 725 065843",
     "fit": "High",
-    "fitNote": "Already sells cooking gas - target for bulk/wholesale supply or delivery-partner deal, not retail diversification",
+    "fitNote": "Gas dealer - direct product-line fit for AquaGas cooking gas partnership",
     "county": "Kajiado"
   },
   {
@@ -1875,7 +1499,7 @@ export const OUTREACH_LEADS: OutreachLead[] = [
     "location": "Olerai Rd, Ongata Rongai",
     "phone": "+254 722 573207",
     "fit": "High",
-    "fitNote": "Already sells cooking gas - target for bulk/wholesale supply or delivery-partner deal, not retail diversification",
+    "fitNote": "Gas dealer - direct product-line fit for AquaGas cooking gas partnership",
     "county": "Kajiado"
   },
   {
@@ -1883,8 +1507,8 @@ export const OUTREACH_LEADS: OutreachLead[] = [
     "category": "Wholesaler",
     "location": "Njambi Rd, Ongata Rongai",
     "phone": "+254 711 516774",
-    "fit": "Medium-High",
-    "fitNote": "General/FMCG wholesaler - possible bulk stocking channel",
+    "fit": "Medium",
+    "fitNote": "Bulk retailer - good fit for gas/water/household FMCG distribution",
     "county": "Kajiado"
   },
   {
@@ -1892,8 +1516,8 @@ export const OUTREACH_LEADS: OutreachLead[] = [
     "category": "Wholesaler",
     "location": "Magadi Rd, Ongata Rongai",
     "phone": "+254 704 595051",
-    "fit": "Medium-High",
-    "fitNote": "General/FMCG wholesaler - possible bulk stocking channel",
+    "fit": "Medium",
+    "fitNote": "Bulk retailer - good fit for gas/water/household FMCG distribution",
     "county": "Kajiado"
   },
   {
@@ -1901,8 +1525,8 @@ export const OUTREACH_LEADS: OutreachLead[] = [
     "category": "Wholesaler",
     "location": "Rongai Stage, Ongata Rongai",
     "phone": "+254 741 428384",
-    "fit": "Medium-High",
-    "fitNote": "General/FMCG wholesaler - possible bulk stocking channel",
+    "fit": "Medium",
+    "fitNote": "Bulk retailer - good fit for gas/water/household FMCG distribution",
     "county": "Kajiado"
   },
   {
@@ -1911,7 +1535,7 @@ export const OUTREACH_LEADS: OutreachLead[] = [
     "location": "Naivasha Rd, Nairobi",
     "phone": "+254 720 767370",
     "fit": "Medium",
-    "fitNote": "General hardware store - verify in person if it stocks household/electrical items",
+    "fitNote": "General hardware store - verify in person if it stocks household/water/gas accessories",
     "county": "Nairobi"
   },
   {
@@ -1920,7 +1544,7 @@ export const OUTREACH_LEADS: OutreachLead[] = [
     "location": "Dagoretti Rd, Nairobi",
     "phone": "Not listed - visit in person",
     "fit": "Medium",
-    "fitNote": "General hardware store - verify in person if it stocks household/electrical items",
+    "fitNote": "General hardware store - verify in person if it stocks household/water/gas accessories",
     "county": "Nairobi"
   },
   {
@@ -1929,7 +1553,7 @@ export const OUTREACH_LEADS: OutreachLead[] = [
     "location": "Dagoretti Rd, Nairobi",
     "phone": "Not listed - visit in person",
     "fit": "Medium",
-    "fitNote": "General hardware store - verify in person if it stocks household/electrical items",
+    "fitNote": "General hardware store - verify in person if it stocks household/water/gas accessories",
     "county": "Nairobi"
   },
   {
@@ -1938,7 +1562,7 @@ export const OUTREACH_LEADS: OutreachLead[] = [
     "location": "Dagoretti Rd, Nairobi",
     "phone": "Not listed - visit in person",
     "fit": "Medium",
-    "fitNote": "General hardware store - verify in person if it stocks household/electrical items",
+    "fitNote": "General hardware store - verify in person if it stocks household/water/gas accessories",
     "county": "Nairobi"
   },
   {
@@ -1947,7 +1571,7 @@ export const OUTREACH_LEADS: OutreachLead[] = [
     "location": "Naivasha Rd, Nairobi",
     "phone": "+254 758 027984",
     "fit": "Medium",
-    "fitNote": "General hardware store - verify in person if it stocks household/electrical items",
+    "fitNote": "General hardware store - verify in person if it stocks household/water/gas accessories",
     "county": "Nairobi"
   },
   {
@@ -1956,7 +1580,7 @@ export const OUTREACH_LEADS: OutreachLead[] = [
     "location": "Nairobi",
     "phone": "Not listed - visit in person",
     "fit": "Medium",
-    "fitNote": "General hardware store - verify in person if it stocks household/electrical items",
+    "fitNote": "General hardware store - verify in person if it stocks household/water/gas accessories",
     "county": "Nairobi"
   },
   {
@@ -1965,17 +1589,8 @@ export const OUTREACH_LEADS: OutreachLead[] = [
     "location": "Dagoretti Rd, Nairobi",
     "phone": "Not listed - visit in person",
     "fit": "Medium",
-    "fitNote": "General hardware store - verify in person if it stocks household/electrical items",
+    "fitNote": "General hardware store - verify in person if it stocks household/water/gas accessories",
     "county": "Nairobi"
-  },
-  {
-    "name": "Quick Mart Kikuyu Rd",
-    "category": "Supermarket",
-    "location": "Kikuyu Rd, Nairobi",
-    "phone": "+254 702 151515",
-    "fit": "High",
-    "fitNote": "Retail shelf space for gas refills, bottled water & kitchenware - direct fit",
-    "county": "Kiambu"
   },
   {
     "name": "Jimfloh Ventures gas supplier and water refill",
@@ -1983,7 +1598,7 @@ export const OUTREACH_LEADS: OutreachLead[] = [
     "location": "Macharia Rd, Nairobi",
     "phone": "+254 117 162680",
     "fit": "High",
-    "fitNote": "Already sells cooking gas - target for bulk/wholesale supply or delivery-partner deal, not retail diversification",
+    "fitNote": "Gas dealer - direct product-line fit for AquaGas cooking gas partnership",
     "county": "Nairobi"
   },
   {
@@ -1992,7 +1607,7 @@ export const OUTREACH_LEADS: OutreachLead[] = [
     "location": "Nairobi",
     "phone": "+254 725 707271",
     "fit": "High",
-    "fitNote": "Already sells cooking gas - target for bulk/wholesale supply or delivery-partner deal, not retail diversification",
+    "fitNote": "Gas dealer - direct product-line fit for AquaGas cooking gas partnership",
     "county": "Nairobi"
   },
   {
@@ -2001,7 +1616,7 @@ export const OUTREACH_LEADS: OutreachLead[] = [
     "location": "Riverside Dr, Nairobi",
     "phone": "+254 725 707271",
     "fit": "High",
-    "fitNote": "Already sells cooking gas - target for bulk/wholesale supply or delivery-partner deal, not retail diversification",
+    "fitNote": "Gas dealer - direct product-line fit for AquaGas cooking gas partnership",
     "county": "Nairobi"
   },
   {
@@ -2010,7 +1625,7 @@ export const OUTREACH_LEADS: OutreachLead[] = [
     "location": "Amboseli Rd, Nairobi",
     "phone": "+254 725 785001",
     "fit": "High",
-    "fitNote": "Already sells cooking gas - target for bulk/wholesale supply or delivery-partner deal, not retail diversification",
+    "fitNote": "Gas dealer - direct product-line fit for AquaGas cooking gas partnership",
     "county": "Nairobi"
   },
   {
@@ -2019,7 +1634,7 @@ export const OUTREACH_LEADS: OutreachLead[] = [
     "location": "Dagoretti Rd, Nairobi",
     "phone": "+254 727 852040",
     "fit": "High",
-    "fitNote": "Already sells cooking gas - target for bulk/wholesale supply or delivery-partner deal, not retail diversification",
+    "fitNote": "Gas dealer - direct product-line fit for AquaGas cooking gas partnership",
     "county": "Nairobi"
   },
   {
@@ -2027,8 +1642,8 @@ export const OUTREACH_LEADS: OutreachLead[] = [
     "category": "Hardware",
     "location": "Viwandani Mchumbi Rd, South B, Nairobi",
     "phone": "+254 733 986276",
-    "fit": "Low",
-    "fitNote": "Pure construction/building-materials hardware - weak fit",
+    "fit": "Medium",
+    "fitNote": "General hardware store - verify in person if it stocks household/water/gas accessories",
     "county": "Nairobi"
   },
   {
@@ -2037,7 +1652,7 @@ export const OUTREACH_LEADS: OutreachLead[] = [
     "location": "Mchumbi Rd, South B, Nairobi",
     "phone": "Not listed - visit in person",
     "fit": "Medium",
-    "fitNote": "General hardware store - verify in person if it stocks household/electrical items",
+    "fitNote": "General hardware store - verify in person if it stocks household/water/gas accessories",
     "county": "Nairobi"
   },
   {
@@ -2046,7 +1661,7 @@ export const OUTREACH_LEADS: OutreachLead[] = [
     "location": "Mchumbi Rd, South B, Nairobi",
     "phone": "+254 720 740118",
     "fit": "Medium",
-    "fitNote": "General hardware store - verify in person if it stocks household/electrical items",
+    "fitNote": "General hardware store - verify in person if it stocks household/water/gas accessories",
     "county": "Nairobi"
   },
   {
@@ -2055,16 +1670,7 @@ export const OUTREACH_LEADS: OutreachLead[] = [
     "location": "Capital Centre, South B, Nairobi",
     "phone": "+254 20 556638",
     "fit": "Medium",
-    "fitNote": "General hardware store - verify in person if it stocks household/electrical items",
-    "county": "Nairobi"
-  },
-  {
-    "name": "Naivas Supermarket-South C",
-    "category": "Supermarket",
-    "location": "Muhoho Rd, South C, Nairobi",
-    "phone": "+254 20 2053453",
-    "fit": "High",
-    "fitNote": "Retail shelf space for gas refills, bottled water & kitchenware - direct fit",
+    "fitNote": "General hardware store - verify in person if it stocks household/water/gas accessories",
     "county": "Nairobi"
   },
   {
@@ -2072,8 +1678,8 @@ export const OUTREACH_LEADS: OutreachLead[] = [
     "category": "Supermarket",
     "location": "South C, Nairobi",
     "phone": "+254 799 944238",
-    "fit": "High",
-    "fitNote": "Retail shelf space for gas refills, bottled water & kitchenware - direct fit",
+    "fit": "Medium",
+    "fitNote": "Independent supermarket/minimart - potential retail shelf space for household items",
     "county": "Nairobi"
   },
   {
@@ -2081,8 +1687,8 @@ export const OUTREACH_LEADS: OutreachLead[] = [
     "category": "Supermarket",
     "location": "Five Star Rd, South C, Nairobi",
     "phone": "+254 721 850359",
-    "fit": "High",
-    "fitNote": "Retail shelf space for gas refills, bottled water & kitchenware - direct fit",
+    "fit": "Medium",
+    "fitNote": "Independent supermarket/minimart - potential retail shelf space for household items",
     "county": "Nairobi"
   },
   {
@@ -2091,7 +1697,7 @@ export const OUTREACH_LEADS: OutreachLead[] = [
     "location": "South B, Nairobi",
     "phone": "+254 723 846436",
     "fit": "High",
-    "fitNote": "Already sells cooking gas - target for bulk/wholesale supply or delivery-partner deal, not retail diversification",
+    "fitNote": "Gas dealer - direct product-line fit for AquaGas cooking gas partnership",
     "county": "Nairobi"
   },
   {
@@ -2100,7 +1706,7 @@ export const OUTREACH_LEADS: OutreachLead[] = [
     "location": "Zanzibar Rd, South B, Nairobi",
     "phone": "+254 700 207859",
     "fit": "High",
-    "fitNote": "Already sells cooking gas - target for bulk/wholesale supply or delivery-partner deal, not retail diversification",
+    "fitNote": "Gas dealer - direct product-line fit for AquaGas cooking gas partnership",
     "county": "Nairobi"
   },
   {
@@ -2109,7 +1715,7 @@ export const OUTREACH_LEADS: OutreachLead[] = [
     "location": "Muhoho Ave, South C, Nairobi",
     "phone": "+254 700 207859",
     "fit": "High",
-    "fitNote": "Already sells cooking gas - target for bulk/wholesale supply or delivery-partner deal, not retail diversification",
+    "fitNote": "Gas dealer - direct product-line fit for AquaGas cooking gas partnership",
     "county": "Nairobi"
   },
   {
@@ -2118,7 +1724,7 @@ export const OUTREACH_LEADS: OutreachLead[] = [
     "location": "Hendred Ave, Nairobi",
     "phone": "+254 112 961405",
     "fit": "High",
-    "fitNote": "Already sells cooking gas - target for bulk/wholesale supply or delivery-partner deal, not retail diversification",
+    "fitNote": "Gas dealer - direct product-line fit for AquaGas cooking gas partnership",
     "county": "Nairobi"
   },
   {
@@ -2127,7 +1733,7 @@ export const OUTREACH_LEADS: OutreachLead[] = [
     "location": "Pipeline, Nairobi",
     "phone": "Not listed - visit in person",
     "fit": "Medium",
-    "fitNote": "General hardware store - verify in person if it stocks household/electrical items",
+    "fitNote": "General hardware store - verify in person if it stocks household/water/gas accessories",
     "county": "Nairobi"
   },
   {
@@ -2136,7 +1742,7 @@ export const OUTREACH_LEADS: OutreachLead[] = [
     "location": "Pipeline, Nairobi",
     "phone": "Not listed - visit in person",
     "fit": "Medium",
-    "fitNote": "General hardware store - verify in person if it stocks household/electrical items",
+    "fitNote": "General hardware store - verify in person if it stocks household/water/gas accessories",
     "county": "Nairobi"
   },
   {
@@ -2144,8 +1750,8 @@ export const OUTREACH_LEADS: OutreachLead[] = [
     "category": "Hardware",
     "location": "Nairobi",
     "phone": "+254 723 165982",
-    "fit": "High",
-    "fitNote": "Water/plumbing/electrical hardware - adjacent to gas & water delivery (Davis & Shirtliff-type fit)",
+    "fit": "Medium",
+    "fitNote": "General hardware store - verify in person if it stocks household/water/gas accessories",
     "county": "Nairobi"
   },
   {
@@ -2154,16 +1760,7 @@ export const OUTREACH_LEADS: OutreachLead[] = [
     "location": "Nairobi",
     "phone": "Not listed - visit in person",
     "fit": "Medium",
-    "fitNote": "General hardware store - verify in person if it stocks household/electrical items",
-    "county": "Nairobi"
-  },
-  {
-    "name": "Naivas Supermarket-Umoja",
-    "category": "Supermarket",
-    "location": "Kayole Spine Rd, Umoja, Nairobi",
-    "phone": "+254 20 2585914",
-    "fit": "High",
-    "fitNote": "Retail shelf space for gas refills, bottled water & kitchenware - direct fit",
+    "fitNote": "General hardware store - verify in person if it stocks household/water/gas accessories",
     "county": "Nairobi"
   },
   {
@@ -2171,17 +1768,8 @@ export const OUTREACH_LEADS: OutreachLead[] = [
     "category": "Supermarket",
     "location": "Moi Drive, Umoja, Nairobi",
     "phone": "+254 702 897145",
-    "fit": "High",
-    "fitNote": "Retail shelf space for gas refills, bottled water & kitchenware - direct fit",
-    "county": "Nairobi"
-  },
-  {
-    "name": "Shujaa Mall (Cleanshelf) - Kayole",
-    "category": "Supermarket",
-    "location": "Kayole Spine Rd, Nairobi",
-    "phone": "+254 20 2715932",
-    "fit": "High",
-    "fitNote": "Retail shelf space for gas refills, bottled water & kitchenware - direct fit",
+    "fit": "Medium",
+    "fitNote": "Independent supermarket/minimart - potential retail shelf space for household items",
     "county": "Nairobi"
   },
   {
@@ -2189,8 +1777,8 @@ export const OUTREACH_LEADS: OutreachLead[] = [
     "category": "Supermarket",
     "location": "Umoja 3, Nairobi",
     "phone": "+254 796 130042",
-    "fit": "High",
-    "fitNote": "Retail shelf space for gas refills, bottled water & kitchenware - direct fit",
+    "fit": "Medium",
+    "fitNote": "Independent supermarket/minimart - potential retail shelf space for household items",
     "county": "Nairobi"
   },
   {
@@ -2199,7 +1787,7 @@ export const OUTREACH_LEADS: OutreachLead[] = [
     "location": "Moi Dr, Umoja, Nairobi",
     "phone": "+254 740 677669",
     "fit": "High",
-    "fitNote": "Already sells cooking gas - target for bulk/wholesale supply or delivery-partner deal, not retail diversification",
+    "fitNote": "Gas dealer - direct product-line fit for AquaGas cooking gas partnership",
     "county": "Nairobi"
   },
   {
@@ -2208,7 +1796,7 @@ export const OUTREACH_LEADS: OutreachLead[] = [
     "location": "Umoja II, Nairobi",
     "phone": "+254 703 663454",
     "fit": "High",
-    "fitNote": "Already sells cooking gas - target for bulk/wholesale supply or delivery-partner deal, not retail diversification",
+    "fitNote": "Gas dealer - direct product-line fit for AquaGas cooking gas partnership",
     "county": "Nairobi"
   },
   {
@@ -2217,7 +1805,7 @@ export const OUTREACH_LEADS: OutreachLead[] = [
     "location": "Umoja II, Nairobi",
     "phone": "+254 720 480133",
     "fit": "High",
-    "fitNote": "Already sells cooking gas - target for bulk/wholesale supply or delivery-partner deal, not retail diversification",
+    "fitNote": "Gas dealer - direct product-line fit for AquaGas cooking gas partnership",
     "county": "Nairobi"
   },
   {
@@ -2226,7 +1814,7 @@ export const OUTREACH_LEADS: OutreachLead[] = [
     "location": "Umoja I, Nairobi",
     "phone": "+254 738 433953",
     "fit": "High",
-    "fitNote": "Already sells cooking gas - target for bulk/wholesale supply or delivery-partner deal, not retail diversification",
+    "fitNote": "Gas dealer - direct product-line fit for AquaGas cooking gas partnership",
     "county": "Nairobi"
   },
   {
@@ -2235,7 +1823,7 @@ export const OUTREACH_LEADS: OutreachLead[] = [
     "location": "Moi Drive, Umoja, Nairobi",
     "phone": "+254 710 438879",
     "fit": "High",
-    "fitNote": "Already sells cooking gas - target for bulk/wholesale supply or delivery-partner deal, not retail diversification",
+    "fitNote": "Gas dealer - direct product-line fit for AquaGas cooking gas partnership",
     "county": "Nairobi"
   },
   {
@@ -2244,7 +1832,7 @@ export const OUTREACH_LEADS: OutreachLead[] = [
     "location": "Nairobi",
     "phone": "Not listed - visit in person",
     "fit": "Medium",
-    "fitNote": "General hardware store - verify in person if it stocks household/electrical items",
+    "fitNote": "General hardware store - verify in person if it stocks household/water/gas accessories",
     "county": "Nairobi"
   },
   {
@@ -2253,7 +1841,7 @@ export const OUTREACH_LEADS: OutreachLead[] = [
     "location": "Cardinal Otunga, Nairobi",
     "phone": "+254 704 262801",
     "fit": "Medium",
-    "fitNote": "General hardware store - verify in person if it stocks household/electrical items",
+    "fitNote": "General hardware store - verify in person if it stocks household/water/gas accessories",
     "county": "Nairobi"
   },
   {
@@ -2262,7 +1850,7 @@ export const OUTREACH_LEADS: OutreachLead[] = [
     "location": "Kariobangi, Nairobi",
     "phone": "Not listed - visit in person",
     "fit": "Medium",
-    "fitNote": "General hardware store - verify in person if it stocks household/electrical items",
+    "fitNote": "General hardware store - verify in person if it stocks household/water/gas accessories",
     "county": "Nairobi"
   },
   {
@@ -2271,7 +1859,7 @@ export const OUTREACH_LEADS: OutreachLead[] = [
     "location": "Kariobangi, Nairobi",
     "phone": "+254 794 436299",
     "fit": "Medium",
-    "fitNote": "General hardware store - verify in person if it stocks household/electrical items",
+    "fitNote": "General hardware store - verify in person if it stocks household/water/gas accessories",
     "county": "Nairobi"
   },
   {
@@ -2280,7 +1868,7 @@ export const OUTREACH_LEADS: OutreachLead[] = [
     "location": "Koma Rock Rd, Nairobi",
     "phone": "Not listed - visit in person",
     "fit": "High",
-    "fitNote": "Already sells cooking gas - target for bulk/wholesale supply or delivery-partner deal, not retail diversification",
+    "fitNote": "Gas dealer - direct product-line fit for AquaGas cooking gas partnership",
     "county": "Nairobi"
   },
   {
@@ -2288,8 +1876,8 @@ export const OUTREACH_LEADS: OutreachLead[] = [
     "category": "Supermarket",
     "location": "Kariobangi South, Nairobi",
     "phone": "+254 722 658704",
-    "fit": "High",
-    "fitNote": "Retail shelf space for gas refills, bottled water & kitchenware - direct fit",
+    "fit": "Medium",
+    "fitNote": "Independent supermarket/minimart - potential retail shelf space for household items",
     "county": "Nairobi"
   },
   {
@@ -2298,7 +1886,7 @@ export const OUTREACH_LEADS: OutreachLead[] = [
     "location": "Mwihoko Rd, Githurai",
     "phone": "+254 722 399555",
     "fit": "Medium",
-    "fitNote": "General hardware store - verify in person if it stocks household/electrical items",
+    "fitNote": "General hardware store - verify in person if it stocks household/water/gas accessories",
     "county": "Kiambu"
   },
   {
@@ -2307,7 +1895,7 @@ export const OUTREACH_LEADS: OutreachLead[] = [
     "location": "Orchad Plaza, Githurai",
     "phone": "+254 719 202108",
     "fit": "Medium",
-    "fitNote": "General hardware store - verify in person if it stocks household/electrical items",
+    "fitNote": "General hardware store - verify in person if it stocks household/water/gas accessories",
     "county": "Kiambu"
   },
   {
@@ -2316,7 +1904,7 @@ export const OUTREACH_LEADS: OutreachLead[] = [
     "location": "Kamiti Rd, Githurai",
     "phone": "+254 724 469394",
     "fit": "Medium",
-    "fitNote": "General hardware store - verify in person if it stocks household/electrical items",
+    "fitNote": "General hardware store - verify in person if it stocks household/water/gas accessories",
     "county": "Kiambu"
   },
   {
@@ -2325,7 +1913,7 @@ export const OUTREACH_LEADS: OutreachLead[] = [
     "location": "Kamiti Rd, Githurai",
     "phone": "Not listed - visit in person",
     "fit": "Medium",
-    "fitNote": "General hardware store - verify in person if it stocks household/electrical items",
+    "fitNote": "General hardware store - verify in person if it stocks household/water/gas accessories",
     "county": "Kiambu"
   },
   {
@@ -2334,7 +1922,7 @@ export const OUTREACH_LEADS: OutreachLead[] = [
     "location": "Kamiti Rd, Githurai",
     "phone": "+254 706 507523",
     "fit": "Medium",
-    "fitNote": "General hardware store - verify in person if it stocks household/electrical items",
+    "fitNote": "General hardware store - verify in person if it stocks household/water/gas accessories",
     "county": "Kiambu"
   },
   {
@@ -2343,25 +1931,7 @@ export const OUTREACH_LEADS: OutreachLead[] = [
     "location": "Githurai 45",
     "phone": "+254 721 599315",
     "fit": "Medium",
-    "fitNote": "General hardware store - verify in person if it stocks household/electrical items",
-    "county": "Kiambu"
-  },
-  {
-    "name": "Naivas Supermarket - Githurai 44",
-    "category": "Supermarket",
-    "location": "Kamiti Rd, Githurai",
-    "phone": "+254 20 8000794",
-    "fit": "High",
-    "fitNote": "Retail shelf space for gas refills, bottled water & kitchenware - direct fit",
-    "county": "Kiambu"
-  },
-  {
-    "name": "Naivas Supermarket Githurai Branch",
-    "category": "Supermarket",
-    "location": "Naivas Rd, Githurai",
-    "phone": "+254 20 8000794",
-    "fit": "High",
-    "fitNote": "Retail shelf space for gas refills, bottled water & kitchenware - direct fit",
+    "fitNote": "General hardware store - verify in person if it stocks household/water/gas accessories",
     "county": "Kiambu"
   },
   {
@@ -2369,8 +1939,8 @@ export const OUTREACH_LEADS: OutreachLead[] = [
     "category": "Supermarket",
     "location": "Githurai 45",
     "phone": "+254 798 577425",
-    "fit": "High",
-    "fitNote": "Retail shelf space for gas refills, bottled water & kitchenware - direct fit",
+    "fit": "Medium",
+    "fitNote": "Independent supermarket/minimart - potential retail shelf space for household items",
     "county": "Kiambu"
   },
   {
@@ -2378,8 +1948,8 @@ export const OUTREACH_LEADS: OutreachLead[] = [
     "category": "Supermarket",
     "location": "Githurai",
     "phone": "Not listed - visit in person",
-    "fit": "High",
-    "fitNote": "Retail shelf space for gas refills, bottled water & kitchenware - direct fit",
+    "fit": "Medium",
+    "fitNote": "Independent supermarket/minimart - potential retail shelf space for household items",
     "county": "Kiambu"
   },
   {
@@ -2387,8 +1957,8 @@ export const OUTREACH_LEADS: OutreachLead[] = [
     "category": "Supermarket",
     "location": "Githurai",
     "phone": "Not listed - visit in person",
-    "fit": "High",
-    "fitNote": "Retail shelf space for gas refills, bottled water & kitchenware - direct fit",
+    "fit": "Medium",
+    "fitNote": "Independent supermarket/minimart - potential retail shelf space for household items",
     "county": "Kiambu"
   },
   {
@@ -2397,7 +1967,7 @@ export const OUTREACH_LEADS: OutreachLead[] = [
     "location": "Githurai",
     "phone": "+254 738 402683",
     "fit": "High",
-    "fitNote": "Already sells cooking gas - target for bulk/wholesale supply or delivery-partner deal, not retail diversification",
+    "fitNote": "Gas dealer - direct product-line fit for AquaGas cooking gas partnership",
     "county": "Kiambu"
   },
   {
@@ -2406,7 +1976,7 @@ export const OUTREACH_LEADS: OutreachLead[] = [
     "location": "Githurai",
     "phone": "+254 707 821832",
     "fit": "High",
-    "fitNote": "Already sells cooking gas - target for bulk/wholesale supply or delivery-partner deal, not retail diversification",
+    "fitNote": "Gas dealer - direct product-line fit for AquaGas cooking gas partnership",
     "county": "Kiambu"
   },
   {
@@ -2415,7 +1985,7 @@ export const OUTREACH_LEADS: OutreachLead[] = [
     "location": "South Gate Rd, Githurai",
     "phone": "+254 754 827262",
     "fit": "High",
-    "fitNote": "Already sells cooking gas - target for bulk/wholesale supply or delivery-partner deal, not retail diversification",
+    "fitNote": "Gas dealer - direct product-line fit for AquaGas cooking gas partnership",
     "county": "Kiambu"
   },
   {
@@ -2424,7 +1994,7 @@ export const OUTREACH_LEADS: OutreachLead[] = [
     "location": "Githurai",
     "phone": "+254 716 288650",
     "fit": "High",
-    "fitNote": "Already sells cooking gas - target for bulk/wholesale supply or delivery-partner deal, not retail diversification",
+    "fitNote": "Gas dealer - direct product-line fit for AquaGas cooking gas partnership",
     "county": "Kiambu"
   },
   {
@@ -2433,7 +2003,7 @@ export const OUTREACH_LEADS: OutreachLead[] = [
     "location": "Githurai",
     "phone": "+254 714 713258",
     "fit": "High",
-    "fitNote": "Already sells cooking gas - target for bulk/wholesale supply or delivery-partner deal, not retail diversification",
+    "fitNote": "Gas dealer - direct product-line fit for AquaGas cooking gas partnership",
     "county": "Kiambu"
   },
   {
@@ -2441,8 +2011,8 @@ export const OUTREACH_LEADS: OutreachLead[] = [
     "category": "Wholesaler",
     "location": "Githurai 45",
     "phone": "+254 711 429933",
-    "fit": "Medium-High",
-    "fitNote": "General/FMCG wholesaler - possible bulk stocking channel",
+    "fit": "Medium",
+    "fitNote": "Bulk retailer - good fit for gas/water/household FMCG distribution",
     "county": "Kiambu"
   },
   {
@@ -2450,8 +2020,8 @@ export const OUTREACH_LEADS: OutreachLead[] = [
     "category": "Wholesaler",
     "location": "Githurai",
     "phone": "Not listed - visit in person",
-    "fit": "Medium-High",
-    "fitNote": "General/FMCG wholesaler - possible bulk stocking channel",
+    "fit": "Medium",
+    "fitNote": "Bulk retailer - good fit for gas/water/household FMCG distribution",
     "county": "Kiambu"
   },
   {
@@ -2459,8 +2029,8 @@ export const OUTREACH_LEADS: OutreachLead[] = [
     "category": "Wholesaler",
     "location": "Githurai 45",
     "phone": "+254 745 124874",
-    "fit": "Medium-High",
-    "fitNote": "General/FMCG wholesaler - possible bulk stocking channel",
+    "fit": "Medium",
+    "fitNote": "Bulk retailer - good fit for gas/water/household FMCG distribution",
     "county": "Kiambu"
   },
   {
@@ -2468,8 +2038,8 @@ export const OUTREACH_LEADS: OutreachLead[] = [
     "category": "Wholesaler",
     "location": "Githurai",
     "phone": "+254 716 841070",
-    "fit": "Medium-High",
-    "fitNote": "General/FMCG wholesaler - possible bulk stocking channel",
+    "fit": "Medium",
+    "fitNote": "Bulk retailer - good fit for gas/water/household FMCG distribution",
     "county": "Kiambu"
   },
   {
@@ -2478,7 +2048,7 @@ export const OUTREACH_LEADS: OutreachLead[] = [
     "location": "Gatundu",
     "phone": "+254 759 815208",
     "fit": "Medium",
-    "fitNote": "General hardware store - verify in person if it stocks household/electrical items",
+    "fitNote": "General hardware store - verify in person if it stocks household/water/gas accessories",
     "county": "Kiambu"
   },
   {
@@ -2487,7 +2057,7 @@ export const OUTREACH_LEADS: OutreachLead[] = [
     "location": "Gatundu",
     "phone": "Not listed - visit in person",
     "fit": "Medium",
-    "fitNote": "General hardware store - verify in person if it stocks household/electrical items",
+    "fitNote": "General hardware store - verify in person if it stocks household/water/gas accessories",
     "county": "Kiambu"
   },
   {
@@ -2496,7 +2066,7 @@ export const OUTREACH_LEADS: OutreachLead[] = [
     "location": "Gatundu",
     "phone": "+254 721 552301",
     "fit": "Medium",
-    "fitNote": "General hardware store - verify in person if it stocks household/electrical items",
+    "fitNote": "General hardware store - verify in person if it stocks household/water/gas accessories",
     "county": "Kiambu"
   },
   {
@@ -2505,7 +2075,7 @@ export const OUTREACH_LEADS: OutreachLead[] = [
     "location": "Gatundu",
     "phone": "Not listed - visit in person",
     "fit": "Medium",
-    "fitNote": "General hardware store - verify in person if it stocks household/electrical items",
+    "fitNote": "General hardware store - verify in person if it stocks household/water/gas accessories",
     "county": "Kiambu"
   },
   {
@@ -2514,7 +2084,7 @@ export const OUTREACH_LEADS: OutreachLead[] = [
     "location": "Gatundu",
     "phone": "Not listed - visit in person",
     "fit": "Medium",
-    "fitNote": "General hardware store - verify in person if it stocks household/electrical items",
+    "fitNote": "General hardware store - verify in person if it stocks household/water/gas accessories",
     "county": "Kiambu"
   },
   {
@@ -2522,8 +2092,8 @@ export const OUTREACH_LEADS: OutreachLead[] = [
     "category": "Supermarket",
     "location": "Gatundu CBD",
     "phone": "+254 790 250644",
-    "fit": "High",
-    "fitNote": "Retail shelf space for gas refills, bottled water & kitchenware - direct fit",
+    "fit": "Medium",
+    "fitNote": "Independent supermarket/minimart - potential retail shelf space for household items",
     "county": "Kiambu"
   },
   {
@@ -2531,8 +2101,8 @@ export const OUTREACH_LEADS: OutreachLead[] = [
     "category": "Supermarket",
     "location": "Kenyatta Rd, Gatundu",
     "phone": "Not listed - visit in person",
-    "fit": "High",
-    "fitNote": "Retail shelf space for gas refills, bottled water & kitchenware - direct fit",
+    "fit": "Medium",
+    "fitNote": "Independent supermarket/minimart - potential retail shelf space for household items",
     "county": "Kiambu"
   },
   {
@@ -2540,8 +2110,8 @@ export const OUTREACH_LEADS: OutreachLead[] = [
     "category": "Wholesaler",
     "location": "Gatundu",
     "phone": "+254 702 220329",
-    "fit": "Medium-High",
-    "fitNote": "General/FMCG wholesaler - possible bulk stocking channel",
+    "fit": "Medium",
+    "fitNote": "Bulk retailer - good fit for gas/water/household FMCG distribution",
     "county": "Kiambu"
   },
   {
@@ -2550,7 +2120,7 @@ export const OUTREACH_LEADS: OutreachLead[] = [
     "location": "Kiambu Rd, Githunguri",
     "phone": "+254 721 643028",
     "fit": "Medium",
-    "fitNote": "General hardware store - verify in person if it stocks household/electrical items",
+    "fitNote": "General hardware store - verify in person if it stocks household/water/gas accessories",
     "county": "Kiambu"
   },
   {
@@ -2558,8 +2128,8 @@ export const OUTREACH_LEADS: OutreachLead[] = [
     "category": "Supermarket",
     "location": "Githunguri Rd, Githunguri",
     "phone": "+254 721 643028",
-    "fit": "High",
-    "fitNote": "Retail shelf space for gas refills, bottled water & kitchenware - direct fit",
+    "fit": "Medium",
+    "fitNote": "Independent supermarket/minimart - potential retail shelf space for household items",
     "county": "Kiambu"
   },
   {
@@ -2568,7 +2138,7 @@ export const OUTREACH_LEADS: OutreachLead[] = [
     "location": "Githunguri",
     "phone": "Not listed - visit in person",
     "fit": "Medium",
-    "fitNote": "General hardware store - verify in person if it stocks household/electrical items",
+    "fitNote": "General hardware store - verify in person if it stocks household/water/gas accessories",
     "county": "Kiambu"
   },
   {
@@ -2576,8 +2146,8 @@ export const OUTREACH_LEADS: OutreachLead[] = [
     "category": "Hardware",
     "location": "Githunguri",
     "phone": "Not listed - visit in person",
-    "fit": "High",
-    "fitNote": "Water/plumbing/electrical hardware - adjacent to gas & water delivery (Davis & Shirtliff-type fit)",
+    "fit": "Medium",
+    "fitNote": "General hardware store - verify in person if it stocks household/water/gas accessories",
     "county": "Kiambu"
   },
   {
@@ -2585,8 +2155,8 @@ export const OUTREACH_LEADS: OutreachLead[] = [
     "category": "Hardware",
     "location": "Githunguri",
     "phone": "Not listed - visit in person",
-    "fit": "High",
-    "fitNote": "Water/plumbing/electrical hardware - adjacent to gas & water delivery (Davis & Shirtliff-type fit)",
+    "fit": "Medium",
+    "fitNote": "General hardware store - verify in person if it stocks household/water/gas accessories",
     "county": "Kiambu"
   },
   {
@@ -2594,8 +2164,8 @@ export const OUTREACH_LEADS: OutreachLead[] = [
     "category": "Supermarket",
     "location": "Githunguri",
     "phone": "Not listed - visit in person",
-    "fit": "High",
-    "fitNote": "Retail shelf space for gas refills, bottled water & kitchenware - direct fit",
+    "fit": "Medium",
+    "fitNote": "Independent supermarket/minimart - potential retail shelf space for household items",
     "county": "Kiambu"
   },
   {
@@ -2603,8 +2173,8 @@ export const OUTREACH_LEADS: OutreachLead[] = [
     "category": "Supermarket",
     "location": "Githunguri",
     "phone": "Not listed - visit in person",
-    "fit": "High",
-    "fitNote": "Retail shelf space for gas refills, bottled water & kitchenware - direct fit",
+    "fit": "Medium",
+    "fitNote": "Independent supermarket/minimart - potential retail shelf space for household items",
     "county": "Kiambu"
   },
   {
@@ -2612,8 +2182,8 @@ export const OUTREACH_LEADS: OutreachLead[] = [
     "category": "Supermarket",
     "location": "Market Rd, Githunguri",
     "phone": "+254 722 803590",
-    "fit": "High",
-    "fitNote": "Retail shelf space for gas refills, bottled water & kitchenware - direct fit",
+    "fit": "Medium",
+    "fitNote": "Independent supermarket/minimart - potential retail shelf space for household items",
     "county": "Kiambu"
   },
   {
@@ -2622,7 +2192,7 @@ export const OUTREACH_LEADS: OutreachLead[] = [
     "location": "Limuru Town",
     "phone": "Not listed - visit in person",
     "fit": "Medium",
-    "fitNote": "General hardware store - verify in person if it stocks household/electrical items",
+    "fitNote": "General hardware store - verify in person if it stocks household/water/gas accessories",
     "county": "Kiambu"
   },
   {
@@ -2631,7 +2201,7 @@ export const OUTREACH_LEADS: OutreachLead[] = [
     "location": "Hospital Rd, Limuru Town",
     "phone": "Not listed - visit in person",
     "fit": "Medium",
-    "fitNote": "General hardware store - verify in person if it stocks household/electrical items",
+    "fitNote": "General hardware store - verify in person if it stocks household/water/gas accessories",
     "county": "Kiambu"
   },
   {
@@ -2640,7 +2210,7 @@ export const OUTREACH_LEADS: OutreachLead[] = [
     "location": "Limuru Town",
     "phone": "Not listed - visit in person",
     "fit": "Medium",
-    "fitNote": "General hardware store - verify in person if it stocks household/electrical items",
+    "fitNote": "General hardware store - verify in person if it stocks household/water/gas accessories",
     "county": "Kiambu"
   },
   {
@@ -2649,7 +2219,7 @@ export const OUTREACH_LEADS: OutreachLead[] = [
     "location": "Kabete",
     "phone": "+254 723 364999",
     "fit": "Medium",
-    "fitNote": "General hardware store - verify in person if it stocks household/electrical items",
+    "fitNote": "General hardware store - verify in person if it stocks household/water/gas accessories",
     "county": "Kiambu"
   },
   {
@@ -2658,7 +2228,7 @@ export const OUTREACH_LEADS: OutreachLead[] = [
     "location": "Ndenderu",
     "phone": "+254 717 746532",
     "fit": "Medium",
-    "fitNote": "General hardware store - verify in person if it stocks household/electrical items",
+    "fitNote": "General hardware store - verify in person if it stocks household/water/gas accessories",
     "county": "Kiambu"
   },
   {
@@ -2667,7 +2237,7 @@ export const OUTREACH_LEADS: OutreachLead[] = [
     "location": "Lower Kabete",
     "phone": "+254 780 789068",
     "fit": "Medium",
-    "fitNote": "General hardware store - verify in person if it stocks household/electrical items",
+    "fitNote": "General hardware store - verify in person if it stocks household/water/gas accessories",
     "county": "Kiambu"
   },
   {
@@ -2676,7 +2246,7 @@ export const OUTREACH_LEADS: OutreachLead[] = [
     "location": "Ruaka",
     "phone": "+254 782 005737",
     "fit": "Medium",
-    "fitNote": "General hardware store - verify in person if it stocks household/electrical items",
+    "fitNote": "General hardware store - verify in person if it stocks household/water/gas accessories",
     "county": "Kiambu"
   },
   {
@@ -2685,7 +2255,7 @@ export const OUTREACH_LEADS: OutreachLead[] = [
     "location": "Lower Kabete",
     "phone": "Not listed - visit in person",
     "fit": "Medium",
-    "fitNote": "General hardware store - verify in person if it stocks household/electrical items",
+    "fitNote": "General hardware store - verify in person if it stocks household/water/gas accessories",
     "county": "Kiambu"
   },
   {
@@ -2693,8 +2263,8 @@ export const OUTREACH_LEADS: OutreachLead[] = [
     "category": "Hardware",
     "location": "Wangige",
     "phone": "+254 736 466972",
-    "fit": "High",
-    "fitNote": "Water/plumbing/electrical hardware - adjacent to gas & water delivery (Davis & Shirtliff-type fit)",
+    "fit": "Medium",
+    "fitNote": "General hardware store - verify in person if it stocks household/water/gas accessories",
     "county": "Kiambu"
   },
   {
@@ -2702,8 +2272,8 @@ export const OUTREACH_LEADS: OutreachLead[] = [
     "category": "Supermarket",
     "location": "Lower Kabete",
     "phone": "Not listed - visit in person",
-    "fit": "High",
-    "fitNote": "Retail shelf space for gas refills, bottled water & kitchenware - direct fit",
+    "fit": "Medium",
+    "fitNote": "Independent supermarket/minimart - potential retail shelf space for household items",
     "county": "Kiambu"
   },
   {
@@ -2711,17 +2281,17 @@ export const OUTREACH_LEADS: OutreachLead[] = [
     "category": "Supermarket",
     "location": "Lower Kabete Rd, Nairobi",
     "phone": "+254 724 256699",
-    "fit": "High",
-    "fitNote": "Retail shelf space for gas refills, bottled water & kitchenware - direct fit",
-    "county": "Kiambu"
+    "fit": "Medium",
+    "fitNote": "Independent supermarket/minimart - potential retail shelf space for household items",
+    "county": "Nairobi"
   },
   {
     "name": "Ebenezer shop lower kabete",
     "category": "Wholesaler",
     "location": "Lower Kabete",
     "phone": "+254 752 987207",
-    "fit": "Medium-High",
-    "fitNote": "General/FMCG wholesaler - possible bulk stocking channel",
+    "fit": "Medium",
+    "fitNote": "Bulk retailer - good fit for gas/water/household FMCG distribution",
     "county": "Kiambu"
   },
   {
@@ -2729,18 +2299,18 @@ export const OUTREACH_LEADS: OutreachLead[] = [
     "category": "Hardware",
     "location": "Muranga Town",
     "phone": "+254 726 353460",
-    "fit": "High",
-    "fitNote": "Water/plumbing/electrical hardware - adjacent to gas & water delivery (Davis & Shirtliff-type fit)",
-    "county": "Kiambu"
+    "fit": "Medium",
+    "fitNote": "General hardware store - verify in person if it stocks household/water/gas accessories",
+    "county": "Murang'a"
   },
   {
     "name": "Toto's Electricals Sales, Services & Hardware",
     "category": "Hardware",
     "location": "Muranga Town",
     "phone": "+254 713 679048",
-    "fit": "High",
-    "fitNote": "Water/plumbing/electrical hardware - adjacent to gas & water delivery (Davis & Shirtliff-type fit)",
-    "county": "Kiambu"
+    "fit": "Medium",
+    "fitNote": "General hardware store - verify in person if it stocks household/water/gas accessories",
+    "county": "Murang'a"
   },
   {
     "name": "LELAMOS GLASSMART AND HARDWARE",
@@ -2748,8 +2318,8 @@ export const OUTREACH_LEADS: OutreachLead[] = [
     "location": "Muranga Town",
     "phone": "+254 716 582899",
     "fit": "Medium",
-    "fitNote": "General hardware store - verify in person if it stocks household/electrical items",
-    "county": "Kiambu"
+    "fitNote": "General hardware store - verify in person if it stocks household/water/gas accessories",
+    "county": "Murang'a"
   },
   {
     "name": "Muthokinju - MURANGA",
@@ -2757,8 +2327,8 @@ export const OUTREACH_LEADS: OutreachLead[] = [
     "location": "Kenol-Muranga Rd, Muranga Town",
     "phone": "+254 727 798806",
     "fit": "Medium",
-    "fitNote": "General hardware store - verify in person if it stocks household/electrical items",
-    "county": "Kiambu"
+    "fitNote": "General hardware store - verify in person if it stocks household/water/gas accessories",
+    "county": "Murang'a"
   },
   {
     "name": "Gopinatha Hardware",
@@ -2766,8 +2336,8 @@ export const OUTREACH_LEADS: OutreachLead[] = [
     "location": "Muranga Town",
     "phone": "+254 792 501713",
     "fit": "Medium",
-    "fitNote": "General hardware store - verify in person if it stocks household/electrical items",
-    "county": "Kiambu"
+    "fitNote": "General hardware store - verify in person if it stocks household/water/gas accessories",
+    "county": "Murang'a"
   },
   {
     "name": "Kiwas Auto Hardware",
@@ -2775,53 +2345,53 @@ export const OUTREACH_LEADS: OutreachLead[] = [
     "location": "Market Rd, Muranga Town",
     "phone": "+254 721 397468",
     "fit": "Medium",
-    "fitNote": "General hardware store - verify in person if it stocks household/electrical items",
-    "county": "Kiambu"
+    "fitNote": "General hardware store - verify in person if it stocks household/water/gas accessories",
+    "county": "Murang'a"
   },
   {
     "name": "Mathais Supermarket - Muranga",
     "category": "Supermarket",
     "location": "Muguru Market Rd, Muranga Town",
     "phone": "+254 67 21331",
-    "fit": "High",
-    "fitNote": "Retail shelf space for gas refills, bottled water & kitchenware - direct fit",
-    "county": "Kiambu"
+    "fit": "Medium",
+    "fitNote": "Independent supermarket/minimart - potential retail shelf space for household items",
+    "county": "Murang'a"
   },
   {
     "name": "Magunas - Muranga CBD",
     "category": "Supermarket",
     "location": "Muranga Town",
     "phone": "Not listed - visit in person",
-    "fit": "High",
-    "fitNote": "Retail shelf space for gas refills, bottled water & kitchenware - direct fit",
-    "county": "Kiambu"
+    "fit": "Medium",
+    "fitNote": "Independent supermarket/minimart - potential retail shelf space for household items",
+    "county": "Murang'a"
   },
   {
     "name": "Magunas - Karuri",
     "category": "Supermarket",
     "location": "Karuri, Muranga",
     "phone": "Not listed - visit in person",
-    "fit": "High",
-    "fitNote": "Retail shelf space for gas refills, bottled water & kitchenware - direct fit",
-    "county": "Kiambu"
+    "fit": "Medium",
+    "fitNote": "Independent supermarket/minimart - potential retail shelf space for household items",
+    "county": "Murang'a"
   },
   {
     "name": "Murtown Supermarket",
     "category": "Supermarket",
     "location": "Manyeki Rd, Muranga Town",
     "phone": "+254 722 896759",
-    "fit": "High",
-    "fitNote": "Retail shelf space for gas refills, bottled water & kitchenware - direct fit",
-    "county": "Kiambu"
+    "fit": "Medium",
+    "fitNote": "Independent supermarket/minimart - potential retail shelf space for household items",
+    "county": "Murang'a"
   },
   {
     "name": "Andu Main Wholesalers Mukuyu",
     "category": "Wholesaler",
     "location": "Mukuyu, Muranga Town",
     "phone": "+254 714 143952",
-    "fit": "Medium-High",
-    "fitNote": "General/FMCG wholesaler - possible bulk stocking channel",
-    "county": "Kiambu"
+    "fit": "Medium",
+    "fitNote": "Bulk retailer - good fit for gas/water/household FMCG distribution",
+    "county": "Murang'a"
   },
   {
     "name": "Housewife's Paradise",
@@ -2829,7 +2399,7 @@ export const OUTREACH_LEADS: OutreachLead[] = [
     "location": "Wabera St / Two Rivers, Nairobi",
     "phone": "+254 790 039732",
     "fit": "High",
-    "fitNote": "Direct category match (kitchenware/household essentials)",
+    "fitNote": "Kitchenware retailer - direct product-line fit for AquaGas household items",
     "county": "Nairobi"
   },
   {
@@ -2838,7 +2408,7 @@ export const OUTREACH_LEADS: OutreachLead[] = [
     "location": "Kenyatta Ave, Nairobi",
     "phone": "+254 706 707227",
     "fit": "High",
-    "fitNote": "Direct category match (kitchenware/household essentials)",
+    "fitNote": "Kitchenware retailer - direct product-line fit for AquaGas household items",
     "county": "Nairobi"
   },
   {
@@ -2847,7 +2417,7 @@ export const OUTREACH_LEADS: OutreachLead[] = [
     "location": "Nairobi",
     "phone": "+254 706 229015",
     "fit": "High",
-    "fitNote": "Direct category match (kitchenware/household essentials)",
+    "fitNote": "Kitchenware retailer - direct product-line fit for AquaGas household items",
     "county": "Nairobi"
   },
   {
@@ -2856,7 +2426,7 @@ export const OUTREACH_LEADS: OutreachLead[] = [
     "location": "Mombasa Rd, Nairobi",
     "phone": "+254 20 2133076",
     "fit": "High",
-    "fitNote": "Direct category match (kitchenware/household essentials)",
+    "fitNote": "Kitchenware retailer - direct product-line fit for AquaGas household items",
     "county": "Nairobi"
   },
   {
@@ -2865,7 +2435,7 @@ export const OUTREACH_LEADS: OutreachLead[] = [
     "location": "Commercial St, Thika",
     "phone": "+254 721 410413",
     "fit": "High",
-    "fitNote": "Direct category match (kitchenware/household essentials)",
+    "fitNote": "Kitchenware retailer - direct product-line fit for AquaGas household items",
     "county": "Kiambu"
   },
   {
@@ -2874,7 +2444,7 @@ export const OUTREACH_LEADS: OutreachLead[] = [
     "location": "Thika",
     "phone": "+254 728 894357",
     "fit": "High",
-    "fitNote": "Direct category match (kitchenware/household essentials)",
+    "fitNote": "Kitchenware retailer - direct product-line fit for AquaGas household items",
     "county": "Kiambu"
   },
   {
@@ -2882,8 +2452,8 @@ export const OUTREACH_LEADS: OutreachLead[] = [
     "category": "Supermarket",
     "location": "Kiganjo, Thika",
     "phone": "+254 707 995586",
-    "fit": "High",
-    "fitNote": "Retail shelf space for gas refills, bottled water & kitchenware - direct fit",
+    "fit": "Medium",
+    "fitNote": "Independent supermarket/minimart - potential retail shelf space for household items",
     "county": "Kiambu"
   },
   {
@@ -2892,7 +2462,7 @@ export const OUTREACH_LEADS: OutreachLead[] = [
     "location": "Kitengela, Kajiado",
     "phone": "+254 796 359006",
     "fit": "High",
-    "fitNote": "Already sells gas - target for bulk supply/delivery-partner deal",
+    "fitNote": "Gas dealer - direct product-line fit for AquaGas cooking gas partnership",
     "county": "Kajiado"
   },
   {
@@ -2901,7 +2471,7 @@ export const OUTREACH_LEADS: OutreachLead[] = [
     "location": "Kitengela, Kajiado",
     "phone": "+254 720 972687",
     "fit": "High",
-    "fitNote": "Already sells gas - target for bulk supply/delivery-partner deal",
+    "fitNote": "Gas dealer - direct product-line fit for AquaGas cooking gas partnership",
     "county": "Kajiado"
   },
   {
@@ -2910,16 +2480,7 @@ export const OUTREACH_LEADS: OutreachLead[] = [
     "location": "Kitengela, Kajiado",
     "phone": "+254 746 240016",
     "fit": "High",
-    "fitNote": "Already sells gas - target for bulk supply/delivery-partner deal",
-    "county": "Kajiado"
-  },
-  {
-    "name": "M-Gas Kitengela Depot",
-    "category": "Gas Dealer",
-    "location": "Kitengela, Kajiado",
-    "phone": "+254 800 721 148",
-    "fit": "High",
-    "fitNote": "Already sells gas - target for bulk supply/delivery-partner deal",
+    "fitNote": "Gas dealer - direct product-line fit for AquaGas cooking gas partnership",
     "county": "Kajiado"
   },
   {
@@ -2928,7 +2489,7 @@ export const OUTREACH_LEADS: OutreachLead[] = [
     "location": "Kitengela, Kajiado",
     "phone": "+254 727 778503",
     "fit": "High",
-    "fitNote": "Already sells gas - target for bulk supply/delivery-partner deal",
+    "fitNote": "Gas dealer - direct product-line fit for AquaGas cooking gas partnership",
     "county": "Kajiado"
   },
   {
@@ -2937,7 +2498,7 @@ export const OUTREACH_LEADS: OutreachLead[] = [
     "location": "Kitengela, Kajiado",
     "phone": "+254 723 785656",
     "fit": "High",
-    "fitNote": "Already sells gas - target for bulk supply/delivery-partner deal",
+    "fitNote": "Gas dealer - direct product-line fit for AquaGas cooking gas partnership",
     "county": "Kajiado"
   },
   {
@@ -2946,7 +2507,7 @@ export const OUTREACH_LEADS: OutreachLead[] = [
     "location": "Kitengela, Kajiado",
     "phone": "+254 722 777522",
     "fit": "High",
-    "fitNote": "Already sells gas - target for bulk supply/delivery-partner deal",
+    "fitNote": "Gas dealer - direct product-line fit for AquaGas cooking gas partnership",
     "county": "Kajiado"
   },
   {
@@ -2955,7 +2516,7 @@ export const OUTREACH_LEADS: OutreachLead[] = [
     "location": "Ngong, Kajiado",
     "phone": "+254 722 804061",
     "fit": "High",
-    "fitNote": "Already sells gas - target for bulk supply/delivery-partner deal",
+    "fitNote": "Gas dealer - direct product-line fit for AquaGas cooking gas partnership",
     "county": "Kajiado"
   },
   {
@@ -2964,7 +2525,7 @@ export const OUTREACH_LEADS: OutreachLead[] = [
     "location": "Ngong, Kajiado",
     "phone": "+254 705 553334",
     "fit": "High",
-    "fitNote": "Already sells gas - target for bulk supply/delivery-partner deal",
+    "fitNote": "Gas dealer - direct product-line fit for AquaGas cooking gas partnership",
     "county": "Kajiado"
   },
   {
@@ -2973,7 +2534,7 @@ export const OUTREACH_LEADS: OutreachLead[] = [
     "location": "Ngong, Kajiado",
     "phone": "+254 722 913715",
     "fit": "High",
-    "fitNote": "Already sells gas - target for bulk supply/delivery-partner deal",
+    "fitNote": "Gas dealer - direct product-line fit for AquaGas cooking gas partnership",
     "county": "Kajiado"
   },
   {
@@ -2982,7 +2543,7 @@ export const OUTREACH_LEADS: OutreachLead[] = [
     "location": "Kiserian, Kajiado",
     "phone": "+254 721 612279",
     "fit": "High",
-    "fitNote": "Already sells gas - target for bulk supply/delivery-partner deal",
+    "fitNote": "Gas dealer - direct product-line fit for AquaGas cooking gas partnership",
     "county": "Kajiado"
   },
   {
@@ -2991,7 +2552,7 @@ export const OUTREACH_LEADS: OutreachLead[] = [
     "location": "Olkeri, Kiserian, Kajiado",
     "phone": "+254 723 872031",
     "fit": "High",
-    "fitNote": "Already sells gas - target for bulk supply/delivery-partner deal",
+    "fitNote": "Gas dealer - direct product-line fit for AquaGas cooking gas partnership",
     "county": "Kajiado"
   },
   {
@@ -3000,7 +2561,7 @@ export const OUTREACH_LEADS: OutreachLead[] = [
     "location": "Kajiado Town, Kajiado",
     "phone": "+254 701 705642",
     "fit": "High",
-    "fitNote": "Already sells gas - target for bulk supply/delivery-partner deal",
+    "fitNote": "Gas dealer - direct product-line fit for AquaGas cooking gas partnership",
     "county": "Kajiado"
   },
   {
@@ -3009,7 +2570,7 @@ export const OUTREACH_LEADS: OutreachLead[] = [
     "location": "Namanga Rd, Kajiado",
     "phone": "+254 769 814380",
     "fit": "High",
-    "fitNote": "Already sells gas - target for bulk supply/delivery-partner deal",
+    "fitNote": "Gas dealer - direct product-line fit for AquaGas cooking gas partnership",
     "county": "Kajiado"
   },
   {
@@ -3018,16 +2579,7 @@ export const OUTREACH_LEADS: OutreachLead[] = [
     "location": "Utawala, Nairobi",
     "phone": "+254 713 151023",
     "fit": "High",
-    "fitNote": "Already sells gas - target for bulk supply/delivery-partner deal",
-    "county": "Nairobi"
-  },
-  {
-    "name": "M-Gas Utawala Depot",
-    "category": "Gas Dealer",
-    "location": "Utawala, Nairobi",
-    "phone": "+254 800 721 148",
-    "fit": "High",
-    "fitNote": "Already sells gas - target for bulk supply/delivery-partner deal",
+    "fitNote": "Gas dealer - direct product-line fit for AquaGas cooking gas partnership",
     "county": "Nairobi"
   },
   {
@@ -3036,7 +2588,7 @@ export const OUTREACH_LEADS: OutreachLead[] = [
     "location": "Nairobi",
     "phone": "+254 794 320044",
     "fit": "High",
-    "fitNote": "Already sells gas - target for bulk supply/delivery-partner deal",
+    "fitNote": "Gas dealer - direct product-line fit for AquaGas cooking gas partnership",
     "county": "Nairobi"
   },
   {
@@ -3045,7 +2597,7 @@ export const OUTREACH_LEADS: OutreachLead[] = [
     "location": "Nairobi",
     "phone": "+254 722 338987",
     "fit": "High",
-    "fitNote": "Already sells gas - target for bulk supply/delivery-partner deal",
+    "fitNote": "Gas dealer - direct product-line fit for AquaGas cooking gas partnership",
     "county": "Nairobi"
   },
   {
@@ -3054,7 +2606,7 @@ export const OUTREACH_LEADS: OutreachLead[] = [
     "location": "Zebra Rd, Nairobi",
     "phone": "+254 720 518398",
     "fit": "High",
-    "fitNote": "Already sells gas - target for bulk supply/delivery-partner deal",
+    "fitNote": "Gas dealer - direct product-line fit for AquaGas cooking gas partnership",
     "county": "Nairobi"
   },
   {
@@ -3063,7 +2615,7 @@ export const OUTREACH_LEADS: OutreachLead[] = [
     "location": "Nairobi",
     "phone": "+254 716 942438",
     "fit": "High",
-    "fitNote": "Already sells gas - target for bulk supply/delivery-partner deal",
+    "fitNote": "Gas dealer - direct product-line fit for AquaGas cooking gas partnership",
     "county": "Nairobi"
   },
   {
@@ -3072,7 +2624,7 @@ export const OUTREACH_LEADS: OutreachLead[] = [
     "location": "Lavington, Nairobi",
     "phone": "+254 719 161742",
     "fit": "High",
-    "fitNote": "Already sells gas - target for bulk supply/delivery-partner deal",
+    "fitNote": "Gas dealer - direct product-line fit for AquaGas cooking gas partnership",
     "county": "Nairobi"
   },
   {
@@ -3081,7 +2633,7 @@ export const OUTREACH_LEADS: OutreachLead[] = [
     "location": "Kandara Rd, Nairobi",
     "phone": "+254 710 672316",
     "fit": "High",
-    "fitNote": "Already sells gas - target for bulk supply/delivery-partner deal",
+    "fitNote": "Gas dealer - direct product-line fit for AquaGas cooking gas partnership",
     "county": "Nairobi"
   },
   {
@@ -3090,7 +2642,7 @@ export const OUTREACH_LEADS: OutreachLead[] = [
     "location": "Nairobi",
     "phone": "+254 796 915565",
     "fit": "High",
-    "fitNote": "Already sells gas - target for bulk supply/delivery-partner deal",
+    "fitNote": "Gas dealer - direct product-line fit for AquaGas cooking gas partnership",
     "county": "Nairobi"
   },
   {
@@ -3099,7 +2651,7 @@ export const OUTREACH_LEADS: OutreachLead[] = [
     "location": "Westlands, Nairobi",
     "phone": "+254 758 121569",
     "fit": "High",
-    "fitNote": "Already sells gas - target for bulk supply/delivery-partner deal",
+    "fitNote": "Gas dealer - direct product-line fit for AquaGas cooking gas partnership",
     "county": "Nairobi"
   },
   {
@@ -3108,7 +2660,7 @@ export const OUTREACH_LEADS: OutreachLead[] = [
     "location": "Seasons Rd, Kasarani, Nairobi",
     "phone": "+254 727 521521",
     "fit": "High",
-    "fitNote": "Already sells gas - target for bulk supply/delivery-partner deal",
+    "fitNote": "Gas dealer - direct product-line fit for AquaGas cooking gas partnership",
     "county": "Nairobi"
   },
   {
@@ -3117,7 +2669,7 @@ export const OUTREACH_LEADS: OutreachLead[] = [
     "location": "Roysambu, Nairobi",
     "phone": "+254 110 351600",
     "fit": "High",
-    "fitNote": "Already sells gas - target for bulk supply/delivery-partner deal",
+    "fitNote": "Gas dealer - direct product-line fit for AquaGas cooking gas partnership",
     "county": "Nairobi"
   },
   {
@@ -3126,7 +2678,7 @@ export const OUTREACH_LEADS: OutreachLead[] = [
     "location": "Mirema, Roysambu, Nairobi",
     "phone": "+254 716 727779",
     "fit": "High",
-    "fitNote": "Already sells gas - target for bulk supply/delivery-partner deal",
+    "fitNote": "Gas dealer - direct product-line fit for AquaGas cooking gas partnership",
     "county": "Nairobi"
   },
   {
@@ -3135,16 +2687,7 @@ export const OUTREACH_LEADS: OutreachLead[] = [
     "location": "Kangemi, Nairobi",
     "phone": "+254 792 553521",
     "fit": "High",
-    "fitNote": "Already sells gas - target for bulk supply/delivery-partner deal",
-    "county": "Nairobi"
-  },
-  {
-    "name": "M-Gas Kangemi Depot",
-    "category": "Gas Dealer",
-    "location": "Kangemi, Nairobi",
-    "phone": "+254 800 721 148",
-    "fit": "High",
-    "fitNote": "Already sells gas - target for bulk supply/delivery-partner deal",
+    "fitNote": "Gas dealer - direct product-line fit for AquaGas cooking gas partnership",
     "county": "Nairobi"
   },
   {
@@ -3153,7 +2696,7 @@ export const OUTREACH_LEADS: OutreachLead[] = [
     "location": "Kangemi, Nairobi",
     "phone": "+254 790 120500",
     "fit": "High",
-    "fitNote": "Already sells gas - target for bulk supply/delivery-partner deal",
+    "fitNote": "Gas dealer - direct product-line fit for AquaGas cooking gas partnership",
     "county": "Nairobi"
   },
   {
@@ -3162,7 +2705,7 @@ export const OUTREACH_LEADS: OutreachLead[] = [
     "location": "Mountain View, Nairobi",
     "phone": "+254 723 792829",
     "fit": "High",
-    "fitNote": "Already sells gas - target for bulk supply/delivery-partner deal",
+    "fitNote": "Gas dealer - direct product-line fit for AquaGas cooking gas partnership",
     "county": "Nairobi"
   },
   {
@@ -3171,7 +2714,7 @@ export const OUTREACH_LEADS: OutreachLead[] = [
     "location": "Kiambu Rd, Kiambu",
     "phone": "+254 725 592966",
     "fit": "High",
-    "fitNote": "Already sells gas - target for bulk supply/delivery-partner deal",
+    "fitNote": "Gas dealer - direct product-line fit for AquaGas cooking gas partnership",
     "county": "Kiambu"
   },
   {
@@ -3180,7 +2723,7 @@ export const OUTREACH_LEADS: OutreachLead[] = [
     "location": "Kiambu",
     "phone": "+254 794 295056",
     "fit": "High",
-    "fitNote": "Already sells gas - target for bulk supply/delivery-partner deal",
+    "fitNote": "Gas dealer - direct product-line fit for AquaGas cooking gas partnership",
     "county": "Kiambu"
   },
   {
@@ -3188,8 +2731,8 @@ export const OUTREACH_LEADS: OutreachLead[] = [
     "category": "Fuel Station / LPG Agent",
     "location": "Thika Rd, Nairobi",
     "phone": "+254 723 731391",
-    "fit": "Medium-High",
-    "fitNote": "Major fuel-retail brand that also sells/refills LPG cylinders on-site - approach as a franchise-shelf or bulk-supply partnership; likely needs the area/district manager or head office rather than the pump attendant.",
+    "fit": "Medium",
+    "fitNote": "Verify fit and stock in person",
     "county": "Nairobi"
   },
   {
@@ -3197,8 +2740,8 @@ export const OUTREACH_LEADS: OutreachLead[] = [
     "category": "Fuel Station / LPG Agent",
     "location": "Koma Rock Rd, Dandora, Nairobi",
     "phone": "+254 722 519815",
-    "fit": "Medium-High",
-    "fitNote": "Major fuel-retail brand that also sells/refills LPG cylinders on-site - approach as a franchise-shelf or bulk-supply partnership; likely needs the area/district manager or head office rather than the pump attendant.",
+    "fit": "Medium",
+    "fitNote": "Verify fit and stock in person",
     "county": "Nairobi"
   },
   {
@@ -3206,8 +2749,8 @@ export const OUTREACH_LEADS: OutreachLead[] = [
     "category": "Fuel Station / LPG Agent",
     "location": "Kiambu Rd, Nairobi",
     "phone": "+254 719 444499",
-    "fit": "Medium-High",
-    "fitNote": "Major fuel-retail brand that also sells/refills LPG cylinders on-site - approach as a franchise-shelf or bulk-supply partnership; likely needs the area/district manager or head office rather than the pump attendant.",
+    "fit": "Medium",
+    "fitNote": "Verify fit and stock in person",
     "county": "Nairobi"
   },
   {
@@ -3215,8 +2758,8 @@ export const OUTREACH_LEADS: OutreachLead[] = [
     "category": "Fuel Station / LPG Agent",
     "location": "Utawala, Nairobi",
     "phone": "+254 726 322513",
-    "fit": "Medium-High",
-    "fitNote": "Major fuel-retail brand that also sells/refills LPG cylinders on-site - approach as a franchise-shelf or bulk-supply partnership; likely needs the area/district manager or head office rather than the pump attendant.",
+    "fit": "Medium",
+    "fitNote": "Verify fit and stock in person",
     "county": "Nairobi"
   },
   {
@@ -3224,8 +2767,8 @@ export const OUTREACH_LEADS: OutreachLead[] = [
     "category": "Fuel Station / LPG Agent",
     "location": "Muranga Rd, Nairobi",
     "phone": "+254 718 062300",
-    "fit": "Medium-High",
-    "fitNote": "Major fuel-retail brand that also sells/refills LPG cylinders on-site - approach as a franchise-shelf or bulk-supply partnership; likely needs the area/district manager or head office rather than the pump attendant.",
+    "fit": "Medium",
+    "fitNote": "Verify fit and stock in person",
     "county": "Nairobi"
   },
   {
@@ -3233,8 +2776,8 @@ export const OUTREACH_LEADS: OutreachLead[] = [
     "category": "Fuel Station / LPG Agent",
     "location": "Buruburu, Nairobi",
     "phone": "+254 722 899202",
-    "fit": "Medium-High",
-    "fitNote": "Major fuel-retail brand that also sells/refills LPG cylinders on-site - approach as a franchise-shelf or bulk-supply partnership; likely needs the area/district manager or head office rather than the pump attendant.",
+    "fit": "Medium",
+    "fitNote": "Verify fit and stock in person",
     "county": "Nairobi"
   },
   {
@@ -3242,8 +2785,8 @@ export const OUTREACH_LEADS: OutreachLead[] = [
     "category": "Fuel Station / LPG Agent",
     "location": "Northern Bypass, Marurui, Nairobi",
     "phone": "+254 721 567741",
-    "fit": "Medium-High",
-    "fitNote": "Major fuel-retail brand that also sells/refills LPG cylinders on-site - approach as a franchise-shelf or bulk-supply partnership; likely needs the area/district manager or head office rather than the pump attendant.",
+    "fit": "Medium",
+    "fitNote": "Verify fit and stock in person",
     "county": "Nairobi"
   },
   {
@@ -3251,8 +2794,8 @@ export const OUTREACH_LEADS: OutreachLead[] = [
     "category": "Fuel Station / LPG Agent",
     "location": "Langata Rd, Nairobi",
     "phone": "+254 718 597871",
-    "fit": "Medium-High",
-    "fitNote": "Major fuel-retail brand that also sells/refills LPG cylinders on-site - approach as a franchise-shelf or bulk-supply partnership; likely needs the area/district manager or head office rather than the pump attendant.",
+    "fit": "Medium",
+    "fitNote": "Verify fit and stock in person",
     "county": "Nairobi"
   },
   {
@@ -3260,8 +2803,8 @@ export const OUTREACH_LEADS: OutreachLead[] = [
     "category": "Fuel Station / LPG Agent",
     "location": "Muranga Rd, Njiru, Nairobi",
     "phone": "+254 20 6952000",
-    "fit": "Medium-High",
-    "fitNote": "Major fuel-retail brand that also sells/refills LPG cylinders on-site - approach as a franchise-shelf or bulk-supply partnership; likely needs the area/district manager or head office rather than the pump attendant.",
+    "fit": "Medium",
+    "fitNote": "Verify fit and stock in person",
     "county": "Nairobi"
   },
   {
@@ -3269,8 +2812,8 @@ export const OUTREACH_LEADS: OutreachLead[] = [
     "category": "Fuel Station / LPG Agent",
     "location": "Ngong Rd, Ngong, Kajiado",
     "phone": "+254 724 924926",
-    "fit": "Medium-High",
-    "fitNote": "Major fuel-retail brand that also sells/refills LPG cylinders on-site - approach as a franchise-shelf or bulk-supply partnership; likely needs the area/district manager or head office rather than the pump attendant.",
+    "fit": "Medium",
+    "fitNote": "Verify fit and stock in person",
     "county": "Kajiado"
   },
   {
@@ -3278,8 +2821,8 @@ export const OUTREACH_LEADS: OutreachLead[] = [
     "category": "Fuel Station / LPG Agent",
     "location": "Ngong Rd, Ngong, Kajiado",
     "phone": "+254 743 000000",
-    "fit": "Medium-High",
-    "fitNote": "Major fuel-retail brand that also sells/refills LPG cylinders on-site - approach as a franchise-shelf or bulk-supply partnership; likely needs the area/district manager or head office rather than the pump attendant.",
+    "fit": "Medium",
+    "fitNote": "Verify fit and stock in person",
     "county": "Kajiado"
   },
   {
@@ -3287,8 +2830,8 @@ export const OUTREACH_LEADS: OutreachLead[] = [
     "category": "Fuel Station / LPG Agent",
     "location": "Magadi Rd, Kiserian, Kajiado",
     "phone": "+254 723 860974",
-    "fit": "Medium-High",
-    "fitNote": "Major fuel-retail brand that also sells/refills LPG cylinders on-site - approach as a franchise-shelf or bulk-supply partnership; likely needs the area/district manager or head office rather than the pump attendant.",
+    "fit": "Medium",
+    "fitNote": "Verify fit and stock in person",
     "county": "Kajiado"
   },
   {
@@ -3296,8 +2839,8 @@ export const OUTREACH_LEADS: OutreachLead[] = [
     "category": "Fuel Station / LPG Agent",
     "location": "A104 Nairobi-Namanga Rd, Kajiado Town, Kajiado",
     "phone": "+254 723 280000",
-    "fit": "Medium-High",
-    "fitNote": "Major fuel-retail brand that also sells/refills LPG cylinders on-site - approach as a franchise-shelf or bulk-supply partnership; likely needs the area/district manager or head office rather than the pump attendant.",
+    "fit": "Medium",
+    "fitNote": "Verify fit and stock in person",
     "county": "Kajiado"
   },
   {
@@ -3305,8 +2848,8 @@ export const OUTREACH_LEADS: OutreachLead[] = [
     "category": "Fuel Station / LPG Agent",
     "location": "Namanga Rd, Kajiado Town, Kajiado",
     "phone": "+254 20 6952000",
-    "fit": "Medium-High",
-    "fitNote": "Major fuel-retail brand that also sells/refills LPG cylinders on-site - approach as a franchise-shelf or bulk-supply partnership; likely needs the area/district manager or head office rather than the pump attendant.",
+    "fit": "Medium",
+    "fitNote": "Verify fit and stock in person",
     "county": "Kajiado"
   },
   {
@@ -3314,8 +2857,8 @@ export const OUTREACH_LEADS: OutreachLead[] = [
     "category": "Fuel Station / LPG Agent",
     "location": "Thika Superhighway, Ruiru, Kiambu",
     "phone": "+254 727 840579",
-    "fit": "Medium-High",
-    "fitNote": "Major fuel-retail brand that also sells/refills LPG cylinders on-site - approach as a franchise-shelf or bulk-supply partnership; likely needs the area/district manager or head office rather than the pump attendant.",
+    "fit": "Medium",
+    "fitNote": "Verify fit and stock in person",
     "county": "Kiambu"
   },
   {
@@ -3323,8 +2866,8 @@ export const OUTREACH_LEADS: OutreachLead[] = [
     "category": "Fuel Station / LPG Agent",
     "location": "Embu-Nairobi Hwy, Ruiru, Kiambu",
     "phone": "+254 723 491946",
-    "fit": "Medium-High",
-    "fitNote": "Major fuel-retail brand that also sells/refills LPG cylinders on-site - approach as a franchise-shelf or bulk-supply partnership; likely needs the area/district manager or head office rather than the pump attendant.",
+    "fit": "Medium",
+    "fitNote": "Verify fit and stock in person",
     "county": "Kiambu"
   },
   {
@@ -3332,8 +2875,8 @@ export const OUTREACH_LEADS: OutreachLead[] = [
     "category": "Fuel Station / LPG Agent",
     "location": "Kiambu Rd, Kiambu",
     "phone": "+254 725 000000",
-    "fit": "Medium-High",
-    "fitNote": "Major fuel-retail brand that also sells/refills LPG cylinders on-site - approach as a franchise-shelf or bulk-supply partnership; likely needs the area/district manager or head office rather than the pump attendant.",
+    "fit": "Medium",
+    "fitNote": "Verify fit and stock in person",
     "county": "Kiambu"
   },
   {
@@ -3341,8 +2884,8 @@ export const OUTREACH_LEADS: OutreachLead[] = [
     "category": "Fuel Station / LPG Agent",
     "location": "Kiambu Rd, Kiambu",
     "phone": "+254 706 033264",
-    "fit": "Medium-High",
-    "fitNote": "Major fuel-retail brand that also sells/refills LPG cylinders on-site - approach as a franchise-shelf or bulk-supply partnership; likely needs the area/district manager or head office rather than the pump attendant.",
+    "fit": "Medium",
+    "fitNote": "Verify fit and stock in person",
     "county": "Kiambu"
   },
   {
@@ -3350,8 +2893,8 @@ export const OUTREACH_LEADS: OutreachLead[] = [
     "category": "Fuel Station / LPG Agent",
     "location": "Kiambu Rd, Limuru Town, Kiambu",
     "phone": "+254 706 033264",
-    "fit": "Medium-High",
-    "fitNote": "Major fuel-retail brand that also sells/refills LPG cylinders on-site - approach as a franchise-shelf or bulk-supply partnership; likely needs the area/district manager or head office rather than the pump attendant.",
+    "fit": "Medium",
+    "fitNote": "Verify fit and stock in person",
     "county": "Kiambu"
   },
   {
@@ -3359,8 +2902,1664 @@ export const OUTREACH_LEADS: OutreachLead[] = [
     "category": "Fuel Station / LPG Agent",
     "location": "Banana-Raini Rd, Muchatha, Kiambu",
     "phone": "+254 20 6952000",
-    "fit": "Medium-High",
-    "fitNote": "Major fuel-retail brand that also sells/refills LPG cylinders on-site - approach as a franchise-shelf or bulk-supply partnership; likely needs the area/district manager or head office rather than the pump attendant.",
+    "fit": "Medium",
+    "fitNote": "Verify fit and stock in person",
     "county": "Kiambu"
+  },
+  {
+    "name": "SEQUID HARDWARE LTD",
+    "category": "Hardware",
+    "location": "Gitanga Rd, Nairobi",
+    "phone": "+254 703 633472",
+    "fit": "Medium",
+    "fitNote": "General hardware store - verify in person if it stocks household/water/gas accessories",
+    "county": "Nairobi"
+  },
+  {
+    "name": "Diamond hardware store",
+    "category": "Hardware",
+    "location": "Gitanga Rd, Nairobi",
+    "phone": "+254 700 057500",
+    "fit": "Medium",
+    "fitNote": "General hardware store - verify in person if it stocks household/water/gas accessories",
+    "county": "Nairobi"
+  },
+  {
+    "name": "Eusam hardware store",
+    "category": "Hardware",
+    "location": "Dagoretti Rd, Nairobi",
+    "phone": "+254 798 830610",
+    "fit": "Medium",
+    "fitNote": "General hardware store - verify in person if it stocks household/water/gas accessories",
+    "county": "Nairobi"
+  },
+  {
+    "name": "Citizen Trading Ltd",
+    "category": "Hardware",
+    "location": "Gitanga Rd, Nairobi",
+    "phone": "+254 722 724524",
+    "fit": "Medium",
+    "fitNote": "General hardware store - verify in person if it stocks household/water/gas accessories",
+    "county": "Nairobi"
+  },
+  {
+    "name": "South b (shopping area)",
+    "category": "Hardware",
+    "location": "Five Star Rd, South B, Nairobi",
+    "phone": "Not listed - visit in person",
+    "fit": "Medium",
+    "fitNote": "General hardware store - verify in person if it stocks household/water/gas accessories",
+    "county": "Nairobi"
+  },
+  {
+    "name": "Nairobi Garments / Hardware Homes",
+    "category": "Hardware/Wholesaler",
+    "location": "Funzi Rd, Nairobi",
+    "phone": "+254 782 455555",
+    "fit": "Medium",
+    "fitNote": "General hardware store - verify in person if it stocks household/water/gas accessories",
+    "county": "Nairobi"
+  },
+  {
+    "name": "UMOJA GLASS MART & GEN HARDWARE",
+    "category": "Hardware",
+    "location": "Umoja, Nairobi",
+    "phone": "Not listed - visit in person",
+    "fit": "Medium",
+    "fitNote": "General hardware store - verify in person if it stocks household/water/gas accessories",
+    "county": "Nairobi"
+  },
+  {
+    "name": "Rocks Hardware",
+    "category": "Hardware",
+    "location": "Umoja, Nairobi",
+    "phone": "Not listed - visit in person",
+    "fit": "Medium",
+    "fitNote": "General hardware store - verify in person if it stocks household/water/gas accessories",
+    "county": "Nairobi"
+  },
+  {
+    "name": "Mujengo Materials & Electrical Hardware",
+    "category": "Hardware",
+    "location": "Kayole Spine Rd, Nairobi",
+    "phone": "+254 726 604388",
+    "fit": "Medium",
+    "fitNote": "General hardware store - verify in person if it stocks household/water/gas accessories",
+    "county": "Nairobi"
+  },
+  {
+    "name": "Accurate General Hardware & Workshop",
+    "category": "Hardware",
+    "location": "Githurai area, Nairobi",
+    "phone": "+254 721 261685",
+    "fit": "Medium",
+    "fitNote": "General hardware store - verify in person if it stocks household/water/gas accessories",
+    "county": "Nairobi"
+  },
+  {
+    "name": "Sajoh General Hardware & Electronics",
+    "category": "Hardware",
+    "location": "Githurai, Nairobi",
+    "phone": "Not listed - visit in person",
+    "fit": "Medium",
+    "fitNote": "General hardware store - verify in person if it stocks household/water/gas accessories",
+    "county": "Nairobi"
+  },
+  {
+    "name": "Kams Hardware",
+    "category": "Hardware",
+    "location": "Githurai 44, Nairobi",
+    "phone": "Not listed - visit in person",
+    "fit": "Medium",
+    "fitNote": "General hardware store - verify in person if it stocks household/water/gas accessories",
+    "county": "Nairobi"
+  },
+  {
+    "name": "Blessed Hardware",
+    "category": "Hardware",
+    "location": "Utawala, Nairobi",
+    "phone": "+254 722 691503",
+    "fit": "Medium",
+    "fitNote": "General hardware store - verify in person if it stocks household/water/gas accessories",
+    "county": "Nairobi"
+  },
+  {
+    "name": "utawala hardware and electricals",
+    "category": "Hardware/Wholesaler",
+    "location": "Utawala, Nairobi",
+    "phone": "+254 729 037575",
+    "fit": "Medium",
+    "fitNote": "General hardware store - verify in person if it stocks household/water/gas accessories",
+    "county": "Nairobi"
+  },
+  {
+    "name": "GSL hardware",
+    "category": "Hardware",
+    "location": "Utawala, Nairobi",
+    "phone": "+254 717 280218",
+    "fit": "Medium",
+    "fitNote": "General hardware store - verify in person if it stocks household/water/gas accessories",
+    "county": "Nairobi"
+  },
+  {
+    "name": "Benta Hardware & Supplies",
+    "category": "Hardware",
+    "location": "Marenga Rd, Nairobi",
+    "phone": "+254 723 731119",
+    "fit": "Medium",
+    "fitNote": "General hardware store - verify in person if it stocks household/water/gas accessories",
+    "county": "Nairobi"
+  },
+  {
+    "name": "Kawangware General Hardware",
+    "category": "Hardware",
+    "location": "Hinga Dr, Nairobi",
+    "phone": "Not listed - visit in person",
+    "fit": "Medium",
+    "fitNote": "General hardware store - verify in person if it stocks household/water/gas accessories",
+    "county": "Nairobi"
+  },
+  {
+    "name": "HARDWARE KANGEMI",
+    "category": "Hardware",
+    "location": "Kangemi, Nairobi",
+    "phone": "+254 715 001954",
+    "fit": "Medium",
+    "fitNote": "General hardware store - verify in person if it stocks household/water/gas accessories",
+    "county": "Nairobi"
+  },
+  {
+    "name": "Emis Hardware",
+    "category": "Hardware",
+    "location": "Off Waiyaki Way, Nairobi",
+    "phone": "Not listed - visit in person",
+    "fit": "Medium",
+    "fitNote": "General hardware store - verify in person if it stocks household/water/gas accessories",
+    "county": "Nairobi"
+  },
+  {
+    "name": "JOHEWA GENERAL SUPPLIES",
+    "category": "Hardware",
+    "location": "Thiongo Rd, Nairobi",
+    "phone": "+254 769 395098",
+    "fit": "Medium",
+    "fitNote": "General hardware store - verify in person if it stocks household/water/gas accessories",
+    "county": "Nairobi"
+  },
+  {
+    "name": "Chewa Hardware",
+    "category": "Hardware",
+    "location": "Kangemi, Nairobi",
+    "phone": "Not listed - visit in person",
+    "fit": "Medium",
+    "fitNote": "General hardware store - verify in person if it stocks household/water/gas accessories",
+    "county": "Nairobi"
+  },
+  {
+    "name": "Laxcon Hardware & Spares Ltd",
+    "category": "Hardware",
+    "location": "Limuru Rd, Nairobi",
+    "phone": "+254 20 2689327",
+    "fit": "Medium",
+    "fitNote": "General hardware store - verify in person if it stocks household/water/gas accessories",
+    "county": "Nairobi"
+  },
+  {
+    "name": "Park Hardware And Electricals",
+    "category": "Hardware",
+    "location": "Park Rd, Nairobi",
+    "phone": "+254 724 415813",
+    "fit": "Medium",
+    "fitNote": "General hardware store - verify in person if it stocks household/water/gas accessories",
+    "county": "Nairobi"
+  },
+  {
+    "name": "Dheer Distributors limited",
+    "category": "Hardware",
+    "location": "Park Rd, Nairobi",
+    "phone": "+254 705 731829",
+    "fit": "Medium",
+    "fitNote": "General hardware store - verify in person if it stocks household/water/gas accessories",
+    "county": "Nairobi"
+  },
+  {
+    "name": "House Finishers Hardware Wholesale & Retail",
+    "category": "Hardware",
+    "location": "Limuru Rd, Nairobi",
+    "phone": "+254 721 135233",
+    "fit": "Medium",
+    "fitNote": "General hardware store - verify in person if it stocks household/water/gas accessories",
+    "county": "Nairobi"
+  },
+  {
+    "name": "Sungura Hardware",
+    "category": "Hardware",
+    "location": "Duruma Rd, Nairobi",
+    "phone": "+254 717 576619",
+    "fit": "Medium",
+    "fitNote": "General hardware store - verify in person if it stocks household/water/gas accessories",
+    "county": "Nairobi"
+  },
+  {
+    "name": "Mid Seven Hardware",
+    "category": "Hardware",
+    "location": "Kariobangi, Nairobi",
+    "phone": "+254 733 377900",
+    "fit": "Medium",
+    "fitNote": "General hardware store - verify in person if it stocks household/water/gas accessories",
+    "county": "Nairobi"
+  },
+  {
+    "name": "Bemark Hardware Enterprises",
+    "category": "Hardware",
+    "location": "Kariobangi, Nairobi",
+    "phone": "+254 721 353612",
+    "fit": "Medium",
+    "fitNote": "General hardware store - verify in person if it stocks household/water/gas accessories",
+    "county": "Nairobi"
+  },
+  {
+    "name": "OSKAR GENERAL HARDWERE",
+    "category": "Hardware",
+    "location": "Kariobangi, Nairobi",
+    "phone": "+254 723 920332",
+    "fit": "Medium",
+    "fitNote": "General hardware store - verify in person if it stocks household/water/gas accessories",
+    "county": "Nairobi"
+  },
+  {
+    "name": "Testimony Hardware Kariobangi",
+    "category": "Hardware",
+    "location": "Kariobangi, Nairobi",
+    "phone": "+254 741 205423",
+    "fit": "Medium",
+    "fitNote": "General hardware store - verify in person if it stocks household/water/gas accessories",
+    "county": "Nairobi"
+  },
+  {
+    "name": "Blessed Traders",
+    "category": "Hardware",
+    "location": "Kariobangi, Nairobi",
+    "phone": "+254 724 319487",
+    "fit": "Medium",
+    "fitNote": "General hardware store - verify in person if it stocks household/water/gas accessories",
+    "county": "Nairobi"
+  },
+  {
+    "name": "Kenice Investment",
+    "category": "Hardware",
+    "location": "Kamunde Rd, Kariobangi, Nairobi",
+    "phone": "+254 721 259426",
+    "fit": "Medium",
+    "fitNote": "General hardware store - verify in person if it stocks household/water/gas accessories",
+    "county": "Nairobi"
+  },
+  {
+    "name": "Mlolongo Hardware",
+    "category": "Hardware",
+    "location": "Athi River",
+    "phone": "+254 20 3564561",
+    "fit": "Medium",
+    "fitNote": "General hardware store - verify in person if it stocks household/water/gas accessories",
+    "county": "Machakos"
+  },
+  {
+    "name": "Yaanzoni Hardware",
+    "category": "Hardware",
+    "location": "Athi River",
+    "phone": "Not listed - visit in person",
+    "fit": "Medium",
+    "fitNote": "General hardware store - verify in person if it stocks household/water/gas accessories",
+    "county": "Machakos"
+  },
+  {
+    "name": "Gohaps Hardware Stores Ltd",
+    "category": "Hardware",
+    "location": "Namanga Rd, Kitengela",
+    "phone": "+254 740 000777",
+    "fit": "Medium",
+    "fitNote": "General hardware store - verify in person if it stocks household/water/gas accessories",
+    "county": "Kajiado"
+  },
+  {
+    "name": "Pramukh Hardware Stores LTD (ATHI RIVER)",
+    "category": "Hardware",
+    "location": "Athi River",
+    "phone": "+254 718 299491",
+    "fit": "Medium",
+    "fitNote": "General hardware store - verify in person if it stocks household/water/gas accessories",
+    "county": "Machakos"
+  },
+  {
+    "name": "Paints And Hardware Supermarket Limited",
+    "category": "Hardware",
+    "location": "Mombasa Rd, Syokimau/Mlolongo",
+    "phone": "+254 795 509299",
+    "fit": "Medium",
+    "fitNote": "General hardware store - verify in person if it stocks household/water/gas accessories",
+    "county": "Machakos"
+  },
+  {
+    "name": "Millenium Hardware",
+    "category": "Hardware",
+    "location": "Athi River",
+    "phone": "Not listed - visit in person",
+    "fit": "Medium",
+    "fitNote": "General hardware store - verify in person if it stocks household/water/gas accessories",
+    "county": "Machakos"
+  },
+  {
+    "name": "Gasxpress rongai",
+    "category": "Gas Dealer",
+    "location": "Ongata Rongai",
+    "phone": "+254 733 839518",
+    "fit": "High",
+    "fitNote": "Gas dealer - direct product-line fit for AquaGas cooking gas partnership",
+    "county": "Kajiado"
+  },
+  {
+    "name": "Aquagas Delivery-app",
+    "category": "Gas Dealer",
+    "location": "Ongata Rongai",
+    "phone": "+254 710 820666",
+    "fit": "High",
+    "fitNote": "Gas dealer - direct product-line fit for AquaGas cooking gas partnership",
+    "county": "Kajiado"
+  },
+  {
+    "name": "SMART GAS SUPPLIES",
+    "category": "Gas Dealer",
+    "location": "Nairobi",
+    "phone": "+254 703 633579",
+    "fit": "High",
+    "fitNote": "Gas dealer - direct product-line fit for AquaGas cooking gas partnership",
+    "county": "Nairobi"
+  },
+  {
+    "name": "Sun King Shop LPG Kayole",
+    "category": "Gas Dealer",
+    "location": "Kayole, Nairobi",
+    "phone": "+254 736 637370",
+    "fit": "High",
+    "fitNote": "Gas dealer - direct product-line fit for AquaGas cooking gas partnership",
+    "county": "Nairobi"
+  },
+  {
+    "name": "SMART POINT GAS DEPOT",
+    "category": "Gas Dealer",
+    "location": "Kayole, Nairobi",
+    "phone": "+254 727 841778",
+    "fit": "High",
+    "fitNote": "Gas dealer - direct product-line fit for AquaGas cooking gas partnership",
+    "county": "Nairobi"
+  },
+  {
+    "name": "Kitengela Hope Gas Centre",
+    "category": "Gas Dealer",
+    "location": "Miriam Rd, Kitengela",
+    "phone": "+254 722 117594",
+    "fit": "High",
+    "fitNote": "Gas dealer - direct product-line fit for AquaGas cooking gas partnership",
+    "county": "Kajiado"
+  },
+  {
+    "name": "Progas",
+    "category": "Gas Dealer",
+    "location": "Kitengela",
+    "phone": "+254 722 777522",
+    "fit": "High",
+    "fitNote": "Gas dealer - direct product-line fit for AquaGas cooking gas partnership",
+    "county": "Kajiado"
+  },
+  {
+    "name": "Good Friends Gas Suppliers (Kahawa)",
+    "category": "Gas Dealer",
+    "location": "Kahawa, Nairobi",
+    "phone": "+254 716 850309",
+    "fit": "High",
+    "fitNote": "Gas dealer - direct product-line fit for AquaGas cooking gas partnership",
+    "county": "Nairobi"
+  },
+  {
+    "name": "Cooking Gas (Roysambu area)",
+    "category": "Gas Dealer",
+    "location": "Nairobi",
+    "phone": "+254 711 297885",
+    "fit": "High",
+    "fitNote": "Gas dealer - direct product-line fit for AquaGas cooking gas partnership",
+    "county": "Nairobi"
+  },
+  {
+    "name": "Kamwi Gas",
+    "category": "Gas Dealer",
+    "location": "Githurai",
+    "phone": "+254 726 058129",
+    "fit": "High",
+    "fitNote": "Gas dealer - direct product-line fit for AquaGas cooking gas partnership",
+    "county": "Kiambu"
+  },
+  {
+    "name": "Cooking friend gas delivery",
+    "category": "Gas Dealer",
+    "location": "Kilimani, Nairobi",
+    "phone": "+254 728 230899",
+    "fit": "High",
+    "fitNote": "Gas dealer - direct product-line fit for AquaGas cooking gas partnership",
+    "county": "Nairobi"
+  },
+  {
+    "name": "Mobile Cooking Gas",
+    "category": "Gas Dealer",
+    "location": "Nairobi",
+    "phone": "+254 759 613690",
+    "fit": "High",
+    "fitNote": "Gas dealer - direct product-line fit for AquaGas cooking gas partnership",
+    "county": "Nairobi"
+  },
+  {
+    "name": "Dial A Gas (Kawangware)",
+    "category": "Gas Dealer",
+    "location": "Kawangware, Nairobi",
+    "phone": "Not listed - visit in person",
+    "fit": "High",
+    "fitNote": "Gas dealer - direct product-line fit for AquaGas cooking gas partnership",
+    "county": "Nairobi"
+  },
+  {
+    "name": "Postbank Rickwell Gas Distributors",
+    "category": "Gas Dealer",
+    "location": "Kawangware, Nairobi",
+    "phone": "+254 716 918999",
+    "fit": "High",
+    "fitNote": "Gas dealer - direct product-line fit for AquaGas cooking gas partnership",
+    "county": "Nairobi"
+  },
+  {
+    "name": "Kariobangi Market",
+    "category": "Wholesaler",
+    "location": "Kariobangi, Nairobi",
+    "phone": "+254 725 212556",
+    "fit": "Medium",
+    "fitNote": "Bulk retailer - good fit for gas/water/household FMCG distribution",
+    "county": "Nairobi"
+  },
+  {
+    "name": "GOLDEN SAVE WHOLESALERS LTD",
+    "category": "Wholesaler",
+    "location": "Muhoho Rd, Nairobi",
+    "phone": "Not listed - visit in person",
+    "fit": "Medium",
+    "fitNote": "Bulk retailer - good fit for gas/water/household FMCG distribution",
+    "county": "Nairobi"
+  },
+  {
+    "name": "ELWAK STORES",
+    "category": "Wholesaler",
+    "location": "Muhoho Rd, Nairobi",
+    "phone": "Not listed - visit in person",
+    "fit": "Medium",
+    "fitNote": "Bulk retailer - good fit for gas/water/household FMCG distribution",
+    "county": "Nairobi"
+  },
+  {
+    "name": "Sam West Wholesale & Retail Supermarket",
+    "category": "Wholesaler",
+    "location": "Gitanga Rd, Nairobi",
+    "phone": "+254 141 517007",
+    "fit": "Medium",
+    "fitNote": "Bulk retailer - good fit for gas/water/household FMCG distribution",
+    "county": "Nairobi"
+  },
+  {
+    "name": "Topserve Limited - Kimathi Street Branch",
+    "category": "Kitchenware",
+    "location": "Kimathi St, Nairobi",
+    "phone": "+254 722 329064",
+    "fit": "High",
+    "fitNote": "Kitchenware retailer - direct product-line fit for AquaGas household items",
+    "county": "Nairobi"
+  },
+  {
+    "name": "Cedar Clink Hardware (Kimathi House)",
+    "category": "Hardware",
+    "location": "Kimathi St, Nairobi",
+    "phone": "+254 722 911919",
+    "fit": "Medium",
+    "fitNote": "General hardware store - verify in person if it stocks household/water/gas accessories",
+    "county": "Nairobi"
+  },
+  {
+    "name": "DEALS POA HOUSEHOLDS",
+    "category": "Kitchenware",
+    "location": "Kimathi St, Nairobi",
+    "phone": "+254 797 121637",
+    "fit": "High",
+    "fitNote": "Kitchenware retailer - direct product-line fit for AquaGas household items",
+    "county": "Nairobi"
+  },
+  {
+    "name": "Rift Valley General Hardware",
+    "category": "Hardware",
+    "location": "Githunguri",
+    "phone": "+254 721 324111",
+    "fit": "Medium",
+    "fitNote": "General hardware store - verify in person if it stocks household/water/gas accessories",
+    "county": "Kiambu"
+  },
+  {
+    "name": "Wamunene Hardware Stores",
+    "category": "Hardware",
+    "location": "Githunguri",
+    "phone": "Not listed - visit in person",
+    "fit": "Medium",
+    "fitNote": "General hardware store - verify in person if it stocks household/water/gas accessories",
+    "county": "Kiambu"
+  },
+  {
+    "name": "Wa Kinyanjui Hardware",
+    "category": "Hardware",
+    "location": "Githunguri",
+    "phone": "+254 702 115263",
+    "fit": "Medium",
+    "fitNote": "General hardware store - verify in person if it stocks household/water/gas accessories",
+    "county": "Kiambu"
+  },
+  {
+    "name": "Gas Point Depot (Kikuyu Town)",
+    "category": "Gas Dealer",
+    "location": "Dagoreti Rd, Kikuyu",
+    "phone": "+254 708 140109",
+    "fit": "High",
+    "fitNote": "Gas dealer - direct product-line fit for AquaGas cooking gas partnership",
+    "county": "Kiambu"
+  },
+  {
+    "name": "Kahso Distributors And Logistics Ltd - Kibichiku",
+    "category": "Gas Dealer",
+    "location": "Kibichiku, Kiambu",
+    "phone": "+254 758 121569",
+    "fit": "High",
+    "fitNote": "Gas dealer - direct product-line fit for AquaGas cooking gas partnership",
+    "county": "Kiambu"
+  },
+  {
+    "name": "Williamson Cooking Gas Delivery Kinoo",
+    "category": "Gas Dealer",
+    "location": "Rungiri, Kinoo",
+    "phone": "+254 702 495503",
+    "fit": "High",
+    "fitNote": "Gas dealer - direct product-line fit for AquaGas cooking gas partnership",
+    "county": "Kiambu"
+  },
+  {
+    "name": "Bronco gas suppliers",
+    "category": "Gas Dealer",
+    "location": "Limuru Town",
+    "phone": "+254 715 883048",
+    "fit": "High",
+    "fitNote": "Gas dealer - direct product-line fit for AquaGas cooking gas partnership",
+    "county": "Kiambu"
+  },
+  {
+    "name": "Marus Gas",
+    "category": "Gas Dealer",
+    "location": "Limuru area",
+    "phone": "Not listed - visit in person",
+    "fit": "High",
+    "fitNote": "Gas dealer - direct product-line fit for AquaGas cooking gas partnership",
+    "county": "Kiambu"
+  },
+  {
+    "name": "Tawi Wholesalers",
+    "category": "Wholesaler",
+    "location": "Pongezi Plaza, Kiambu",
+    "phone": "+254 725 799090",
+    "fit": "Medium",
+    "fitNote": "Bulk retailer - good fit for gas/water/household FMCG distribution",
+    "county": "Kiambu"
+  },
+  {
+    "name": "Sunil Desselb wholesalers",
+    "category": "Wholesaler",
+    "location": "Kiambu town",
+    "phone": "+254 734 638180",
+    "fit": "Medium",
+    "fitNote": "Bulk retailer - good fit for gas/water/household FMCG distribution",
+    "county": "Kiambu"
+  },
+  {
+    "name": "Al-bidaya wholesale and retail shop",
+    "category": "Wholesaler",
+    "location": "Kiambu Rd, Kiambu",
+    "phone": "+254 722 304636",
+    "fit": "Medium",
+    "fitNote": "Bulk retailer - good fit for gas/water/household FMCG distribution",
+    "county": "Kiambu"
+  },
+  {
+    "name": "Jimos Wholesalers & Retailers",
+    "category": "Wholesaler",
+    "location": "Kiambu town",
+    "phone": "+254 722 623053",
+    "fit": "Medium",
+    "fitNote": "Bulk retailer - good fit for gas/water/household FMCG distribution",
+    "county": "Kiambu"
+  },
+  {
+    "name": "Daima Wholesalers",
+    "category": "Wholesaler",
+    "location": "Kiambu town",
+    "phone": "Not listed - visit in person",
+    "fit": "Medium",
+    "fitNote": "Bulk retailer - good fit for gas/water/household FMCG distribution",
+    "county": "Kiambu"
+  },
+  {
+    "name": "VISION WHOLESALERS & CEREALS",
+    "category": "Wholesaler",
+    "location": "Kiambu town",
+    "phone": "Not listed - visit in person",
+    "fit": "Medium",
+    "fitNote": "Bulk retailer - good fit for gas/water/household FMCG distribution",
+    "county": "Kiambu"
+  },
+  {
+    "name": "Naju Electricals and Hardware",
+    "category": "Hardware",
+    "location": "Huruma, Nairobi",
+    "phone": "Not listed - visit in person",
+    "fit": "Medium",
+    "fitNote": "General hardware store - verify in person if it stocks household/water/gas accessories",
+    "county": "Nairobi"
+  },
+  {
+    "name": "Bei Nafuu Hardware",
+    "category": "Hardware",
+    "location": "Huruma, Nairobi",
+    "phone": "Not listed - visit in person",
+    "fit": "Medium",
+    "fitNote": "General hardware store - verify in person if it stocks household/water/gas accessories",
+    "county": "Nairobi"
+  },
+  {
+    "name": "OH hardware",
+    "category": "Hardware",
+    "location": "Huruma, Nairobi",
+    "phone": "Not listed - visit in person",
+    "fit": "Medium",
+    "fitNote": "General hardware store - verify in person if it stocks household/water/gas accessories",
+    "county": "Nairobi"
+  },
+  {
+    "name": "Rainbow Steel Limited",
+    "category": "Hardware",
+    "location": "Huruma Rd, Nairobi",
+    "phone": "Not listed - visit in person",
+    "fit": "Medium",
+    "fitNote": "General hardware store - verify in person if it stocks household/water/gas accessories",
+    "county": "Nairobi"
+  },
+  {
+    "name": "Kingori Tools & Metals",
+    "category": "Hardware",
+    "location": "Huruma Rd, Nairobi",
+    "phone": "+254 728 628541",
+    "fit": "Medium",
+    "fitNote": "General hardware store - verify in person if it stocks household/water/gas accessories",
+    "county": "Nairobi"
+  },
+  {
+    "name": "Wakerage Glassmart and Hardware",
+    "category": "Hardware",
+    "location": "Huruma, Nairobi",
+    "phone": "Not listed - visit in person",
+    "fit": "Medium",
+    "fitNote": "General hardware store - verify in person if it stocks household/water/gas accessories",
+    "county": "Nairobi"
+  },
+  {
+    "name": "Miako Hardware",
+    "category": "Hardware",
+    "location": "Waiyaki Way, Nairobi",
+    "phone": "Not listed - visit in person",
+    "fit": "Medium",
+    "fitNote": "General hardware store - verify in person if it stocks household/water/gas accessories",
+    "county": "Nairobi"
+  },
+  {
+    "name": "Alibhai Shariff & Sons Ltd Hardware",
+    "category": "Hardware",
+    "location": "Westlands, Nairobi",
+    "phone": "+254 20 4447798",
+    "fit": "Medium",
+    "fitNote": "General hardware store - verify in person if it stocks household/water/gas accessories",
+    "county": "Nairobi"
+  },
+  {
+    "name": "Cemco enterprises waiyaki way",
+    "category": "Hardware",
+    "location": "Waiyaki Way, Nairobi",
+    "phone": "+254 723 990348",
+    "fit": "Medium",
+    "fitNote": "General hardware store - verify in person if it stocks household/water/gas accessories",
+    "county": "Nairobi"
+  },
+  {
+    "name": "J.K Hardware",
+    "category": "Hardware",
+    "location": "Lower Kabete Rd, Nairobi",
+    "phone": "Not listed - visit in person",
+    "fit": "Medium",
+    "fitNote": "General hardware store - verify in person if it stocks household/water/gas accessories",
+    "county": "Nairobi"
+  },
+  {
+    "name": "PRAMUKH HARDWARE STORES",
+    "category": "Hardware",
+    "location": "Syokimau Ave, Machakos",
+    "phone": "Not listed - visit in person",
+    "fit": "Medium",
+    "fitNote": "General hardware store - verify in person if it stocks household/water/gas accessories",
+    "county": "Machakos"
+  },
+  {
+    "name": "Kathuli Timber & Hardwares Ltd",
+    "category": "Hardware",
+    "location": "Mumbuni North, Machakos",
+    "phone": "+254 44 2021025",
+    "fit": "Medium",
+    "fitNote": "General hardware store - verify in person if it stocks household/water/gas accessories",
+    "county": "Machakos"
+  },
+  {
+    "name": "Muthokinju - MACHAKOS",
+    "category": "Hardware",
+    "location": "Ngei Rd, Machakos",
+    "phone": "+254 743 951691",
+    "fit": "Medium",
+    "fitNote": "General hardware store - verify in person if it stocks household/water/gas accessories",
+    "county": "Machakos"
+  },
+  {
+    "name": "Magnum Hardware & Construction",
+    "category": "Hardware",
+    "location": "Machakos",
+    "phone": "+254 113 837443",
+    "fit": "Medium",
+    "fitNote": "General hardware store - verify in person if it stocks household/water/gas accessories",
+    "county": "Machakos"
+  },
+  {
+    "name": "Machakos Hundal Agency",
+    "category": "Hardware",
+    "location": "Syokimau Ave, Machakos",
+    "phone": "Not listed - visit in person",
+    "fit": "Medium",
+    "fitNote": "General hardware store - verify in person if it stocks household/water/gas accessories",
+    "county": "Machakos"
+  },
+  {
+    "name": "Akamba Timber & Hardware Ltd",
+    "category": "Hardware",
+    "location": "Mumbuni North, Machakos",
+    "phone": "+254 724 404409",
+    "fit": "Medium",
+    "fitNote": "General hardware store - verify in person if it stocks household/water/gas accessories",
+    "county": "Machakos"
+  },
+  {
+    "name": "BAPS HARDWARE LIMITED",
+    "category": "Hardware",
+    "location": "Namanga Rd, Kajiado",
+    "phone": "+254 703 778787",
+    "fit": "Medium",
+    "fitNote": "General hardware store - verify in person if it stocks household/water/gas accessories",
+    "county": "Kajiado"
+  },
+  {
+    "name": "LELESHUA",
+    "category": "Hardware",
+    "location": "Kajiado",
+    "phone": "+254 701 596587",
+    "fit": "Medium",
+    "fitNote": "General hardware store - verify in person if it stocks household/water/gas accessories",
+    "county": "Kajiado"
+  },
+  {
+    "name": "YOGI SWAMI STEEL KAJIADO LTD",
+    "category": "Hardware",
+    "location": "Kajiado",
+    "phone": "+254 722 763376",
+    "fit": "Medium",
+    "fitNote": "General hardware store - verify in person if it stocks household/water/gas accessories",
+    "county": "Kajiado"
+  },
+  {
+    "name": "Hanif timber & hardware",
+    "category": "Hardware",
+    "location": "Namanga Rd, Kajiado",
+    "phone": "+254 705 100682",
+    "fit": "Medium",
+    "fitNote": "General hardware store - verify in person if it stocks household/water/gas accessories",
+    "county": "Kajiado"
+  },
+  {
+    "name": "Lewino Hardware",
+    "category": "Hardware",
+    "location": "Kajiado North",
+    "phone": "+254 721 773828",
+    "fit": "Medium",
+    "fitNote": "General hardware store - verify in person if it stocks household/water/gas accessories",
+    "county": "Kajiado"
+  },
+  {
+    "name": "Testimony Junior Hardware Kiserian",
+    "category": "Hardware",
+    "location": "Magadi Rd, Kiserian",
+    "phone": "+254 722 690303",
+    "fit": "Medium",
+    "fitNote": "General hardware store - verify in person if it stocks household/water/gas accessories",
+    "county": "Kajiado"
+  },
+  {
+    "name": "Sioge E-buy Hardware Ltd",
+    "category": "Hardware",
+    "location": "Kiserian",
+    "phone": "+254 734 514342",
+    "fit": "Medium",
+    "fitNote": "General hardware store - verify in person if it stocks household/water/gas accessories",
+    "county": "Kajiado"
+  },
+  {
+    "name": "Polaris Hardware",
+    "category": "Hardware",
+    "location": "Kiserian",
+    "phone": "Not listed - visit in person",
+    "fit": "Medium",
+    "fitNote": "General hardware store - verify in person if it stocks household/water/gas accessories",
+    "county": "Kajiado"
+  },
+  {
+    "name": "H WORLD KENYA LTD",
+    "category": "Hardware",
+    "location": "Gichagi, Kiserian",
+    "phone": "+254 798 303007",
+    "fit": "Medium",
+    "fitNote": "General hardware store - verify in person if it stocks household/water/gas accessories",
+    "county": "Kajiado"
+  },
+  {
+    "name": "NOORBHAI & SONS HARDWARE LTD",
+    "category": "Hardware",
+    "location": "Forest Line Rd, Kiserian",
+    "phone": "+254 719 338271",
+    "fit": "Medium",
+    "fitNote": "General hardware store - verify in person if it stocks household/water/gas accessories",
+    "county": "Kajiado"
+  },
+  {
+    "name": "Saris Hardware",
+    "category": "Hardware",
+    "location": "Namanga Rd, Kitengela",
+    "phone": "+254 720 070544",
+    "fit": "Medium",
+    "fitNote": "General hardware store - verify in person if it stocks household/water/gas accessories",
+    "county": "Kajiado"
+  },
+  {
+    "name": "Muthokinju - SYOKIMAU",
+    "category": "Hardware",
+    "location": "Mombasa Rd, Syokimau",
+    "phone": "+254 798 831702",
+    "fit": "Medium",
+    "fitNote": "General hardware store - verify in person if it stocks household/water/gas accessories",
+    "county": "Machakos"
+  },
+  {
+    "name": "RAKIH HARDWARE & GENERAL SUPPLIES",
+    "category": "Hardware",
+    "location": "Katani Rd, Syokimau",
+    "phone": "+254 705 824229",
+    "fit": "Medium",
+    "fitNote": "General hardware store - verify in person if it stocks household/water/gas accessories",
+    "county": "Machakos"
+  },
+  {
+    "name": "Community Timber & Hardware",
+    "category": "Hardware",
+    "location": "Community Rd, Syokimau",
+    "phone": "+254 714 035043",
+    "fit": "Medium",
+    "fitNote": "General hardware store - verify in person if it stocks household/water/gas accessories",
+    "county": "Machakos"
+  },
+  {
+    "name": "Rowa hardware",
+    "category": "Hardware",
+    "location": "Katani Rd, Syokimau",
+    "phone": "Not listed - visit in person",
+    "fit": "Medium",
+    "fitNote": "General hardware store - verify in person if it stocks household/water/gas accessories",
+    "county": "Machakos"
+  },
+  {
+    "name": "Atlantis Timber And Hardware",
+    "category": "Hardware",
+    "location": "Community Rd, Syokimau",
+    "phone": "+254 20 8893991",
+    "fit": "Medium",
+    "fitNote": "General hardware store - verify in person if it stocks household/water/gas accessories",
+    "county": "Machakos"
+  },
+  {
+    "name": "Classic Ironmongers Ltd.",
+    "category": "Hardware",
+    "location": "Mombasa Rd, Syokimau",
+    "phone": "+254 708 367304",
+    "fit": "Medium",
+    "fitNote": "General hardware store - verify in person if it stocks household/water/gas accessories",
+    "county": "Machakos"
+  },
+  {
+    "name": "Akamba Steel & General Wholesalers",
+    "category": "Hardware/Wholesaler",
+    "location": "Makutano-Kitui Rd, Machakos",
+    "phone": "+254 733 816044",
+    "fit": "Medium",
+    "fitNote": "General hardware store - verify in person if it stocks household/water/gas accessories",
+    "county": "Machakos"
+  },
+  {
+    "name": "B center gas point",
+    "category": "Gas Dealer",
+    "location": "Sweetwaters, Machakos",
+    "phone": "+254 723 807746",
+    "fit": "High",
+    "fitNote": "Gas dealer - direct product-line fit for AquaGas cooking gas partnership",
+    "county": "Machakos"
+  },
+  {
+    "name": "Total Cooking Gas",
+    "category": "Gas Dealer",
+    "location": "Machakos",
+    "phone": "Not listed - visit in person",
+    "fit": "High",
+    "fitNote": "Gas dealer - direct product-line fit for AquaGas cooking gas partnership",
+    "county": "Machakos"
+  },
+  {
+    "name": "Evolution Gas Hub",
+    "category": "Gas Dealer",
+    "location": "Kathemboni Rd, Machakos",
+    "phone": "Not listed - visit in person",
+    "fit": "High",
+    "fitNote": "Gas dealer - direct product-line fit for AquaGas cooking gas partnership",
+    "county": "Machakos"
+  },
+  {
+    "name": "Rubis gas- Machakos university",
+    "category": "Gas Dealer",
+    "location": "Machakos",
+    "phone": "+254 742 075281",
+    "fit": "High",
+    "fitNote": "Gas dealer - direct product-line fit for AquaGas cooking gas partnership",
+    "county": "Machakos"
+  },
+  {
+    "name": "Machakos Gas Point - Fortune Gas Stores",
+    "category": "Gas Dealer",
+    "location": "Machakos University Gate B",
+    "phone": "+254 799 223927",
+    "fit": "High",
+    "fitNote": "Gas dealer - direct product-line fit for AquaGas cooking gas partnership",
+    "county": "Machakos"
+  },
+  {
+    "name": "Pro Gas Container Machakos",
+    "category": "Gas Dealer",
+    "location": "Machakos",
+    "phone": "+254 800 723 666",
+    "fit": "High",
+    "fitNote": "Gas dealer - direct product-line fit for AquaGas cooking gas partnership",
+    "county": "Machakos"
+  },
+  {
+    "name": "Economy Gas Depot",
+    "category": "Gas Dealer",
+    "location": "Olkeri, Kajiado North, Kiserian",
+    "phone": "+254 707 116864",
+    "fit": "High",
+    "fitNote": "Gas dealer - direct product-line fit for AquaGas cooking gas partnership",
+    "county": "Kajiado"
+  },
+  {
+    "name": "Royal Gas Depot",
+    "category": "Gas Dealer",
+    "location": "Olkeri, Kajiado North, Kiserian",
+    "phone": "+254 721 612279",
+    "fit": "High",
+    "fitNote": "Gas dealer - direct product-line fit for AquaGas cooking gas partnership",
+    "county": "Kajiado"
+  },
+  {
+    "name": "Pima Gas Keffra Kiserian",
+    "category": "Gas Dealer",
+    "location": "Kiserian",
+    "phone": "Not listed - visit in person",
+    "fit": "High",
+    "fitNote": "Gas dealer - direct product-line fit for AquaGas cooking gas partnership",
+    "county": "Kajiado"
+  },
+  {
+    "name": "Ok Gas",
+    "category": "Gas Dealer",
+    "location": "Olkeri, Kiserian",
+    "phone": "+254 722 784247",
+    "fit": "High",
+    "fitNote": "Gas dealer - direct product-line fit for AquaGas cooking gas partnership",
+    "county": "Kajiado"
+  },
+  {
+    "name": "Choices gas suppliers",
+    "category": "Gas Dealer",
+    "location": "Kiserian",
+    "phone": "Not listed - visit in person",
+    "fit": "High",
+    "fitNote": "Gas dealer - direct product-line fit for AquaGas cooking gas partnership",
+    "county": "Kajiado"
+  },
+  {
+    "name": "SASA WHOLESALERS LTD",
+    "category": "Wholesaler",
+    "location": "Machakos",
+    "phone": "+254 723 576838",
+    "fit": "Medium",
+    "fitNote": "Bulk retailer - good fit for gas/water/household FMCG distribution",
+    "county": "Machakos"
+  },
+  {
+    "name": "Kivuvo Traders",
+    "category": "Wholesaler",
+    "location": "Mumbuni North, Machakos",
+    "phone": "+254 44 21399",
+    "fit": "Medium",
+    "fitNote": "Bulk retailer - good fit for gas/water/household FMCG distribution",
+    "county": "Machakos"
+  },
+  {
+    "name": "WAA SUPPLIERS MACHAKOS",
+    "category": "Wholesaler",
+    "location": "Machakos",
+    "phone": "+254 708 417194",
+    "fit": "Medium",
+    "fitNote": "Bulk retailer - good fit for gas/water/household FMCG distribution",
+    "county": "Machakos"
+  },
+  {
+    "name": "SABAKI FRESH OIL & FOODS",
+    "category": "Wholesaler",
+    "location": "Market St, Machakos",
+    "phone": "+254 715 806076",
+    "fit": "Medium",
+    "fitNote": "Bulk retailer - good fit for gas/water/household FMCG distribution",
+    "county": "Machakos"
+  },
+  {
+    "name": "Masai Stores Ltd",
+    "category": "Wholesaler",
+    "location": "Old Bazaar St, Kajiado",
+    "phone": "+254 722 224225",
+    "fit": "Medium",
+    "fitNote": "Bulk retailer - good fit for gas/water/household FMCG distribution",
+    "county": "Kajiado"
+  },
+  {
+    "name": "Machakos Exotic Furnitures",
+    "category": "Kitchenware",
+    "location": "Makutano-Kitui Rd, Machakos",
+    "phone": "+254 101 012376",
+    "fit": "High",
+    "fitNote": "Kitchenware retailer - direct product-line fit for AquaGas household items",
+    "county": "Machakos"
+  },
+  {
+    "name": "Diamond home fashion (Machakos)",
+    "category": "Kitchenware",
+    "location": "Machakos",
+    "phone": "+254 728 146421",
+    "fit": "High",
+    "fitNote": "Kitchenware retailer - direct product-line fit for AquaGas household items",
+    "county": "Machakos"
+  },
+  {
+    "name": "The Mecca Store Limited- kitchenware and cookware",
+    "category": "Kitchenware",
+    "location": "Ring Rd, Nairobi (Westlands)",
+    "phone": "+254 715 838556",
+    "fit": "High",
+    "fitNote": "Kitchenware retailer - direct product-line fit for AquaGas household items",
+    "county": "Nairobi"
+  },
+  {
+    "name": "Finechef Kenya",
+    "category": "Kitchenware",
+    "location": "Mulu Mutisya Hwy, Machakos",
+    "phone": "+254 796 230412",
+    "fit": "High",
+    "fitNote": "Kitchenware retailer - direct product-line fit for AquaGas household items",
+    "county": "Machakos"
+  },
+  {
+    "name": "Recon supplies ltd",
+    "category": "Hardware",
+    "location": "Ruaka Town",
+    "phone": "+254 748 120144",
+    "fit": "Medium",
+    "fitNote": "General hardware store - verify in person if it stocks household/water/gas accessories",
+    "county": "Kiambu"
+  },
+  {
+    "name": "Zainab Smart Hardware",
+    "category": "Hardware",
+    "location": "Wakimu House, Limuru Rd, Ruaka",
+    "phone": "+254 753 838004",
+    "fit": "Medium",
+    "fitNote": "General hardware store - verify in person if it stocks household/water/gas accessories",
+    "county": "Kiambu"
+  },
+  {
+    "name": "Ruaka Timberyard & Hardware",
+    "category": "Hardware",
+    "location": "Limuru Rd, Ruaka",
+    "phone": "Not listed - visit in person",
+    "fit": "Medium",
+    "fitNote": "General hardware store - verify in person if it stocks household/water/gas accessories",
+    "county": "Kiambu"
+  },
+  {
+    "name": "MM HARDWARE LTD",
+    "category": "Hardware",
+    "location": "Gachira-ini Stage, Ruaka",
+    "phone": "+254 727 661760",
+    "fit": "Medium",
+    "fitNote": "General hardware store - verify in person if it stocks household/water/gas accessories",
+    "county": "Kiambu"
+  },
+  {
+    "name": "Mkulima minimart",
+    "category": "Supermarket",
+    "location": "Ruaka",
+    "phone": "Not listed - visit in person",
+    "fit": "Medium",
+    "fitNote": "Independent supermarket/minimart - potential retail shelf space for household items",
+    "county": "Kiambu"
+  },
+  {
+    "name": "ICON MART Supermarket",
+    "category": "Supermarket",
+    "location": "Ruaka",
+    "phone": "Not listed - visit in person",
+    "fit": "Medium",
+    "fitNote": "Independent supermarket/minimart - potential retail shelf space for household items",
+    "county": "Kiambu"
+  },
+  {
+    "name": "Ngawa Minimart",
+    "category": "Supermarket",
+    "location": "Red Hill Rd, Ruaka area",
+    "phone": "Not listed - visit in person",
+    "fit": "Medium",
+    "fitNote": "Independent supermarket/minimart - potential retail shelf space for household items",
+    "county": "Kiambu"
+  },
+  {
+    "name": "Rosslyn Hardware- Rosslyn Gates Centre",
+    "category": "Hardware",
+    "location": "Limuru Rd, Rosslyn",
+    "phone": "+254 722 441086",
+    "fit": "Medium",
+    "fitNote": "General hardware store - verify in person if it stocks household/water/gas accessories",
+    "county": "Kiambu"
+  },
+  {
+    "name": "GIWA GAS-RUAKA",
+    "category": "Gas Dealer",
+    "location": "Ruaka",
+    "phone": "+254 722 752814",
+    "fit": "High",
+    "fitNote": "Gas dealer - direct product-line fit for AquaGas cooking gas partnership",
+    "county": "Kiambu"
+  },
+  {
+    "name": "Quick gas (Ruminyi)",
+    "category": "Gas Dealer",
+    "location": "Ruminyi, Ruaka area",
+    "phone": "+254 789 134414",
+    "fit": "High",
+    "fitNote": "Gas dealer - direct product-line fit for AquaGas cooking gas partnership",
+    "county": "Kiambu"
+  },
+  {
+    "name": "Nice gas point (multi-brand) - Ruaka",
+    "category": "Gas Dealer",
+    "location": "Kariuki Dr, Limuru Rd, Ruaka",
+    "phone": "+254 705 965023",
+    "fit": "High",
+    "fitNote": "Gas dealer - direct product-line fit for AquaGas cooking gas partnership",
+    "county": "Kiambu"
+  },
+  {
+    "name": "SAM BARBER & COOKING GAS RUAKA",
+    "category": "Gas Dealer",
+    "location": "Ruaka",
+    "phone": "+254 721 527092",
+    "fit": "High",
+    "fitNote": "Gas dealer - direct product-line fit for AquaGas cooking gas partnership",
+    "county": "Kiambu"
+  },
+  {
+    "name": "My dear gas point kasarini",
+    "category": "Gas Dealer",
+    "location": "Kiambu Rd, Kiambu",
+    "phone": "+254 706 040679",
+    "fit": "High",
+    "fitNote": "Gas dealer - direct product-line fit for AquaGas cooking gas partnership",
+    "county": "Kiambu"
+  },
+  {
+    "name": "Smart Price Gas Suppliers (California Rd Ruaka)",
+    "category": "Gas Dealer",
+    "location": "Limuru Rd, Ruaka",
+    "phone": "+254 740 804268",
+    "fit": "High",
+    "fitNote": "Gas dealer - direct product-line fit for AquaGas cooking gas partnership",
+    "county": "Kiambu"
+  },
+  {
+    "name": "Rossetti Cook Market - Italian Kitchenware - Village Market",
+    "category": "Kitchenware",
+    "location": "Village Market, Nairobi",
+    "phone": "+254 794 518322",
+    "fit": "High",
+    "fitNote": "Kitchenware retailer - direct product-line fit for AquaGas household items",
+    "county": "Nairobi"
+  },
+  {
+    "name": "Hi Kitchen village Market",
+    "category": "Kitchenware",
+    "location": "Village Market, Nairobi",
+    "phone": "+254 700 861802",
+    "fit": "High",
+    "fitNote": "Kitchenware retailer - direct product-line fit for AquaGas household items",
+    "county": "Nairobi"
+  },
+  {
+    "name": "Housewife's Paradise - Two Rivers Mall",
+    "category": "Kitchenware",
+    "location": "Two Rivers Mall, Nairobi",
+    "phone": "+254 790 039732",
+    "fit": "High",
+    "fitNote": "Kitchenware retailer - direct product-line fit for AquaGas household items",
+    "county": "Nairobi"
+  },
+  {
+    "name": "Nobri Home",
+    "category": "Kitchenware",
+    "location": "Village Market, Nairobi",
+    "phone": "+254 702 630650",
+    "fit": "High",
+    "fitNote": "Kitchenware retailer - direct product-line fit for AquaGas household items",
+    "county": "Nairobi"
+  },
+  {
+    "name": "NYUMBANI MINIMART",
+    "category": "Supermarket",
+    "location": "Ruiru",
+    "phone": "Not listed - visit in person",
+    "fit": "Medium",
+    "fitNote": "Independent supermarket/minimart - potential retail shelf space for household items",
+    "county": "Kiambu"
+  },
+  {
+    "name": "Thogos Minimart",
+    "category": "Supermarket",
+    "location": "Githunguri Rd, Kiambu",
+    "phone": "+254 796 046672",
+    "fit": "Medium",
+    "fitNote": "Independent supermarket/minimart - potential retail shelf space for household items",
+    "county": "Kiambu"
+  },
+  {
+    "name": "Ridgeways Hardware & Fabricators",
+    "category": "Hardware",
+    "location": "Kiambu Rd, Ridgeways",
+    "phone": "+254 733 444071",
+    "fit": "Medium",
+    "fitNote": "General hardware store - verify in person if it stocks household/water/gas accessories",
+    "county": "Nairobi"
+  },
+  {
+    "name": "Nairobi Gas and Water distributors",
+    "category": "Gas Dealer",
+    "location": "East Church Rd, Nairobi",
+    "phone": "+254 797 137247",
+    "fit": "High",
+    "fitNote": "Gas dealer - direct product-line fit for AquaGas cooking gas partnership",
+    "county": "Nairobi"
+  },
+  {
+    "name": "24 seven enterprise",
+    "category": "Supermarket",
+    "location": "Kiambu Rd (Kiambu town side)",
+    "phone": "+254 719 740045",
+    "fit": "Medium",
+    "fitNote": "Independent supermarket/minimart - potential retail shelf space for household items",
+    "county": "Kiambu"
+  },
+  {
+    "name": "Ahadi General Hardware",
+    "category": "Hardware",
+    "location": "Membley Estate, Ruiru, Eastern Bypass",
+    "phone": "0722 328458",
+    "fit": "Medium",
+    "fitNote": "General hardware store - verify in person if it stocks household/water/gas accessories",
+    "county": "Nairobi"
+  },
+  {
+    "name": "Davis & Shirtliff - Karen HQ",
+    "category": "High-End Hardware",
+    "location": "Dundori Rd, Nairobi",
+    "phone": "+254 711 079000",
+    "fit": "High",
+    "fitNote": "Premium water/solar/plumbing equipment dealer - Davis & Shirtliff-tier technical hardware, strong fit for water/gas household systems",
+    "county": "Nairobi"
+  },
+  {
+    "name": "Davis & Shirtliff Nairobi Downtown",
+    "category": "High-End Hardware",
+    "location": "River Rd, Nairobi",
+    "phone": "+254 715 439392",
+    "fit": "High",
+    "fitNote": "Premium water/solar/plumbing equipment dealer - Davis & Shirtliff-tier technical hardware, strong fit for water/gas household systems",
+    "county": "Nairobi"
+  },
+  {
+    "name": "Davis & Shirtliff Westlands",
+    "category": "High-End Hardware",
+    "location": "Woodvale Cl, Nairobi",
+    "phone": "+254 711 079683",
+    "fit": "High",
+    "fitNote": "Premium water/solar/plumbing equipment dealer - Davis & Shirtliff-tier technical hardware, strong fit for water/gas household systems",
+    "county": "Nairobi"
+  },
+  {
+    "name": "Davis & Shirtliff - Eastleigh",
+    "category": "High-End Hardware",
+    "location": "Eastleigh, Nairobi",
+    "phone": "+254 711 079700",
+    "fit": "High",
+    "fitNote": "Premium water/solar/plumbing equipment dealer - Davis & Shirtliff-tier technical hardware, strong fit for water/gas household systems",
+    "county": "Nairobi"
+  },
+  {
+    "name": "Davis & Shirtliff Kangundo Road",
+    "category": "High-End Hardware",
+    "location": "Kangundo Rd, Nairobi",
+    "phone": "+254 701 454518",
+    "fit": "High",
+    "fitNote": "Premium water/solar/plumbing equipment dealer - Davis & Shirtliff-tier technical hardware, strong fit for water/gas household systems",
+    "county": "Nairobi"
+  },
+  {
+    "name": "Davis & Shirtliff Lavington",
+    "category": "High-End Hardware",
+    "location": "Othaya Rd, Lavington, Nairobi",
+    "phone": "+254 113 435335",
+    "fit": "High",
+    "fitNote": "Premium water/solar/plumbing equipment dealer - Davis & Shirtliff-tier technical hardware, strong fit for water/gas household systems",
+    "county": "Nairobi"
+  },
+  {
+    "name": "Davis & Shirtliff Utawala",
+    "category": "High-End Hardware",
+    "location": "Mustard Seed Plaza, Utawala",
+    "phone": "+254 780 575745",
+    "fit": "High",
+    "fitNote": "Premium water/solar/plumbing equipment dealer - Davis & Shirtliff-tier technical hardware, strong fit for water/gas household systems",
+    "county": "Nairobi"
+  },
+  {
+    "name": "Davis & Shirtliff Gikomba",
+    "category": "High-End Hardware",
+    "location": "Pumwani-Digo Rd, Gikomba, Nairobi",
+    "phone": "+254 110 597719",
+    "fit": "High",
+    "fitNote": "Premium water/solar/plumbing equipment dealer - Davis & Shirtliff-tier technical hardware, strong fit for water/gas household systems",
+    "county": "Nairobi"
+  },
+  {
+    "name": "Davis & Shirtliff Kiambu",
+    "category": "High-End Hardware",
+    "location": "Biashara St, Kiambu",
+    "phone": "+254 701 646309",
+    "fit": "High",
+    "fitNote": "Premium water/solar/plumbing equipment dealer - Davis & Shirtliff-tier technical hardware, strong fit for water/gas household systems",
+    "county": "Kiambu"
+  },
+  {
+    "name": "Davis & Shirtliff Ruaka",
+    "category": "High-End Hardware",
+    "location": "Ruaka",
+    "phone": "+254 114 236091",
+    "fit": "High",
+    "fitNote": "Premium water/solar/plumbing equipment dealer - Davis & Shirtliff-tier technical hardware, strong fit for water/gas household systems",
+    "county": "Kiambu"
+  },
+  {
+    "name": "KITALI SUPPLIERS LTD",
+    "category": "High-End Hardware",
+    "location": "Ronald Ngala St, Nairobi",
+    "phone": "+254 781 111118",
+    "fit": "High",
+    "fitNote": "Premium water/solar/plumbing equipment dealer - Davis & Shirtliff-tier technical hardware, strong fit for water/gas household systems",
+    "county": "Nairobi"
+  },
+  {
+    "name": "Macire Limited",
+    "category": "High-End Hardware",
+    "location": "Kumasi Rd, Nairobi",
+    "phone": "+254 713 520969",
+    "fit": "High",
+    "fitNote": "Premium water/solar/plumbing equipment dealer - Davis & Shirtliff-tier technical hardware, strong fit for water/gas household systems",
+    "county": "Nairobi"
+  },
+  {
+    "name": "Annasco Traders",
+    "category": "High-End Hardware",
+    "location": "River Rd, Nairobi",
+    "phone": "+254 727 203870",
+    "fit": "High",
+    "fitNote": "Premium water/solar/plumbing equipment dealer - Davis & Shirtliff-tier technical hardware, strong fit for water/gas household systems",
+    "county": "Nairobi"
+  },
+  {
+    "name": "Skyniks Limited",
+    "category": "High-End Hardware",
+    "location": "Luthuli Ave, Nairobi",
+    "phone": "+254 794 136656",
+    "fit": "High",
+    "fitNote": "Premium water/solar/plumbing equipment dealer - Davis & Shirtliff-tier technical hardware, strong fit for water/gas household systems",
+    "county": "Nairobi"
+  },
+  {
+    "name": "Water equipment and Systems Limited",
+    "category": "High-End Hardware",
+    "location": "Enterprise Rd, Nairobi",
+    "phone": "+254 20 2008241",
+    "fit": "High",
+    "fitNote": "Premium water/solar/plumbing equipment dealer - Davis & Shirtliff-tier technical hardware, strong fit for water/gas household systems",
+    "county": "Nairobi"
+  },
+  {
+    "name": "Bills On Solar EA Limited",
+    "category": "High-End Hardware",
+    "location": "Industrial Area, Nairobi",
+    "phone": "+254 795 857846",
+    "fit": "High",
+    "fitNote": "Premium water/solar/plumbing equipment dealer - Davis & Shirtliff-tier technical hardware, strong fit for water/gas household systems",
+    "county": "Nairobi"
+  },
+  {
+    "name": "SolarShop Africa",
+    "category": "High-End Hardware",
+    "location": "Northern Bypass, Ruiru",
+    "phone": "+254 722 863668",
+    "fit": "High",
+    "fitNote": "Premium water/solar/plumbing equipment dealer - Davis & Shirtliff-tier technical hardware, strong fit for water/gas household systems",
+    "county": "Kiambu"
+  },
+  {
+    "name": "PowerPoint Systems (E.A) Ltd",
+    "category": "High-End Hardware",
+    "location": "Lusaka Rd, Nairobi",
+    "phone": "+254 722 155534",
+    "fit": "High",
+    "fitNote": "Premium water/solar/plumbing equipment dealer - Davis & Shirtliff-tier technical hardware, strong fit for water/gas household systems",
+    "county": "Nairobi"
+  },
+  {
+    "name": "Phyne Tech Limited (Water/Milk/Oil ATMs)",
+    "category": "High-End Hardware",
+    "location": "Ruiru",
+    "phone": "+254 720 900777",
+    "fit": "High",
+    "fitNote": "Premium water/solar/plumbing equipment dealer - Davis & Shirtliff-tier technical hardware, strong fit for water/gas household systems",
+    "county": "Kiambu"
+  },
+  {
+    "name": "Saset Ltd (Water/Milk/Oil ATMs)",
+    "category": "High-End Hardware",
+    "location": "Ruiru Toll Station",
+    "phone": "+254 726 747403",
+    "fit": "High",
+    "fitNote": "Premium water/solar/plumbing equipment dealer - Davis & Shirtliff-tier technical hardware, strong fit for water/gas household systems",
+    "county": "Kiambu"
+  },
+  {
+    "name": "PHYMAC LIMITED (Cooking Oil/Milk ATMs, Water Purifiers)",
+    "category": "High-End Hardware",
+    "location": "Kihunguro, Ruiru",
+    "phone": "+254 707 419100",
+    "fit": "High",
+    "fitNote": "Premium water/solar/plumbing equipment dealer - Davis & Shirtliff-tier technical hardware, strong fit for water/gas household systems",
+    "county": "Kiambu"
+  },
+  {
+    "name": "Premiumplumbing Ltd Kenya",
+    "category": "High-End Hardware",
+    "location": "Keigi House, Kiambu",
+    "phone": "+254 742 742906",
+    "fit": "High",
+    "fitNote": "Premium water/solar/plumbing equipment dealer - Davis & Shirtliff-tier technical hardware, strong fit for water/gas household systems",
+    "county": "Kiambu"
+  },
+  {
+    "name": "Elite Water Solutions",
+    "category": "High-End Hardware",
+    "location": "Kikuyu, Kiambu",
+    "phone": "+254 700 489691",
+    "fit": "High",
+    "fitNote": "Premium water/solar/plumbing equipment dealer - Davis & Shirtliff-tier technical hardware, strong fit for water/gas household systems",
+    "county": "Kiambu"
+  },
+  {
+    "name": "Raeli Hydro Systems Ltd",
+    "category": "High-End Hardware",
+    "location": "Lusaka Rd, Nairobi",
+    "phone": "+254 700 666888",
+    "fit": "High",
+    "fitNote": "Premium water/solar/plumbing equipment dealer - Davis & Shirtliff-tier technical hardware, strong fit for water/gas household systems",
+    "county": "Nairobi"
+  },
+  {
+    "name": "Roto Moulders Limited",
+    "category": "High-End Hardware",
+    "location": "Enterprise Rd, Nairobi",
+    "phone": "+254 714 978758",
+    "fit": "High",
+    "fitNote": "Premium water/solar/plumbing equipment dealer - Davis & Shirtliff-tier technical hardware, strong fit for water/gas household systems",
+    "county": "Nairobi"
+  },
+  {
+    "name": "Kentainers ltd (Kentank)",
+    "category": "High-End Hardware",
+    "location": "Ruiru",
+    "phone": "+254 722 206378",
+    "fit": "High",
+    "fitNote": "Premium water/solar/plumbing equipment dealer - Davis & Shirtliff-tier technical hardware, strong fit for water/gas household systems",
+    "county": "Kiambu"
+  },
+  {
+    "name": "JUMBO QUALITY PRODUCTS LTD (POA TANK)",
+    "category": "High-End Hardware",
+    "location": "Mombasa Rd, Nairobi",
+    "phone": "+254 720 295555",
+    "fit": "High",
+    "fitNote": "Premium water/solar/plumbing equipment dealer - Davis & Shirtliff-tier technical hardware, strong fit for water/gas household systems",
+    "county": "Nairobi"
+  },
+  {
+    "name": "Mamba Tanks",
+    "category": "High-End Hardware",
+    "location": "Viwandani, Nairobi",
+    "phone": "+254 722 138669",
+    "fit": "High",
+    "fitNote": "Premium water/solar/plumbing equipment dealer - Davis & Shirtliff-tier technical hardware, strong fit for water/gas household systems",
+    "county": "Nairobi"
+  },
+  {
+    "name": "Nemsi Holdings Limited",
+    "category": "High-End Hardware",
+    "location": "Dar es Salaam Rd, Nairobi",
+    "phone": "+254 743 919921",
+    "fit": "High",
+    "fitNote": "Premium water/solar/plumbing equipment dealer - Davis & Shirtliff-tier technical hardware, strong fit for water/gas household systems",
+    "county": "Nairobi"
+  },
+  {
+    "name": "Plumbware Limited",
+    "category": "High-End Hardware",
+    "location": "Lanet Rd, Nairobi",
+    "phone": "+254 20 6536974",
+    "fit": "High",
+    "fitNote": "Premium water/solar/plumbing equipment dealer - Davis & Shirtliff-tier technical hardware, strong fit for water/gas household systems",
+    "county": "Nairobi"
+  },
+  {
+    "name": "Jamjos Enterprises ltd",
+    "category": "High-End Hardware",
+    "location": "Sheikh Karume Rd, Nairobi",
+    "phone": "+254 704 454000",
+    "fit": "High",
+    "fitNote": "Premium water/solar/plumbing equipment dealer - Davis & Shirtliff-tier technical hardware, strong fit for water/gas household systems",
+    "county": "Nairobi"
+  },
+  {
+    "name": "Blane Plumbers Ltd",
+    "category": "High-End Hardware",
+    "location": "Kimathi St, Nairobi",
+    "phone": "+254 725 744361",
+    "fit": "High",
+    "fitNote": "Premium water/solar/plumbing equipment dealer - Davis & Shirtliff-tier technical hardware, strong fit for water/gas household systems",
+    "county": "Nairobi"
+  },
+  {
+    "name": "Smartlink Distributors Limited",
+    "category": "High-End Hardware",
+    "location": "Sheikh Karume Rd, Nairobi",
+    "phone": "+254 729 651066",
+    "fit": "High",
+    "fitNote": "Premium water/solar/plumbing equipment dealer - Davis & Shirtliff-tier technical hardware, strong fit for water/gas household systems",
+    "county": "Nairobi"
   }
 ];
