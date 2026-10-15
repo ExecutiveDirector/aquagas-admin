@@ -9,7 +9,7 @@ interface Order {
   outlet_id: string;
   vendor_id: string;
   vendor_name?: string;
-  order_status: 'draft' | 'pending' | 'confirmed' | 'preparing' | 'ready' | 'dispatched' | 'delivered' | 'cancelled' | 'refunded';
+  order_status: 'draft' | 'pending' | 'confirmed' | 'preparing' | 'ready' | 'dispatched' | 'delivered' | 'canceled' | 'cancelled' | 'refunded';
   payment_status: 'pending' | 'paid' | 'partially_paid' | 'refunded' | 'failed';
   subtotal: number;
   tax_amount: number;
@@ -42,6 +42,14 @@ interface OrderDetailsProps {
   onRefund: (orderId: string, data: { amount: number; reason: string }) => Promise<void>;
   loading?: boolean;
 }
+
+// Mirrors backend utils/orderStatus.js NEXT table.
+const ORDER_NEXT: Record<string, string[]> = {
+  draft: ['pending', 'canceled'], pending: ['confirmed', 'canceled'],
+  confirmed: ['preparing', 'ready', 'canceled'], preparing: ['ready', 'canceled'],
+  ready: ['dispatched', 'canceled'], dispatched: ['delivered', 'canceled'],
+  delivered: ['refunded'], canceled: [], refunded: [],
+};
 
 export default function OrderDetails({ order, onUpdateStatus, onAssignRider, onRefund, loading }: OrderDetailsProps) {
   const [isEditingStatus, setIsEditingStatus] = useState(false);
@@ -97,7 +105,7 @@ export default function OrderDetails({ order, onUpdateStatus, onAssignRider, onR
         <div className="flex space-x-2">
           <div className={`px-3 py-1 rounded-full text-sm ${
             order.order_status === 'delivered' ? 'bg-green-100 dark:bg-green-900/20 text-green-800 dark:text-green-400' :
-            order.order_status === 'cancelled' ? 'bg-red-100 dark:bg-red-900/20 text-red-800 dark:text-red-400' :
+            (order.order_status === 'canceled' || order.order_status === 'cancelled') ? 'bg-red-100 dark:bg-red-900/20 text-red-800 dark:text-red-400' :
             'bg-yellow-100 dark:bg-yellow-900/20 text-yellow-800 dark:text-yellow-400'
           }`}>
             {order.order_status}
@@ -196,14 +204,12 @@ export default function OrderDetails({ order, onUpdateStatus, onAssignRider, onR
               onChange={(e) => setNewStatus(e.target.value as Order['order_status'])}
               className="w-full px-4 py-2 border rounded-lg mb-2"
             >
-              <option value="pending">Pending</option>
-              <option value="confirmed">Confirmed</option>
-              <option value="preparing">Preparing</option>
-              <option value="ready">Ready</option>
-              <option value="dispatched">Dispatched</option>
-              <option value="delivered">Delivered</option>
-              <option value="cancelled">Cancelled</option>
-              <option value="refunded">Refunded</option>
+              {/* Only moves the backend lifecycle allows (utils/orderStatus.js) */}
+              {[order.order_status === 'cancelled' ? 'canceled' : order.order_status,
+                ...(ORDER_NEXT[order.order_status === 'cancelled' ? 'canceled' : order.order_status] || [])]
+                .map((s) => (
+                  <option key={s} value={s}>{s === 'canceled' ? 'Cancelled' : s.charAt(0).toUpperCase() + s.slice(1)}</option>
+                ))}
             </select>
             <input
               type="text"
