@@ -1,4 +1,5 @@
 // src/pages/transactions/Finance.tsx
+import RiderCashTab from './RiderCashTab';
 import React, { useState, useEffect, useCallback, type JSX } from 'react';
 import {
   Wallet,
@@ -39,7 +40,7 @@ import { Bar } from 'react-chartjs-2';
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend);
 
-type Tab = 'transactions' | 'refunds' | 'payouts';
+type Tab = 'transactions' | 'refunds' | 'payouts' | 'rider_cash';
 
 const PAGE_SIZE = 20;
 
@@ -366,6 +367,7 @@ const Finance: React.FC = () => {
     { key: 'transactions', label: 'Transactions', icon: <Receipt className="w-4 h-4" /> },
     { key: 'refunds', label: 'Refunds', icon: <RotateCcw className="w-4 h-4" /> },
     { key: 'payouts', label: 'Payouts', icon: <Wallet className="w-4 h-4" /> },
+    { key: 'rider_cash', label: 'Rider cash', icon: <Wallet className="w-4 h-4" /> },
   ];
 
   const statusBreakdownChart = summary
@@ -687,6 +689,8 @@ const Finance: React.FC = () => {
           <Pagination page={refundPage} totalPages={refundTotalPages} onChange={setRefundPage} />
         </div>
       )}
+
+      {tab === 'rider_cash' && <RiderCashTab />}
 
       {tab === 'payouts' && (
         <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md border border-gray-200 dark:border-gray-600">

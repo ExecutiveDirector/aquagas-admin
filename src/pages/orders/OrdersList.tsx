@@ -42,7 +42,7 @@ export default function OrdersList({
 }: OrdersListProps) {
   const [sortBy, setSortBy] = useState<keyof Order>('order_number');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
-  const [filterStatus, setFilterStatus] = useState<'all' | 'pending' | 'delivered' | 'cancelled'>('all');
+  const [filterStatus, setFilterStatus] = useState<'all' | 'pending' | 'delivered' | 'canceled'>('all');
 
   const filteredOrders = orders.filter(order => 
     filterStatus === 'all' || order.order_status === filterStatus
@@ -130,7 +130,7 @@ export default function OrdersList({
               <option value="all">All Status</option>
               <option value="pending">Pending</option>
               <option value="delivered">Delivered</option>
-              <option value="cancelled">Cancelled</option>
+              <option value="canceled">Cancelled</option>
             </select>
           </div>
         </div>
@@ -186,7 +186,7 @@ export default function OrdersList({
                 <td className="px-6 py-4 whitespace-nowrap">
                   <span className={`inline-flex px-2 py-1 text-xs rounded-full ${
                     order.order_status === 'delivered' ? 'bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400' :
-                    order.order_status === 'cancelled' || order.order_status === 'refunded' ? 'bg-red-100 text-red-800 dark:bg-red-900/20 dark:text-red-400' :
+                    (order.order_status as string) === 'canceled' || (order.order_status as string) === 'cancelled' || order.order_status === 'refunded' ? 'bg-red-100 text-red-800 dark:bg-red-900/20 dark:text-red-400' :
                     'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-400'
                   }`}>
                     {order.order_status}

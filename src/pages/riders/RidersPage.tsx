@@ -58,7 +58,7 @@ interface AnalyticsSummary {
 type ViewMode = 'list' | 'details' | 'analytics' | 'map';
 type DetailTab = 'info' | 'orders';
 
-const ORDER_STATUSES = ['all', 'pending', 'confirmed', 'preparing', 'ready', 'dispatched', 'delivered', 'cancelled'];
+const ORDER_STATUSES = ['all', 'pending', 'confirmed', 'preparing', 'ready', 'dispatched', 'delivered', 'canceled'];
 
 // ─── Pure helpers ─────────────────────────────────────────────────────────────
 // FIX: previously read r.auth_account — the backend's nested include alias
@@ -100,6 +100,7 @@ function orderStatusBadge(s: string) {
     ready:      'bg-cyan-100 text-cyan-800 dark:bg-cyan-900/30 dark:text-cyan-300',
     dispatched: 'bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-300',
     delivered:  'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300',
+    canceled:   'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300',
     cancelled:  'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300',
   };
   return m[s?.toLowerCase()] ?? 'bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-400';
