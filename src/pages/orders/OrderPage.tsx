@@ -85,6 +85,7 @@ function OrderDetailPanel({
   const [showRiderDropdown, setShowRiderDropdown] = useState(false);
   const [refundAmount, setRefundAmount] = useState(order.total_amount);
   const [refundReason, setRefundReason] = useState("");
+  const [refundRef, setRefundRef] = useState("");
   const [actionLoading, setActionLoading] = useState(false);
   const [actionError, setActionError] = useState<string | null>(null);
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
@@ -173,13 +174,14 @@ function OrderDetailPanel({
 
   const handleRefund = async () => {
     if (!refundReason.trim()) return;
+    if (!window.confirm(`Record a refund of KES ${refundAmount} for ${order.order_number}?\nOnly do this after you have sent the money back to the customer.`)) return;
     setActionLoading(true); setActionError(null);
     try {
-      await refundOrder(order.order_id, refundAmount, refundReason);
-      showSuccess("Refund processed");
+      await refundOrder(order.order_id, refundAmount, refundReason, refundRef.trim() || undefined);
+      showSuccess("Refund recorded");
       onUpdate();
     } catch (e: any) {
-      setActionError(e?.message ?? "Failed to process refund");
+      setActionError(e?.response?.data?.error ?? e?.message ?? "Failed to record refund");
     } finally {
       setActionLoading(false);
     }
@@ -372,7 +374,8 @@ function OrderDetailPanel({
 
           {/* Refund */}
           <section>
-            <h3 className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-3">Process Refund</h3>
+            <h3 className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-3">Record Refund</h3>
+            <p className="text-xs text-gray-400 mb-2">This updates the books. Send the money first (M-Pesa / Pesapal), then enter the reference.</p>
             <div className="space-y-2">
               <input
                 type="number"
@@ -390,12 +393,20 @@ function OrderDetailPanel({
                 disabled={actionLoading}
                 className="w-full text-sm px-3 py-2 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white outline-none focus:border-red-400 focus:ring-1 focus:ring-red-400/20 transition-colors disabled:opacity-50 placeholder:text-gray-300 dark:placeholder:text-gray-600"
               />
+              <input
+                type="text"
+                value={refundRef}
+                onChange={(e) => setRefundRef(e.target.value)}
+                placeholder="M-Pesa / bank reference"
+                disabled={actionLoading}
+                className="w-full text-sm px-3 py-2 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white outline-none focus:border-red-400 focus:ring-1 focus:ring-red-400/20 transition-colors disabled:opacity-50 placeholder:text-gray-300 dark:placeholder:text-gray-600"
+              />
               <button
                 onClick={handleRefund}
                 disabled={actionLoading || !refundReason.trim()}
                 className="w-full py-2 rounded-xl bg-red-600 hover:bg-red-700 text-white text-sm font-medium disabled:opacity-50 transition-colors"
               >
-                {actionLoading ? "Processing…" : "Process Refund"}
+                {actionLoading ? "Recording…" : "Record Refund"}
               </button>
             </div>
           </section>
