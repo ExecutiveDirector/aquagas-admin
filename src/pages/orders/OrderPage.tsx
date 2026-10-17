@@ -1,6 +1,7 @@
 // src/pages/orders/OrdersPage.tsx
 import React, { useState, useEffect, useCallback, useRef } from "react";
 import { Search, RefreshCw, AlertCircle, ChevronDown, ChevronUp, X, CheckCircle } from "lucide-react";
+import NeedsAttention from "./NeedsAttention";
 import { listOrders, updateOrderStatus, assignRiderToOrder, refundOrder, listRiders } from "../../services/adminService";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -491,6 +492,8 @@ export default function OrdersPage() {
             Refresh
           </button>
         </div>
+
+        <NeedsAttention />
 
         <div className="flex flex-col sm:flex-row gap-3">
           <div className="relative flex-1">
