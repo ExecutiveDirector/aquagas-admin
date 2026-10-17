@@ -371,9 +371,10 @@ export async function assignRiderToOrder(
 export async function refundOrder(
   orderId: string, 
   amount: number, 
-  reason: string
+  reason: string,
+  reference?: string
 ): Promise<ApiResponse> {
-  const res = await api.post(`/v1/admin/orders/${orderId}/refund`, { amount, reason });
+  const res = await api.post(`/v1/admin/orders/${orderId}/refund`, { amount, reason, reference });
   return res.data;
 }
 
