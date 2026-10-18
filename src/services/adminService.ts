@@ -362,9 +362,10 @@ export async function updateOrderStatus(
 
 export async function assignRiderToOrder(
   orderId: string, 
-  riderId: string
+  riderId: string,
+  force = false
 ): Promise<ApiResponse> {
-  const res = await api.post(`/v1/admin/orders/${orderId}/assign-rider`, { rider_id: riderId });
+  const res = await api.post(`/v1/admin/orders/${orderId}/assign-rider`, { rider_id: riderId, ...(force ? { force: true } : {}) });
   return res.data;
 }
 
