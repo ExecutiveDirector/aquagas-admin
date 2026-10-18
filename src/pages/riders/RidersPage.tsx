@@ -22,6 +22,7 @@ import CreateRiderModal from './CreateRiderModal';
 import EditRiderModal from './EditRiderModal';
 import ResetPasswordResultModal from './ResetPasswordResultModal';
 import RidersMap from './RidersMap';
+import api from '../../services/api';
 import type { RiderWithAccount } from '../../types';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -200,16 +201,53 @@ export default function RidersPage() {
     finally { setActionLoading(false); }
   };
 
-  const handleToggleStatus = (rider: Rider) =>
+  // Admin can set any working status at any time (a rider stuck on "busy" must be fixable).
+  const handleSetStatus = (rider: Rider, next: string) =>
     withAction(async () => {
-      const next = rider.current_status === 'available' ? 'offline' : 'available';
+      if (next === rider.current_status) return;
+      if (['available', 'offline', 'on_break'].includes(next) && isBusy(rider) &&
+          !window.confirm(`${riderName(rider)} is marked ${rider.current_status.replace('_', ' ')}. Change to ${next.replace('_', ' ')} anyway?`)) return;
       await updateRiderStatus(rider.rider_id, { status: next as any });
-      toast.success(`${riderName(rider)} is now ${next}`);
+      toast.success(`${riderName(rider)} is now ${next.replace('_', ' ')}`);
       await fetchRiders();
       if (selectedRider?.rider_id === rider.rider_id) {
         setSelectedRider(prev => prev ? { ...prev, current_status: next as Rider['current_status'] } : prev);
       }
     });
+
+  // Set the status from the jobs the rider actually holds (fixes a rider stuck on "busy").
+  const handleSyncStatus = (rider: Rider) =>
+    withAction(async () => {
+      const res = await api.post(`/v1/admin/riders/${rider.rider_id}/sync-status`);
+      toast.success(`${riderName(rider)}: ${String(res.data.status).replace('_', ' ')} (${res.data.active_orders} active orders)`);
+      await fetchRiders();
+    });
+
+  const StatusControl = ({ rider, compact }: { rider: Rider; compact?: boolean }) => (
+    <span className="inline-flex items-center gap-1">
+      <select
+        value={rider.current_status}
+        disabled={actionLoading}
+        onChange={(e) => handleSetStatus(rider, e.target.value)}
+        className={`${compact ? 'px-1.5 py-1 text-xs' : 'px-2 py-1.5 text-sm'} rounded border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-100 disabled:opacity-50`}
+        title="Change rider status"
+      >
+        <option value="available">Online</option>
+        <option value="offline">Offline</option>
+        <option value="on_break">On break</option>
+        <option value="on_delivery">On delivery</option>
+        <option value="busy">Busy</option>
+      </select>
+      <button
+        onClick={() => handleSyncStatus(rider)}
+        disabled={actionLoading}
+        title="Match status to the rider's real active orders"
+        className={`${compact ? 'px-1.5 py-1 text-xs' : 'px-2 py-1.5 text-sm'} rounded bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-200 disabled:opacity-50`}
+      >
+        Auto
+      </button>
+    </span>
+  );
 
   const handleApprove = (riderId: string) =>
     withAction(async () => {
@@ -383,14 +421,7 @@ export default function RidersPage() {
                           <CheckCircle className="w-3 h-3 inline mr-0.5" />Verify
                         </button>
                       )}
-                      <button
-                        onClick={() => handleToggleStatus(rider)}
-                        disabled={actionLoading || isBusy(rider)}
-                        title={isBusy(rider) ? 'Rider is on a delivery' : undefined}
-                        className={`px-2.5 py-1 rounded text-xs font-medium transition-colors disabled:opacity-50 ${rider.current_status === 'available' ? 'bg-red-600 hover:bg-red-700 text-white' : 'bg-emerald-600 hover:bg-emerald-700 text-white'}`}
-                      >
-                        {rider.current_status === 'available' ? 'Set Offline' : 'Set Online'}
-                      </button>
+                      {StatusControl({ rider, compact: true })}
                       <button onClick={() => handleResetPassword(rider)} disabled={actionLoading} className="px-2.5 py-1 bg-amber-600 hover:bg-amber-700 text-white rounded text-xs font-medium transition-colors disabled:opacity-50">
                         <Key className="w-3 h-3 inline mr-0.5" />Reset
                       </button>
@@ -572,13 +603,7 @@ export default function RidersPage() {
                       <CheckCircle className="w-4 h-4 inline mr-1" />Verify Rider
                     </button>
                   )}
-                  <button
-                    onClick={() => handleToggleStatus(r)}
-                    disabled={actionLoading || isBusy(r)}
-                    className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors disabled:opacity-50 ${r.current_status === 'available' ? 'bg-red-600 hover:bg-red-700 text-white' : 'bg-emerald-600 hover:bg-emerald-700 text-white'}`}
-                  >
-                    {r.current_status === 'available' ? 'Set Offline' : 'Set Online'}
-                  </button>
+                  {StatusControl({ rider: r })}
                   <button onClick={() => handleResetPassword(r)} disabled={actionLoading} className="px-3 py-1.5 bg-amber-600 hover:bg-amber-700 text-white rounded-lg text-sm font-medium transition-colors disabled:opacity-50">
                     <Key className="w-4 h-4 inline mr-1" />Reset Password
                   </button>

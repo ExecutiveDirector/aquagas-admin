@@ -2,6 +2,7 @@
 import React, { useState, useEffect, useCallback, useRef } from "react";
 import { Search, RefreshCw, AlertCircle, ChevronDown, ChevronUp, X, CheckCircle } from "lucide-react";
 import NeedsAttention from "./NeedsAttention";
+import DispatchQueue from "./DispatchQueue";
 import { listOrders, updateOrderStatus, assignRiderToOrder, refundOrder, listRiders } from "../../services/adminService";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -160,13 +161,24 @@ function OrderDetailPanel({
     if (!selectedRiderId) return;
     setActionLoading(true); setActionError(null);
     try {
-      await assignRiderToOrder(order.order_id, selectedRiderId);
+      try {
+        await assignRiderToOrder(order.order_id, selectedRiderId);
+      } catch (err: any) {
+        // A rider who already holds the maximum number of jobs: the admin decides whether to queue it anyway.
+        const data = err?.response?.data;
+        if (err?.response?.status === 409 && data?.code === "RIDER_AT_CAPACITY") {
+          if (!window.confirm(`${data.error}\n\nAssign anyway? It will queue behind their current orders.`)) { setActionLoading(false); return; }
+          await assignRiderToOrder(order.order_id, selectedRiderId, true);
+        } else {
+          throw err;
+        }
+      }
       showSuccess(`Rider assigned: ${selectedRider?.first_name} ${selectedRider?.last_name}`);
       setSelectedRiderId("");
       setRiderSearch("");
       onUpdate();
     } catch (e: any) {
-      setActionError(e?.message ?? "Failed to assign rider");
+      setActionError(e?.response?.data?.error ?? e?.message ?? "Failed to assign rider");
     } finally {
       setActionLoading(false);
     }
@@ -339,7 +351,9 @@ function OrderDetailPanel({
                         <span className={`text-xs px-1.5 py-0.5 rounded-full ${
                           rider.current_status === 'available'
                             ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400'
-                            : 'bg-gray-100 text-gray-500 dark:bg-gray-700 dark:text-gray-400'
+                            : (rider.current_status === 'busy' || rider.current_status === 'on_delivery')
+                              ? 'bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400'
+                              : 'bg-gray-100 text-gray-500 dark:bg-gray-700 dark:text-gray-400'
                         }`}>
                           {rider.current_status.replace('_', ' ')}
                         </span>
@@ -504,6 +518,7 @@ export default function OrdersPage() {
           </button>
         </div>
 
+        <DispatchQueue onChanged={() => fetchOrders(page)} />
         <NeedsAttention />
 
         <div className="flex flex-col sm:flex-row gap-3">
