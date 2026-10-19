@@ -78,7 +78,11 @@ export interface Refund {
   user_id?: string;
   amount: number;
   reason: string;
-  status: 'pending' | 'approved' | 'rejected' | 'completed';
+  status: 'pending' | 'approved' | 'rejected' | 'processing' | 'completed' | 'failed';
+  destination?: 'wallet' | 'mpesa';
+  phone_number?: string;
+  gateway_reference?: string;
+  failure_reason?: string;
   admin_note?: string;
   processed_by?: string;
   requested_at: string;
@@ -107,15 +111,33 @@ export async function getRefunds(
   }
 }
 
-export async function approveRefund(refundId: string, admin_note?: string): Promise<ApiResponse> {
+export async function approveRefund(
+  refundId: string,
+  opts: { admin_note?: string; destination?: 'wallet' | 'mpesa'; phone_number?: string } = {}
+): Promise<ApiResponse> {
   try {
-    const res = await api.put(`/v1/admin/finance/refunds/${refundId}`, {
-      status: 'approved',
-      admin_note,
-    });
+    const res = await api.put(`/v1/admin/finance/refunds/${refundId}`, { status: 'approved', ...opts });
     return res.data;
   } catch (error: any) {
     throw new Error(error?.response?.data?.error || 'Failed to approve refund');
+  }
+}
+
+export async function completeRefund(refundId: string, gateway_reference: string): Promise<ApiResponse> {
+  try {
+    const res = await api.put(`/v1/admin/finance/refunds/${refundId}`, { status: 'completed', gateway_reference });
+    return res.data;
+  } catch (error: any) {
+    throw new Error(error?.response?.data?.error || 'Failed to mark refund paid');
+  }
+}
+
+export async function retryRefund(refundId: string): Promise<ApiResponse> {
+  try {
+    const res = await api.put(`/v1/admin/finance/refunds/${refundId}`, { status: 'retry' });
+    return res.data;
+  } catch (error: any) {
+    throw new Error(error?.response?.data?.error || 'Failed to retry refund');
   }
 }
 
@@ -158,6 +180,9 @@ export interface Payout {
   status: 'pending' | 'approved' | 'rejected' | 'processing' | 'completed' | 'failed';
   description?: string;
   rejection_reason?: string;
+  phone_number?: string;
+  gateway_reference?: string;
+  failure_reason?: string;
   approved_by?: string;
   approved_at?: string;
   processed_at?: string;
@@ -219,12 +244,21 @@ export async function rejectPayout(payoutId: string, rejection_reason: string): 
   }
 }
 
-export async function completePayout(payoutId: string): Promise<ApiResponse> {
+export async function completePayout(payoutId: string, gateway_reference: string): Promise<ApiResponse> {
   try {
-    const res = await api.put(`/v1/admin/finance/payouts/${payoutId}`, { status: 'completed' });
+    const res = await api.put(`/v1/admin/finance/payouts/${payoutId}`, { status: 'completed', gateway_reference });
     return res.data;
   } catch (error: any) {
-    throw new Error(error?.response?.data?.error || 'Failed to mark payout completed');
+    throw new Error(error?.response?.data?.error || 'Failed to mark payout paid');
+  }
+}
+
+export async function retryPayout(payoutId: string): Promise<ApiResponse> {
+  try {
+    const res = await api.put(`/v1/admin/finance/payouts/${payoutId}`, { status: 'retry' });
+    return res.data;
+  } catch (error: any) {
+    throw new Error(error?.response?.data?.error || 'Failed to retry payout');
   }
 }
 
@@ -317,6 +351,8 @@ export default {
   getTransactionById,
   getRefunds,
   approveRefund,
+  completeRefund,
+  retryRefund,
   rejectRefund,
   processRefund,
   getPayouts,
@@ -324,6 +360,7 @@ export default {
   approvePayout,
   rejectPayout,
   completePayout,
+  retryPayout,
   getRevenueByVendor,
   getFinancialSummary,
   getMpesaTransactions,
