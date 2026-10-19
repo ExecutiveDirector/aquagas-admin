@@ -24,11 +24,14 @@ import {
   getRefunds,
   getPayouts,
   approveRefund,
+  completeRefund,
+  retryRefund,
   rejectRefund,
   createPayout,
   approvePayout,
   rejectPayout,
   completePayout,
+  retryPayout,
   getFinancialSummary,
   exportFinanceData,
   type Transaction,
@@ -145,6 +148,9 @@ const Finance: React.FC = () => {
   const [refundTotalPages, setRefundTotalPages] = useState(1);
   const [refundStatus, setRefundStatus] = useState('all');
   const [refundActionId, setRefundActionId] = useState<string | null>(null);
+  const [approvingRefund, setApprovingRefund] = useState<Refund | null>(null);
+  const [approveDest, setApproveDest] = useState<'wallet' | 'mpesa'>('mpesa');
+  const [approvePhone, setApprovePhone] = useState('');
 
   const [payouts, setPayouts] = useState<Payout[]>([]);
   const [payoutPage, setPayoutPage] = useState(1);
@@ -250,15 +256,57 @@ const Finance: React.FC = () => {
 
   const handleRefresh = () => loadAll(false);
 
-  const handleApproveRefund = async (refund: Refund) => {
+  // Opens the approval dialog; money only moves when the admin confirms there.
+  const handleApproveRefund = (refund: Refund) => {
+    setApprovingRefund(refund);
+    setApproveDest('mpesa');
+    setApprovePhone(refund.user?.phone_number || '');
+  };
+
+  const confirmApproveRefund = async () => {
+    if (!approvingRefund) return;
+    const refund = approvingRefund;
     setRefundActionId(refund.refund_id);
     try {
-      await approveRefund(refund.refund_id);
-      toast.success('Refund approved and wallet credited');
+      const res: any = await approveRefund(refund.refund_id, {
+        destination: approveDest,
+        phone_number: approveDest === 'mpesa' ? approvePhone : undefined,
+      });
+      toast.success(res?.message || 'Refund approved');
+      setApprovingRefund(null);
       await loadRefunds();
       await loadSummary();
     } catch (err: any) {
       toast.error(err.message || 'Failed to approve refund');
+    } finally {
+      setRefundActionId(null);
+    }
+  };
+
+  const handleMarkRefundPaid = async (refund: Refund) => {
+    const ref = window.prompt('Enter the M-PESA receipt / reference you paid with:');
+    if (!ref) return;
+    setRefundActionId(refund.refund_id);
+    try {
+      await completeRefund(refund.refund_id, ref);
+      toast.success('Refund marked as paid');
+      await loadRefunds();
+      await loadSummary();
+    } catch (err: any) {
+      toast.error(err.message || 'Failed to mark refund paid');
+    } finally {
+      setRefundActionId(null);
+    }
+  };
+
+  const handleRetryRefund = async (refund: Refund) => {
+    setRefundActionId(refund.refund_id);
+    try {
+      const res: any = await retryRefund(refund.refund_id);
+      toast(res?.message || 'Retry requested');
+      await loadRefunds();
+    } catch (err: any) {
+      toast.error(err.message || 'Retry failed');
     } finally {
       setRefundActionId(null);
     }
@@ -282,8 +330,8 @@ const Finance: React.FC = () => {
   const handleApprovePayout = async (payout: Payout) => {
     setPayoutActionId(payout.payout_id);
     try {
-      await approvePayout(payout.payout_id);
-      toast.success('Payout approved');
+      const res: any = await approvePayout(payout.payout_id);
+      toast.success(res?.message || 'Payout approved');
       await loadPayouts();
     } catch (err: any) {
       toast.error(err.message || 'Failed to approve payout');
@@ -308,14 +356,29 @@ const Finance: React.FC = () => {
   };
 
   const handleCompletePayout = async (payout: Payout) => {
+    const ref = window.prompt('Enter the M-PESA receipt / reference you paid with:');
+    if (!ref) return;
     setPayoutActionId(payout.payout_id);
     try {
-      await completePayout(payout.payout_id);
-      toast.success('Payout marked completed');
+      await completePayout(payout.payout_id, ref);
+      toast.success('Payout marked as paid');
       await loadPayouts();
       await loadSummary();
     } catch (err: any) {
-      toast.error(err.message || 'Failed to complete payout');
+      toast.error(err.message || 'Failed to mark payout paid');
+    } finally {
+      setPayoutActionId(null);
+    }
+  };
+
+  const handleRetryPayout = async (payout: Payout) => {
+    setPayoutActionId(payout.payout_id);
+    try {
+      const res: any = await retryPayout(payout.payout_id);
+      toast(res?.message || 'Retry requested');
+      await loadPayouts();
+    } catch (err: any) {
+      toast.error(err.message || 'Retry failed');
     } finally {
       setPayoutActionId(null);
     }
@@ -656,6 +719,13 @@ const Finance: React.FC = () => {
                       </td>
                       <td className="px-6 py-4">
                         <StatusBadge status={r.status} />
+                        {r.destination && r.status !== 'pending' && (
+                          <span className="block text-xs text-gray-500 mt-1">
+                            {r.destination === 'mpesa' ? `M-PESA ${r.phone_number || ''}` : 'Wallet'}
+                          </span>
+                        )}
+                        {r.gateway_reference && <span className="block text-xs font-mono text-gray-500">{r.gateway_reference}</span>}
+                        {r.failure_reason && <span className="block text-xs text-red-600 max-w-[200px]">{r.failure_reason}</span>}
                       </td>
                       <td className="px-6 py-4 text-gray-500 dark:text-gray-400">{formatDate(r.requested_at)}</td>
                       <td className="px-6 py-4 text-right">
@@ -674,6 +744,25 @@ const Finance: React.FC = () => {
                               className="px-3 py-1.5 text-xs font-medium rounded-md bg-red-500 text-white hover:bg-red-600 disabled:opacity-50"
                             >
                               Reject
+                            </button>
+                          </div>
+                        ) : r.destination === 'mpesa' && ['approved', 'processing', 'failed'].includes(r.status) ? (
+                          <div className="flex justify-end gap-2">
+                            {['approved', 'failed'].includes(r.status) && (
+                              <button
+                                disabled={refundActionId === r.refund_id}
+                                onClick={() => handleRetryRefund(r)}
+                                className="px-3 py-1.5 text-xs font-medium rounded-md bg-gray-500 text-white hover:bg-gray-600 disabled:opacity-50"
+                              >
+                                Retry send
+                              </button>
+                            )}
+                            <button
+                              disabled={refundActionId === r.refund_id}
+                              onClick={() => handleMarkRefundPaid(r)}
+                              className="px-3 py-1.5 text-xs font-medium rounded-md bg-blue-500 text-white hover:bg-blue-600 disabled:opacity-50"
+                            >
+                              Mark paid
                             </button>
                           </div>
                         ) : (
@@ -765,6 +854,9 @@ const Finance: React.FC = () => {
                       <td className="px-6 py-4 capitalize">{p.method.replace('_', ' ')}</td>
                       <td className="px-6 py-4">
                         <StatusBadge status={p.status} />
+                        {p.phone_number && <span className="block text-xs text-gray-500">{p.phone_number}</span>}
+                        {p.gateway_reference && <span className="block text-xs font-mono text-gray-500">{p.gateway_reference}</span>}
+                        {p.failure_reason && <span className="block text-xs text-red-600 max-w-[200px]">{p.failure_reason}</span>}
                       </td>
                       <td className="px-6 py-4 text-gray-500 dark:text-gray-400">{formatDate(p.created_at)}</td>
                       <td className="px-6 py-4 text-right">
@@ -787,13 +879,22 @@ const Finance: React.FC = () => {
                               </button>
                             </>
                           )}
-                          {(p.status === 'approved' || p.status === 'processing') && (
+                          {(p.status === 'approved' || p.status === 'failed') && p.method === 'mpesa' && (
+                            <button
+                              disabled={payoutActionId === p.payout_id}
+                              onClick={() => handleRetryPayout(p)}
+                              className="px-3 py-1.5 text-xs font-medium rounded-md bg-gray-500 text-white hover:bg-gray-600 disabled:opacity-50"
+                            >
+                              Retry send
+                            </button>
+                          )}
+                          {['approved', 'processing', 'failed'].includes(p.status) && (
                             <button
                               disabled={payoutActionId === p.payout_id}
                               onClick={() => handleCompletePayout(p)}
                               className="px-3 py-1.5 text-xs font-medium rounded-md bg-blue-500 text-white hover:bg-blue-600 disabled:opacity-50"
                             >
-                              Mark Completed
+                              Mark paid
                             </button>
                           )}
                         </div>
@@ -805,6 +906,53 @@ const Finance: React.FC = () => {
             </table>
           </div>
           <Pagination page={payoutPage} totalPages={payoutTotalPages} onChange={setPayoutPage} />
+        </div>
+      )}
+
+      {approvingRefund && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" onClick={() => setApprovingRefund(null)}>
+          <div
+            className="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-md w-full p-6 space-y-4"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-100">
+              Approve refund of {formatKES(approvingRefund.amount)}
+            </h3>
+            <p className="text-sm text-gray-500 dark:text-gray-400">
+              {approvingRefund.user ? `${approvingRefund.user.first_name} ${approvingRefund.user.last_name}` : 'Customer'}
+              {approvingRefund.order?.order_number ? ` · ${approvingRefund.order.order_number}` : ''}
+            </p>
+            <div className="space-y-2">
+              <label className="flex items-center gap-2 text-sm text-gray-800 dark:text-gray-200">
+                <input type="radio" checked={approveDest === 'mpesa'} onChange={() => setApproveDest('mpesa')} />
+                Send back to M-PESA
+              </label>
+              <label className="flex items-center gap-2 text-sm text-gray-800 dark:text-gray-200">
+                <input type="radio" checked={approveDest === 'wallet'} onChange={() => setApproveDest('wallet')} />
+                Credit AquaGas wallet (customer spends it on orders)
+              </label>
+            </div>
+            {approveDest === 'mpesa' && (
+              <input
+                value={approvePhone}
+                onChange={(e) => setApprovePhone(e.target.value)}
+                placeholder="M-PESA number e.g. 0712345678"
+                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
+              />
+            )}
+            <div className="flex justify-end gap-2 pt-2">
+              <button onClick={() => setApprovingRefund(null)} className="px-4 py-2 text-sm rounded-md border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-200">
+                Cancel
+              </button>
+              <button
+                disabled={refundActionId === approvingRefund.refund_id}
+                onClick={confirmApproveRefund}
+                className="px-4 py-2 text-sm rounded-md bg-green-500 text-white hover:bg-green-600 disabled:opacity-50"
+              >
+                Approve refund
+              </button>
+            </div>
+          </div>
         </div>
       )}
 

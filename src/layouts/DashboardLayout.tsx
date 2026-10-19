@@ -27,6 +27,7 @@ import {
   Sparkles,
   Shield,
   Megaphone,
+  Plug,
 } from "lucide-react";
 
 import { motion } from "framer-motion";
@@ -45,6 +46,7 @@ import AdminAnalytics from "../pages/analytics/AnalyticsPage";
 import AdminsPage from "../pages/admins/AdminsPage";
 import WholesalerCatalogPage from "../pages/wholesaler/WholesalerCatalogPage";
 import OutreachPage from "../pages/outreach/OutreachPage";
+import IntegrationsPage from "../pages/integrations/IntegrationsPage";
 
 import {
   isAuthenticated,
@@ -67,6 +69,7 @@ const NAV_MAIN = [
   { name: "Riders", href: "/riders", icon: Truck },
   { name: "Orders", href: "/orders", icon: ShoppingCart },
   { name: "Products", href: "/products", icon: Package },
+  { name: "Integrations", href: "/integrations", icon: Plug },
   { name: "Transactions", href: "/transactions", icon: CreditCard },
 ];
 
@@ -250,6 +253,9 @@ export default function DashboardLayout() {
 
       case "/products":
         return <ProductPage />;
+
+      case "/integrations":
+        return <IntegrationsPage />;
 
       case "/transactions":
         return <Finance />;

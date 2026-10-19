@@ -38,6 +38,7 @@ export const PAGE_ACCESS: Record<string, AdminRole[]> = {
   '/riders': ['super_admin', 'operations_admin'],
   '/orders': ['super_admin', 'operations_admin', 'support_admin'],
   '/products': ['super_admin', 'operations_admin'],
+  '/integrations': ['super_admin', 'operations_admin'],
   '/transactions': ['super_admin', 'finance_admin'],
   '/notifications': ['super_admin', 'marketing_admin'],
   '/outreach': ['super_admin', 'operations_admin', 'marketing_admin'],
