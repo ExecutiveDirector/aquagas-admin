@@ -339,9 +339,14 @@ export async function listOrders(
     start_date?: string;
     end_date?: string;
     search?: string;
+    display_status?: string;
+    group?: string;
+    delayed?: boolean;
   }
 ): Promise<ApiResponse> {
-  const params: any = { page, limit, ...filters };
+  const { status, ...rest } = filters || {};
+  // The backend filters raw status on `order_status` (the old `status` param was ignored).
+  const params: any = { page, limit, ...rest, ...(status ? { order_status: status } : {}) };
   const res = await api.get('/v1/admin/orders', { params });
   return res.data;
 }
@@ -352,12 +357,44 @@ export async function getOrderDetails(orderId: string): Promise<ApiResponse> {
 }
 
 export async function updateOrderStatus(
-  orderId: string, 
-  status: string, 
-  notes?: string
+  orderId: string,
+  status: string,
+  opts?: { reason?: string; force?: boolean }
 ): Promise<ApiResponse> {
-  const res = await api.put(`/v1/admin/orders/${orderId}/status`, { status, notes });
+  const res = await api.put(`/v1/admin/orders/${orderId}/status`, { status, reason: opts?.reason, force: opts?.force });
   return res.data;
+}
+
+export interface OrderStatusSummary {
+  cards: { new: number; preparing: number; active: number; completed: number; delayed: number; exceptions: number };
+  window: { completed: string; exceptions: string };
+  by_status: Record<string, { count: number; label: string }>;
+  delayed: { order_id: number; order_number: string; type: string; minutes: number }[];
+}
+export async function getOrderStatusSummary(): Promise<OrderStatusSummary> {
+  const res = await api.get('/v1/admin/orders/status-summary');
+  return res.data;
+}
+
+export interface OrderTimeline {
+  display_status: string; display_label: string; display_hint: string;
+  delivery_status: string | null; vendor_status: string | null;
+  is_delayed: boolean; delay_type: string | null; delay_minutes: number | null;
+  exception: { type: string; reason: string | null } | null;
+  steps: { label: string; at: string | null; done: boolean }[];
+  durations_min: Record<string, number | null>;
+  history: { at: string; kind: string; from: string | null; to: string; actor_type: string | null; actor_id: string | null; reason: string | null; override: boolean }[];
+  legacy_audit: { at: string; action: string; from: string | null; to: string | null; actor_type: string | null; actor_id: string | null; reason: string | null }[];
+}
+export async function getOrderTimeline(orderId: string): Promise<OrderTimeline> {
+  const res = await api.get(`/v1/admin/orders/${orderId}/timeline`);
+  return res.data;
+}
+export async function disputeOrder(orderId: string, reason: string): Promise<ApiResponse> {
+  return (await api.post(`/v1/admin/orders/${orderId}/dispute`, { reason })).data;
+}
+export async function resolveDispute(orderId: string, note: string): Promise<ApiResponse> {
+  return (await api.post(`/v1/admin/orders/${orderId}/resolve-dispute`, { note })).data;
 }
 
 export async function assignRiderToOrder(
