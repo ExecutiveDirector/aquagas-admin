@@ -3,7 +3,10 @@ import React, { useState, useEffect, useCallback, useRef } from "react";
 import { Search, RefreshCw, AlertCircle, ChevronDown, ChevronUp, X, CheckCircle } from "lucide-react";
 import NeedsAttention from "./NeedsAttention";
 import DispatchQueue from "./DispatchQueue";
-import { listOrders, updateOrderStatus, assignRiderToOrder, refundOrder, listRiders } from "../../services/adminService";
+import { listOrders, updateOrderStatus, assignRiderToOrder, refundOrder, listRiders, disputeOrder, resolveDispute } from "../../services/adminService";
+import OrderStatusCards from "./OrderStatusCards";
+import OrderTimeline from "./OrderTimeline";
+import { DISPLAY_STATUS, DELAY_LABEL, ORDER_NEXT, ALL_ORDER_STATUSES } from "./orderDisplay";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -12,6 +15,13 @@ interface Order {
   order_number: string;
   vendor_name?: string;
   order_status: string;
+  display_status?: string;
+  display_label?: string;
+  is_delayed?: boolean;
+  delay_type?: string | null;
+  delay_minutes?: number | null;
+  exception_type?: string | null;
+  exception_reason?: string | null;
   payment_status: string;
   total_amount: number;
   delivery_type: string;
@@ -53,7 +63,29 @@ const PAYMENT_CONFIG: Record<string, { label: string; cls: string }> = {
   partially_paid: { label: "Partial",  cls: "bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400" },
 };
 
-const ORDER_STATUSES = ["pending","confirmed","preparing","ready","dispatched","delivered","canceled","refunded"];
+const ORDER_STATUSES = ALL_ORDER_STATUSES;
+
+// Status badge: the detailed admin status when the backend provides it, otherwise the raw status.
+function StatusBadge({ order }: { order: Order }) {
+  const cfg = order.display_status ? DISPLAY_STATUS[order.display_status] : undefined;
+  return (
+    <span className="inline-flex items-center gap-1.5 flex-wrap">
+      {cfg ? (
+        <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${cfg.cls}`}>{cfg.label}</span>
+      ) : (
+        <Badge value={order.order_status} config={STATUS_CONFIG} />
+      )}
+      {order.is_delayed && (
+        <span
+          title={`${DELAY_LABEL[order.delay_type ?? ""] ?? "Delayed"}${order.delay_minutes ? ` · ${order.delay_minutes} min` : ""}`}
+          className="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-medium bg-red-600 text-white"
+        >
+          Delayed
+        </span>
+      )}
+    </span>
+  );
+}
 
 function Badge({ value, config }: { value: string; config: Record<string, { label: string; cls: string }> }) {
   const key = value?.toLowerCase();
@@ -79,6 +111,10 @@ function OrderDetailPanel({
   loading: boolean;
 }) {
   const [newStatus, setNewStatus] = useState(order.order_status);
+  const [override, setOverride] = useState(false);
+  const [statusReason, setStatusReason] = useState("");
+  const [issueText, setIssueText] = useState("");
+  const [timelineVersion, setTimelineVersion] = useState(0);
   const [selectedRiderId, setSelectedRiderId] = useState("");
   const [riderSearch, setRiderSearch] = useState("");
   const [riders, setRiders] = useState<Rider[]>([]);
@@ -145,13 +181,35 @@ function OrderDetailPanel({
 
   const handleStatusUpdate = async () => {
     if (newStatus === order.order_status) return;
+    if ((newStatus === "canceled" || override) && statusReason.trim().length < 3) {
+      setActionError(override ? "An override needs a written reason." : "Please give a reason for cancelling.");
+      return;
+    }
     setActionLoading(true); setActionError(null);
     try {
-      await updateOrderStatus(order.order_id, newStatus);
+      await updateOrderStatus(order.order_id, newStatus, { reason: statusReason.trim() || undefined, force: override || undefined });
       showSuccess("Status updated successfully");
       onUpdate();
     } catch (e: any) {
       setActionError(e?.message ?? "Failed to update status");
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const isDisputed = order.exception_type === "disputed";
+  const handleDispute = async () => {
+    if (issueText.trim().length < 3) { setActionError(isDisputed ? "Record how it was resolved." : "Describe the issue first."); return; }
+    setActionLoading(true); setActionError(null);
+    try {
+      if (isDisputed) await resolveDispute(order.order_id, issueText.trim());
+      else await disputeOrder(order.order_id, issueText.trim());
+      showSuccess(isDisputed ? "Dispute resolved" : "Order marked as disputed");
+      setIssueText("");
+      setTimelineVersion((v) => v + 1);
+      onUpdate();
+    } catch (e: any) {
+      setActionError(e?.response?.data?.error ?? e?.message ?? "Action failed");
     } finally {
       setActionLoading(false);
     }
@@ -218,7 +276,7 @@ function OrderDetailPanel({
           <div>
             <h2 className="font-semibold text-gray-900 dark:text-white text-sm">{order.order_number}</h2>
             <div className="flex items-center gap-2 mt-1">
-              <Badge value={order.order_status} config={STATUS_CONFIG} />
+              <StatusBadge order={order} />
               <Badge value={order.payment_status} config={PAYMENT_CONFIG} />
             </div>
           </div>
@@ -284,9 +342,11 @@ function OrderDetailPanel({
                 disabled={actionLoading}
                 className="flex-1 text-sm px-3 py-2 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white outline-none focus:border-indigo-400 focus:ring-1 focus:ring-indigo-400/20 transition-colors disabled:opacity-50"
               >
-                {ORDER_STATUSES.map((s) => (
-                  <option key={s} value={s}>{STATUS_CONFIG[s]?.label ?? s}</option>
-                ))}
+                {(override ? ORDER_STATUSES : [order.order_status, ...(ORDER_NEXT[order.order_status === "cancelled" ? "canceled" : order.order_status] ?? [])])
+                  .filter((s, i, a) => a.indexOf(s) === i)
+                  .map((s) => (
+                    <option key={s} value={s}>{STATUS_CONFIG[s]?.label ?? s}</option>
+                  ))}
               </select>
               <button
                 onClick={handleStatusUpdate}
@@ -294,6 +354,49 @@ function OrderDetailPanel({
                 className="px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-medium disabled:opacity-50 transition-colors"
               >
                 Save
+              </button>
+            </div>
+            {(newStatus === "canceled" || override) && (
+              <input
+                value={statusReason}
+                onChange={(e) => setStatusReason(e.target.value)}
+                placeholder={override ? "Reason for override (required)" : "Reason for cancelling (required)"}
+                className="mt-2 w-full text-sm px-3 py-2 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white outline-none"
+              />
+            )}
+            <label className="mt-2 flex items-center gap-2 text-xs text-gray-500">
+              <input type="checkbox" checked={override} onChange={(e) => setOverride(e.target.checked)} />
+              Override the normal flow (recorded in the audit trail)
+            </label>
+          </section>
+
+          {/* Timeline + audit trail */}
+          <section>
+            <h3 className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-3">Order timeline</h3>
+            <OrderTimeline orderId={order.order_id} version={timelineVersion} />
+          </section>
+
+          {/* Dispute */}
+          <section>
+            <h3 className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-3">
+              {isDisputed ? "Dispute" : "Report an issue"}
+            </h3>
+            {isDisputed && order.exception_reason && (
+              <p className="text-xs text-fuchsia-700 mb-2">Open dispute: {order.exception_reason}</p>
+            )}
+            <div className="flex gap-2">
+              <input
+                value={issueText}
+                onChange={(e) => setIssueText(e.target.value)}
+                placeholder={isDisputed ? "How was it resolved?" : "What needs investigating?"}
+                className="flex-1 text-sm px-3 py-2 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white outline-none"
+              />
+              <button
+                onClick={handleDispute}
+                disabled={actionLoading}
+                className="px-4 py-2 rounded-xl bg-fuchsia-600 hover:bg-fuchsia-700 text-white text-sm font-medium disabled:opacity-50"
+              >
+                {isDisputed ? "Resolve" : "Mark disputed"}
               </button>
             </div>
           </section>
@@ -441,6 +544,8 @@ export default function OrdersPage() {
   const [totalPages, setTotalPages] = useState(1);
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
+  const [groupFilter, setGroupFilter] = useState("");
+  const [summaryKey, setSummaryKey] = useState(0);
   const [sortKey, setSortKey] = useState<SortKey>("created_at");
   const [sortDir, setSortDir] = useState<"asc" | "desc">("desc");
   const [loading, setLoading] = useState(false);
@@ -449,11 +554,17 @@ export default function OrdersPage() {
 
   const searchRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const fetchOrders = useCallback(async (pg = 1, q = search, st = statusFilter) => {
+  const fetchOrders = useCallback(async (pg = 1, q = search, st = statusFilter, grp = groupFilter) => {
     setLoading(true);
     setError(null);
     try {
-      const res = await listOrders(pg, 20, { search: q || undefined, status: st || undefined });
+      const res = await listOrders(pg, 20, {
+        search: q || undefined,
+        display_status: st || undefined,
+        group: grp && grp !== "delayed" ? grp : undefined,
+        delayed: grp === "delayed" ? true : undefined,
+      });
+      setSummaryKey((k) => k + 1);
       setOrders((res.data as Order[]) ?? []);
       setTotal(res.pagination?.total ?? 0);
       setTotalPages(res.pagination?.totalPages ?? 1);
@@ -463,15 +574,15 @@ export default function OrdersPage() {
     } finally {
       setLoading(false);
     }
-  }, [search, statusFilter]);
+  }, [search, statusFilter, groupFilter]);
 
   useEffect(() => { fetchOrders(1); }, []); // eslint-disable-line
 
   useEffect(() => {
     if (searchRef.current) clearTimeout(searchRef.current);
-    searchRef.current = setTimeout(() => fetchOrders(1, search, statusFilter), 400);
+    searchRef.current = setTimeout(() => fetchOrders(1, search, statusFilter, groupFilter), 400);
     return () => { if (searchRef.current) clearTimeout(searchRef.current); };
-  }, [search, statusFilter]); // eslint-disable-line
+  }, [search, statusFilter, groupFilter]); // eslint-disable-line
 
   const toggleSort = (key: SortKey) => {
     if (sortKey === key) setSortDir((d) => (d === "asc" ? "desc" : "asc"));
@@ -518,6 +629,8 @@ export default function OrdersPage() {
           </button>
         </div>
 
+        <OrderStatusCards active={groupFilter} refreshKey={summaryKey} onPick={(g) => { setGroupFilter(g); setStatusFilter(""); }} />
+
         <DispatchQueue onChanged={() => fetchOrders(page)} />
         <NeedsAttention />
 
@@ -534,15 +647,21 @@ export default function OrdersPage() {
           </div>
           <select
             value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value)}
+            onChange={(e) => { setStatusFilter(e.target.value); setGroupFilter(""); }}
             className="px-3 py-2.5 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-sm text-gray-700 dark:text-gray-300 outline-none focus:border-indigo-400 focus:ring-1 focus:ring-indigo-400/20 transition-colors"
           >
             <option value="">All Statuses</option>
-            {ORDER_STATUSES.map((s) => (
-              <option key={s} value={s}>{STATUS_CONFIG[s]?.label ?? s}</option>
+            {Object.entries(DISPLAY_STATUS).map(([k, v]) => (
+              <option key={k} value={k}>{v.label}</option>
             ))}
           </select>
         </div>
+        {groupFilter && (
+          <p className="text-xs text-gray-500">
+            Showing the “{groupFilter}” group.{" "}
+            <button className="text-indigo-600 hover:underline" onClick={() => setGroupFilter("")}>Clear</button>
+          </p>
+        )}
 
         {error && (
           <div className="flex items-center gap-3 px-4 py-3 rounded-xl bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-400 text-sm">
@@ -601,7 +720,7 @@ export default function OrdersPage() {
                           KES {Number(order.total_amount || 0).toLocaleString()}
                         </td>
                         <td className="px-4 py-3">
-                          <Badge value={order.order_status} config={STATUS_CONFIG} />
+                          <StatusBadge order={order} />
                         </td>
                         <td className="px-4 py-3">
                           <Badge value={order.payment_status} config={PAYMENT_CONFIG} />
