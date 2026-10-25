@@ -16,6 +16,7 @@ interface Order {
   vendor_name?: string;
   order_status: string;
   display_status?: string;
+  payment_display?: string;
   display_label?: string;
   is_delayed?: boolean;
   delay_type?: string | null;
@@ -60,6 +61,9 @@ const PAYMENT_CONFIG: Record<string, { label: string; cls: string }> = {
   paid:           { label: "Paid",     cls: "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400" },
   failed:         { label: "Failed",   cls: "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400" },
   refunded:       { label: "Refunded", cls: "bg-gray-100 text-gray-500 dark:bg-gray-700 dark:text-gray-400" },
+  cod:            { label: "Cash on delivery", cls: "bg-sky-100 text-sky-700 dark:bg-sky-900/30 dark:text-sky-400" },
+  mpesa_requested:{ label: "M-Pesa requested", cls: "bg-violet-100 text-violet-700 dark:bg-violet-900/30 dark:text-violet-400" },
+  mpesa_failed:   { label: "M-Pesa failed",    cls: "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400" },
   partially_paid: { label: "Partial",  cls: "bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400" },
 };
 
@@ -277,7 +281,7 @@ function OrderDetailPanel({
             <h2 className="font-semibold text-gray-900 dark:text-white text-sm">{order.order_number}</h2>
             <div className="flex items-center gap-2 mt-1">
               <StatusBadge order={order} />
-              <Badge value={order.payment_status} config={PAYMENT_CONFIG} />
+              <Badge value={order.payment_display || order.payment_status} config={PAYMENT_CONFIG} />
             </div>
           </div>
           <button onClick={onClose} className="p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
@@ -723,7 +727,7 @@ export default function OrdersPage() {
                           <StatusBadge order={order} />
                         </td>
                         <td className="px-4 py-3">
-                          <Badge value={order.payment_status} config={PAYMENT_CONFIG} />
+                          <Badge value={order.payment_display || order.payment_status} config={PAYMENT_CONFIG} />
                         </td>
                         <td className="px-4 py-3 text-xs text-gray-400 whitespace-nowrap">
                           {new Date(order.created_at).toLocaleDateString("en-KE", {
