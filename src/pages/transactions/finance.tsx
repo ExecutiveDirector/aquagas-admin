@@ -851,7 +851,14 @@ const Finance: React.FC = () => {
                         {p.entity_name || `#${p.entity_id}`}
                       </td>
                       <td className="px-6 py-4 font-medium">{formatKES(p.amount)}</td>
-                      <td className="px-6 py-4 capitalize">{p.method.replace('_', ' ')}</td>
+                      <td className="px-6 py-4">
+                        <span className="capitalize">{p.method.replace('_', ' ')}</span>
+                        {p.method === 'bank_transfer' && p.description?.includes('Bank:') && (
+                          <span className="block text-xs text-gray-500 max-w-[220px]">
+                            {p.description.slice(p.description.indexOf('Bank:'))}
+                          </span>
+                        )}
+                      </td>
                       <td className="px-6 py-4">
                         <StatusBadge status={p.status} />
                         {p.phone_number && <span className="block text-xs text-gray-500">{p.phone_number}</span>}
@@ -879,7 +886,7 @@ const Finance: React.FC = () => {
                               </button>
                             </>
                           )}
-                          {(p.status === 'approved' || p.status === 'failed') && p.method === 'mpesa' && (
+                          {(p.status === 'approved' || p.status === 'failed') && (
                             <button
                               disabled={payoutActionId === p.payout_id}
                               onClick={() => handleRetryPayout(p)}
