@@ -1,4 +1,5 @@
 // components/support/SupportTickets.tsx
+import LogoLoader from '../../components/ui/LogoLoader';
 import { useState, useMemo, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
@@ -370,10 +371,7 @@ export default function SupportTickets({
       {/* Ticket List */}
       <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-600 overflow-hidden">
         {loading ? (
-          <div className="p-12 text-center">
-            <RefreshCw className="h-8 w-8 text-gray-400 animate-spin mx-auto mb-3" />
-            <p className="text-gray-500 dark:text-gray-400">Loading tickets...</p>
-          </div>
+          <div className="p-12 flex justify-center"><LogoLoader size={96} /></div>
         ) : filteredTickets.length === 0 ? (
           <div className="p-12 text-center">
             <MessageSquare className="h-12 w-12 text-gray-300 dark:text-gray-600 mx-auto mb-3" />

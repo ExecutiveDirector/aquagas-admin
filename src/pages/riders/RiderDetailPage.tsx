@@ -1,3 +1,4 @@
+import LogoLoader from '../../components/ui/LogoLoader';
 import React, { useEffect, useState } from 'react';
 import { 
   Settings,
@@ -354,8 +355,7 @@ export default function RiderDetailsPage({ rider, onBack, onRiderUpdated }: Ride
       {analyticsLoading && (
         <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
           <div className="flex items-center justify-center py-8">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mr-3"></div>
-            <span className="text-gray-600 dark:text-gray-400">Loading analytics...</span>
+            <LogoLoader size={96} />
           </div>
         </div>
       )}

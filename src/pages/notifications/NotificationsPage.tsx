@@ -1,4 +1,5 @@
 // src/pages/notifications/NotificationsPage.tsx — Production-level rewrite
+import LogoLoader from '../../components/ui/LogoLoader';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import {
   Bell, BellOff, Send, Plus, Trash2, Edit3, RefreshCw,
@@ -403,8 +404,7 @@ export default function NotificationsPage() {
 
             {loading ? (
               <div className="bg-white rounded-2xl border border-slate-100 py-20 flex flex-col items-center gap-3 text-slate-400">
-                <Loader2 className="w-7 h-7 animate-spin" />
-                <p className="text-sm">Loading notifications…</p>
+                <LogoLoader size={96} />
               </div>
             ) : filtered.length === 0 ? (
               <div className="bg-white rounded-2xl border border-slate-100 py-20 flex flex-col items-center gap-3 text-slate-400">

@@ -4,6 +4,7 @@
 // Shopify + Stripe + Linear Inspired
 // ================================================
 
+import LogoLoader from '../components/ui/LogoLoader';
 import { useState, useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import {
@@ -289,12 +290,7 @@ export default function DashboardLayout() {
   if (!account) {
     return (
       <div className="h-screen flex items-center justify-center bg-slate-50">
-        <div className="space-y-4 text-center">
-          <div className="w-10 h-10 rounded-full border-[3px] border-indigo-500 border-t-transparent animate-spin mx-auto" />
-          <p className="text-sm font-medium text-slate-400">
-            Loading workspace...
-          </p>
-        </div>
+        <LogoLoader size={140} />
       </div>
     );
   }

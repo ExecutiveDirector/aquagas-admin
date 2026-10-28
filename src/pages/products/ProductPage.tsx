@@ -2,6 +2,7 @@
 // ProductsPage.tsx — Main orchestrator page
 // ============================================
 
+import LogoLoader from '../../components/ui/LogoLoader';
 import React, { useState, useEffect, useCallback } from 'react';
 import {
   Plus, Search, RefreshCw, Package, FolderTree,
@@ -302,10 +303,7 @@ const ProductsPage: React.FC = () => {
   if (loadingData) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <div className="text-center">
-          <Loader2 className="w-10 h-10 text-blue-500 animate-spin mx-auto mb-3" />
-          <p className="text-sm text-gray-500">Loading catalogue…</p>
-        </div>
+        <LogoLoader size={140} />
       </div>
     );
   }

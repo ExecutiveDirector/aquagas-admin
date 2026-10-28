@@ -1,4 +1,5 @@
 // src/pages/transactions/Finance.tsx
+import LogoLoader from '../../components/ui/LogoLoader';
 import RiderCashTab from './RiderCashTab';
 import React, { useState, useEffect, useCallback, type JSX } from 'react';
 import {
@@ -450,7 +451,7 @@ const Finance: React.FC = () => {
   if (loading) {
     return (
       <div className="flex justify-center items-center min-h-screen bg-gray-50 dark:bg-gray-900">
-        <RefreshCw className="w-8 h-8 text-green-500 animate-spin" />
+        <LogoLoader size={140} />
       </div>
     );
   }

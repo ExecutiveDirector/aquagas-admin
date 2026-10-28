@@ -1,3 +1,4 @@
+import LogoLoader from '../../components/ui/LogoLoader';
 import { useMemo } from 'react';
 import { motion } from 'framer-motion';
 import {
@@ -64,7 +65,7 @@ export default function SupportOverview({
   if (loading) {
     return (
       <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-600 p-12 text-center">
-        <div className="h-8 w-8 border-2 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto" />
+        <div className="flex justify-center"><LogoLoader size={96} /></div>
       </div>
     );
   }

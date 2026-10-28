@@ -1,3 +1,4 @@
+import LogoLoader from '../../components/ui/LogoLoader';
 import React, { useEffect, useState } from 'react';
 import { 
   Truck, 
@@ -184,10 +185,7 @@ export default function RidersListPage({ onViewDetails, onNavigateToAnalytics, o
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
-        <div className="flex flex-col items-center space-y-4">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
-          <div className="text-gray-600 dark:text-gray-400">Loading riders...</div>
-        </div>
+        <LogoLoader size={120} />
       </div>
     );
   }
