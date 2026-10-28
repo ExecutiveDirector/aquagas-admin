@@ -72,12 +72,8 @@ export default function Sidebar({
 
       {/* Brand */}
       <div className="shrink-0 flex items-center gap-3 h-16 px-5 border-b border-slate-100">
-        <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-indigo-500 to-violet-600
-                        flex items-center justify-center shadow-lg shadow-indigo-200/60">
-          <span className="text-white font-black text-sm">AG</span>
-        </div>
         <div className="leading-none">
-          <p className="text-[14.5px] font-bold text-slate-800">AquaGas</p>
+          <img src="/logo.png" alt="AquaGas" className="h-8 w-auto" />
           <p className="text-[10px] text-slate-400 uppercase tracking-widest mt-0.5">Admin</p>
         </div>
         <button
