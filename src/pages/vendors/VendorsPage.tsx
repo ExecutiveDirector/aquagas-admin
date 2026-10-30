@@ -1682,7 +1682,7 @@ const VendorsPage: React.FC = () => {
   const pendingCount = vendors.filter(v => !v.is_verified).length;
 
   return (
-    <div className="min-h-screen bg-gray-50 p-6 lg:p-8">
+    <div className="min-h-screen bg-[#F5F7FB] p-4 sm:p-6 lg:p-8">
       {/* Page toast */}
       {toast && (
         <div className={`fixed top-5 right-5 z-[60] flex items-center gap-3 px-4 py-3 rounded-xl shadow-lg text-sm font-medium transition-all ${toast.type === 'success' ? 'bg-gray-900 text-white' : 'bg-red-600 text-white'}`}>
@@ -1708,7 +1708,7 @@ const VendorsPage: React.FC = () => {
             </button>
             <button
               onClick={() => setShowAddModal(true)}
-              className="flex items-center gap-2 px-4 py-2.5 bg-emerald-600 text-white text-sm font-medium rounded-lg hover:bg-emerald-700 transition-colors"
+              className="flex items-center gap-2 px-4 py-2.5 bg-orange-500 text-white text-sm font-medium rounded-lg hover:bg-orange-600 transition-colors"
             >
               <Plus size={16} /> Add vendor
             </button>
@@ -1790,7 +1790,7 @@ const VendorsPage: React.FC = () => {
                 {!search && (
                   <button
                     onClick={() => setShowAddModal(true)}
-                    className="mt-4 flex items-center gap-1.5 text-sm text-emerald-600 hover:text-emerald-700 font-medium"
+                    className="mt-4 flex items-center gap-1.5 text-sm text-orange-600 hover:text-orange-700 font-medium"
                   >
                     <Plus size={14} /> Add your first vendor
                   </button>
