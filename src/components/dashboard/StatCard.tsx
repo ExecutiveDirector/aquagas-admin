@@ -91,7 +91,7 @@ export default function StatCard({
   return (
     <div className="group relative overflow-hidden rounded-2xl border border-gray-100 dark:border-gray-700 bg-white dark:bg-gray-800 p-5 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-xl hover:border-blue-200 dark:hover:border-blue-900">
       {/* Top accent bar */}
-      <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-blue-600 via-cyan-500 to-emerald-500 opacity-0 group-hover:opacity-100 transition-opacity" />
+      <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-orange-500 via-orange-400 to-amber-300 opacity-0 group-hover:opacity-100 transition-opacity" />
 
       <div className="flex items-start justify-between mb-3">
         <span className="text-xs font-medium tracking-wide text-gray-500 dark:text-gray-400 uppercase">{title}</span>
@@ -119,7 +119,7 @@ export default function StatCard({
       <div className="mt-4 h-px bg-gradient-to-r from-transparent via-gray-100 dark:via-gray-700 to-transparent" />
       <div className="mt-3 flex items-center justify-between">
         <span className="text-[11px] text-gray-400">Updated just now</span>
-        <ArrowUpRight size={13} className="text-blue-400 opacity-0 transition-all group-hover:translate-x-0.5 group-hover:-translate-y-0.5 group-hover:opacity-100" />
+        <ArrowUpRight size={13} className="text-orange-500 opacity-0 transition-all group-hover:translate-x-0.5 group-hover:-translate-y-0.5 group-hover:opacity-100" />
       </div>
     </div>
   );
