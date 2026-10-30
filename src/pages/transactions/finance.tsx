@@ -761,7 +761,7 @@ const Finance: React.FC = () => {
                             <button
                               disabled={refundActionId === r.refund_id}
                               onClick={() => handleMarkRefundPaid(r)}
-                              className="px-3 py-1.5 text-xs font-medium rounded-md bg-blue-500 text-white hover:bg-blue-600 disabled:opacity-50"
+                              className="px-3 py-1.5 text-xs font-medium rounded-md bg-orange-500 text-white hover:bg-orange-600 disabled:opacity-50"
                             >
                               Mark paid
                             </button>
@@ -900,7 +900,7 @@ const Finance: React.FC = () => {
                             <button
                               disabled={payoutActionId === p.payout_id}
                               onClick={() => handleCompletePayout(p)}
-                              className="px-3 py-1.5 text-xs font-medium rounded-md bg-blue-500 text-white hover:bg-blue-600 disabled:opacity-50"
+                              className="px-3 py-1.5 text-xs font-medium rounded-md bg-orange-500 text-white hover:bg-orange-600 disabled:opacity-50"
                             >
                               Mark paid
                             </button>
