@@ -186,9 +186,9 @@ const UsersPage: React.FC = () => {
           <button
             onClick={() => { setSelectedUser(undefined); setShowUserModal(true); }}
             className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl
-                       bg-indigo-600 text-white text-[13.5px] font-semibold
-                       hover:bg-indigo-700 active:scale-[0.97]
-                       shadow-md shadow-indigo-200 transition-all"
+                       bg-orange-500 text-white text-[13.5px] font-semibold
+                       hover:bg-orange-600 active:scale-[0.97]
+                       shadow-md shadow-orange-200 transition-all"
           >
             <Plus className="w-4 h-4" />
             Add User
