@@ -185,7 +185,7 @@ export default function DashboardLayout() {
   // avoids dead-end nav items for every role, not just one.
   const adminRole = getAdminRole();
   const mySections = getPermissions().sections;
-  const filterNav = (items: typeof NAV_OVERVIEW) =>
+  const filterNav = (items: { name: string; href: string; icon: React.ElementType }[]) =>
     items.filter((item) => canAccess(item.href, adminRole, mySections));
   const navGroups = [
     { label: "Overview", items: filterNav(NAV_OVERVIEW) },
