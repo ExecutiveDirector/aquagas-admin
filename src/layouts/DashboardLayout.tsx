@@ -22,10 +22,7 @@ import {
   RefreshCw,
   Package,
   MessageSquare,
-  Search,
-  Command,
   ChevronRight,
-  Sparkles,
   Shield,
   Megaphone,
   Plug,
@@ -115,8 +112,8 @@ function NavItem({
 
         ${
           active
-            ? "bg-indigo-50 border-indigo-100 text-indigo-700 shadow-sm"
-            : "border-transparent text-slate-500 hover:bg-white hover:border-slate-200 hover:text-slate-800"
+            ? "bg-orange-500/10 border-orange-400/20 text-orange-200 shadow-sm"
+            : "border-transparent text-slate-300 hover:bg-white/10 hover:border-white/10 hover:text-white"
         }
       `}
     >
@@ -124,7 +121,7 @@ function NavItem({
       <div
         className={`
           absolute left-0 top-2 bottom-2 w-1 rounded-r-full transition-all
-          ${active ? "bg-indigo-600" : "bg-transparent"}
+          ${active ? "bg-orange-500" : "bg-transparent"}
         `}
       />
 
@@ -136,8 +133,8 @@ function NavItem({
 
           ${
             active
-              ? "bg-indigo-600 text-white shadow-lg shadow-indigo-200"
-              : "bg-slate-100 text-slate-400 group-hover:bg-slate-200 group-hover:text-slate-700"
+              ? "bg-orange-500 text-white shadow-lg shadow-orange-950/30"
+              : "bg-white/10 text-slate-400 group-hover:bg-white/15 group-hover:text-white"
           }
         `}
       >
@@ -147,7 +144,7 @@ function NavItem({
       <span className="truncate">{name}</span>
 
       {active && (
-        <ChevronRight className="ml-auto w-4 h-4 text-indigo-400" />
+        <ChevronRight className="ml-auto w-4 h-4 text-orange-300" />
       )}
     </button>
   );
@@ -299,7 +296,7 @@ export default function DashboardLayout() {
     account?.email?.[0]?.toUpperCase() ?? "A";
 
   return (
-    <div className="h-screen w-screen flex overflow-hidden bg-[#F6F8FC]">
+    <div className="h-screen w-screen flex overflow-hidden bg-[#F5F7FB]">
 
       {/* =========================================
           MOBILE OVERLAY
@@ -319,9 +316,9 @@ export default function DashboardLayout() {
           fixed inset-y-0 left-0 z-50
           flex flex-col
           w-[260px]
-          bg-white
-          border-r border-slate-200/70
-          shadow-[0_10px_40px_rgba(0,0,0,0.04)]
+          bg-[#101C2E]
+          border-r border-white/10
+          shadow-[8px_0_32px_rgba(15,23,42,0.12)]
 
           transition-transform duration-300
 
@@ -338,22 +335,17 @@ export default function DashboardLayout() {
         {/* =====================================
             BRAND
         ===================================== */}
-        <div className="h-16 shrink-0 flex items-center justify-between px-5 border-b border-slate-100">
+        <div className="h-[76px] shrink-0 flex items-center justify-between px-5 border-b border-white/10">
 
           <div className="flex items-center gap-3">
-            <div
-              className="
-                w-10 h-10 rounded-2xl
-                bg-gradient-to-br from-indigo-500 to-violet-600
-                flex items-center justify-center
-                shadow-lg shadow-indigo-200
-              "
-            >
-              <Sparkles className="w-5 h-5 text-white" />
-            </div>
+            <img
+              src="/logo.png"
+              alt="AquaGas"
+              className="h-10 w-10 rounded-xl bg-white object-contain p-1.5 shadow-lg shadow-black/10"
+            />
 
             <div>
-              <p className="text-[15px] font-bold text-slate-800">
+              <p className="text-[15px] font-bold tracking-tight text-white">
                 AquaGas
               </p>
 
@@ -362,39 +354,6 @@ export default function DashboardLayout() {
               </p>
             </div>
           </div>
-        </div>
-
-        {/* =====================================
-            SEARCH
-        ===================================== */}
-        <div className="px-4 pt-4">
-          <button
-            className="
-              w-full flex items-center gap-3
-              px-4 py-3 rounded-2xl
-              bg-slate-50 hover:bg-white
-              border border-slate-200
-              transition-all
-            "
-          >
-            <Search className="w-4 h-4 text-slate-400" />
-
-            <span className="text-sm text-slate-400">
-              Search anything...
-            </span>
-
-            <div
-              className="
-                ml-auto flex items-center gap-1
-                px-2 py-1 rounded-lg
-                bg-white border border-slate-200
-                text-[11px] text-slate-400
-              "
-            >
-              <Command className="w-3 h-3" />
-              K
-            </div>
-          </button>
         </div>
 
         {/* =====================================
@@ -440,30 +399,30 @@ export default function DashboardLayout() {
         {/* =====================================
             FOOTER USER
         ===================================== */}
-        <div className="p-4 border-t border-slate-100">
+        <div className="p-4 border-t border-white/10">
 
           <div
             className="
               flex items-center gap-3
               p-3 rounded-2xl
-              bg-slate-50
-              border border-slate-100
+              bg-white/5
+              border border-white/10
             "
           >
             <div
               className="
                 w-10 h-10 rounded-2xl
-                bg-gradient-to-br from-indigo-500 to-violet-600
+                bg-gradient-to-br from-orange-500 to-orange-600
                 flex items-center justify-center
                 text-white font-bold text-sm
-                shadow-lg shadow-indigo-200
+                shadow-lg shadow-orange-950/30
               "
             >
               {initials}
             </div>
 
             <div className="flex-1 min-w-0">
-              <p className="text-sm font-semibold text-slate-700 truncate">
+              <p className="text-sm font-semibold text-white truncate">
                 {account?.email}
               </p>
 
@@ -477,7 +436,7 @@ export default function DashboardLayout() {
               className="
                 p-2 rounded-xl
                 text-slate-400 hover:text-red-500
-                hover:bg-white
+                hover:bg-white/10
                 transition-all
               "
             >
@@ -497,9 +456,9 @@ export default function DashboardLayout() {
         ===================================== */}
         <header
           className="
-            h-16 shrink-0
-            bg-white/80 backdrop-blur-xl
-            border-b border-slate-200/70
+            h-[76px] shrink-0
+            bg-white/90 backdrop-blur-xl
+            border-b border-slate-200/80
             px-6
             flex items-center
             shadow-sm
@@ -522,7 +481,7 @@ export default function DashboardLayout() {
 
           {/* Title */}
           <div>
-            <h1 className="text-[20px] font-bold tracking-tight text-slate-800">
+            <h1 className="text-[19px] font-semibold tracking-tight text-slate-900">
               {getPageTitle()}
             </h1>
 
@@ -582,10 +541,10 @@ export default function DashboardLayout() {
               <div
                 className="
                   w-10 h-10 rounded-2xl
-                  bg-gradient-to-br from-indigo-500 to-violet-600
+                  bg-gradient-to-br from-orange-500 to-orange-600
                   flex items-center justify-center
                   text-white font-bold text-sm
-                  shadow-lg shadow-indigo-200
+                  shadow-lg shadow-orange-950/30
                 "
               >
                 {initials}
@@ -614,7 +573,7 @@ export default function DashboardLayout() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.25 }}
             className="
-              p-6 lg:p-8
+              p-5 sm:p-6 lg:p-8
               max-w-[1600px]
               mx-auto
               w-full
