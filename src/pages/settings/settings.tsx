@@ -474,7 +474,7 @@ const SettingPage: React.FC = () => {
       {/* SYSTEM / BUSINESS / SECURITY — settings CRUD tabs */}
       {['system', 'business', 'security'].includes(tab) && (
         <div className="bg-white dark:bg-gray-800 rounded-lg shadow border border-gray-200 dark:border-gray-600">
-          <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200 dark:border-gray-600">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 px-4 sm:px-6 py-4 border-b border-gray-200 dark:border-gray-600">
             <h2 className="text-lg font-semibold text-gray-800 dark:text-gray-200 capitalize">{tab} Settings</h2>
             <button
               onClick={() => setShowAddSetting(true)}
@@ -794,7 +794,7 @@ const SettingPage: React.FC = () => {
 
       {/* Add Setting Modal */}
       {showAddSetting && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" onClick={() => setShowAddSetting(false)}>
+        <div className="fixed inset-0 bg-black/50 flex items-start sm:items-center justify-center z-50 p-3 sm:p-4 overflow-y-auto" onClick={() => setShowAddSetting(false)}>
           <form
             onSubmit={handleAddSetting}
             className="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-md w-full p-6"
