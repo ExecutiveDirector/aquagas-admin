@@ -5,6 +5,7 @@
 // ================================================
 
 import LogoLoader from '../components/ui/LogoLoader';
+import NotificationBell from '../components/NotificationBell';
 import { useState, useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import {
@@ -552,25 +553,8 @@ export default function DashboardLayout() {
               System Operational
             </div>
 
-            {/* Notification */}
-            <button
-              className="
-                relative p-2.5 rounded-2xl
-                bg-white border border-slate-200
-                hover:border-slate-300
-                transition-all
-              "
-            >
-              <Bell className="w-4 h-4 text-slate-600" />
-
-              <span
-                className="
-                  absolute top-2 right-2
-                  w-2 h-2 rounded-full
-                  bg-red-500
-                "
-              />
-            </button>
+            {/* Notifications: live new-order alerts */}
+            <NotificationBell />
 
             {/* User */}
             <div
