@@ -414,7 +414,7 @@ export default function RidersPage() {
                       <button onClick={() => handleViewDetails(rider)} className="px-2.5 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded text-xs font-medium transition-colors">
                         <Eye className="w-3 h-3 inline mr-0.5" />View
                       </button>
-                      <button onClick={() => setEditingRider(rider)} className="px-2.5 py-1 bg-indigo-600 hover:bg-indigo-700 text-white rounded text-xs font-medium transition-colors">
+                      <button onClick={() => setEditingRider(rider)} className="px-2.5 py-1 bg-orange-500 hover:bg-orange-600 text-white rounded text-xs font-medium transition-colors">
                         <Pencil className="w-3 h-3 inline mr-0.5" />Edit
                       </button>
                       {!rider.is_verified && (
@@ -474,7 +474,7 @@ export default function RidersPage() {
             </span>
             <button
               onClick={() => setEditingRider(r)}
-              className="ml-1 px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-medium transition-colors flex items-center gap-1"
+              className="ml-1 px-3 py-1.5 bg-orange-500 hover:bg-orange-600 text-white rounded-lg text-xs font-medium transition-colors flex items-center gap-1"
             >
               <Pencil className="w-3.5 h-3.5" />Edit
             </button>
