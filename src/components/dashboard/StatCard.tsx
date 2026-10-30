@@ -118,7 +118,7 @@ export default function StatCard({
 
       <div className="mt-4 h-px bg-gradient-to-r from-transparent via-gray-100 dark:via-gray-700 to-transparent" />
       <div className="mt-3 flex items-center justify-between">
-        <span className="text-[11px] text-gray-400">Updated just now</span>
+        <span className="text-[11px] text-gray-400">Latest available data</span>
         <ArrowUpRight size={13} className="text-orange-500 opacity-0 transition-all group-hover:translate-x-0.5 group-hover:-translate-y-0.5 group-hover:opacity-100" />
       </div>
     </div>
