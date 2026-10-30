@@ -129,7 +129,7 @@ function CreateAdminModal({
               Cancel
             </button>
             <button type="submit" disabled={saving}
-              className="px-4 py-2 rounded-xl text-sm font-semibold bg-indigo-600 text-white hover:bg-indigo-700 disabled:opacity-50">
+              className="px-4 py-2 rounded-xl text-sm font-semibold bg-orange-500 text-white hover:bg-orange-600 disabled:opacity-50">
               {saving ? "Creating…" : "Create Admin"}
             </button>
           </div>
@@ -312,7 +312,7 @@ function EditAdminModal({
               Cancel
             </button>
             <button type="submit" disabled={saving}
-              className="px-4 py-2 rounded-xl text-sm font-semibold bg-indigo-600 text-white hover:bg-indigo-700 disabled:opacity-50">
+              className="px-4 py-2 rounded-xl text-sm font-semibold bg-orange-500 text-white hover:bg-orange-600 disabled:opacity-50">
               {saving ? "Saving…" : "Save Changes"}
             </button>
           </div>
