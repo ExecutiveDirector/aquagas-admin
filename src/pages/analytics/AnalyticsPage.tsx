@@ -476,7 +476,7 @@ const TimeRangeSelector: React.FC<TimeRangeSelectorProps> = ({ selected, onChang
             key={range.value}
             onClick={() => onChange(range.value)}
             className={`rounded-lg px-3 py-1.5 text-sm font-medium transition-colors ${
-              selected === range.value ? 'bg-indigo-600 text-white shadow-sm' : 'text-gray-600 hover:bg-gray-100'
+              selected === range.value ? 'bg-orange-500 text-white shadow-sm' : 'text-gray-600 hover:bg-gray-100'
             }`}
           >
             {range.label}
@@ -541,7 +541,7 @@ const TabButton: React.FC<{ active: boolean; onClick: () => void; icon: LucideIc
   <button
     onClick={onClick}
     className={`flex items-center gap-2 whitespace-nowrap rounded-xl px-4 py-2 text-sm font-medium transition-all ${
-      active ? 'bg-indigo-600 text-white shadow-sm' : 'text-gray-600 hover:bg-white hover:shadow-sm'
+      active ? 'bg-orange-500 text-white shadow-sm' : 'text-gray-600 hover:bg-white hover:shadow-sm'
     }`}
   >
     <Icon className="h-4 w-4" />
@@ -1033,7 +1033,7 @@ const AdminAnalytics: React.FC = () => {
         <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
           <div>
             <h1 className="flex items-center gap-3 text-2xl font-bold text-gray-900">
-              <BarChart3 className="text-indigo-600" size={26} />
+              <BarChart3 className="text-orange-500" size={26} />
               Analytics Dashboard
             </h1>
             <p className="mt-1 text-sm text-gray-500">Monitor business performance and key metrics across the platform</p>
@@ -1060,7 +1060,7 @@ const AdminAnalytics: React.FC = () => {
             <div className="relative">
               <button
                 onClick={() => setExportMenuOpen((v) => !v)}
-                className="flex items-center gap-2 rounded-xl bg-indigo-600 px-4 py-2 text-sm font-medium text-white shadow-sm transition-colors hover:bg-indigo-700"
+                className="flex items-center gap-2 rounded-xl bg-orange-500 px-4 py-2 text-sm font-medium text-white shadow-sm transition-colors hover:bg-orange-600"
               >
                 <Download className="h-4 w-4" />
                 Export
@@ -1181,7 +1181,7 @@ const AdminAnalytics: React.FC = () => {
                         key={c}
                         onClick={() => setActiveChart(c)}
                         className={`rounded-lg px-3 py-1 text-sm font-medium transition-colors ${
-                          activeChart === c ? 'bg-indigo-600 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                          activeChart === c ? 'bg-orange-500 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
                         }`}
                       >
                         {c === 'sales' ? 'Sales' : c === 'users' ? 'User Growth' : 'Revenue'}
@@ -1624,7 +1624,7 @@ const AdminAnalytics: React.FC = () => {
               <button
                 onClick={handleGenerateReport}
                 disabled={reportLoading}
-                className="mt-4 flex items-center gap-2 rounded-xl bg-indigo-600 px-4 py-2 text-sm font-medium text-white shadow-sm transition-colors hover:bg-indigo-700 disabled:opacity-50"
+                className="mt-4 flex items-center gap-2 rounded-xl bg-orange-500 px-4 py-2 text-sm font-medium text-white shadow-sm transition-colors hover:bg-orange-600 disabled:opacity-50"
               >
                 <FileBarChart className="h-4 w-4" />
                 {reportLoading ? 'Generating...' : 'Generate Report'}

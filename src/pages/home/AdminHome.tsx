@@ -152,7 +152,7 @@ export default function AdminHome() {
   // ── Render ──────────────────────────────────────────────────────────────────
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-gray-900">
+    <div className="min-h-full bg-transparent">
       <div className="mx-auto max-w-7xl space-y-8 px-4 py-6 sm:px-6 lg:px-8">
         <DashboardHeader lastUpdated={lastUpdated} refreshing={refreshing} onRefresh={refresh} error={error} />
 
@@ -162,30 +162,24 @@ export default function AdminHome() {
             title="Total Users"
             value={stats?.users}
             icon={Users}
-            iconColor="text-indigo-600"
-            iconBg="bg-indigo-50"
-            spark={[120, 132, 141, 155, 148, 162, stats?.users ?? 0]}
-            sparkColor="#6366f1"
+            iconColor="text-orange-600"
+            iconBg="bg-orange-50"
             loading={statsLoading && !stats}
           />
           <StatCard
             title="Total Vendors"
             value={stats?.vendors}
             icon={Store}
-            iconColor="text-emerald-600"
-            iconBg="bg-emerald-50"
-            spark={[30, 33, 35, 36, 38, 41, stats?.vendors ?? 0]}
-            sparkColor="#10b981"
+            iconColor="text-slate-700"
+            iconBg="bg-slate-100"
             loading={statsLoading && !stats}
           />
           <StatCard
             title="Active Riders"
             value={stats?.riders}
             icon={Truck}
-            iconColor="text-violet-600"
-            iconBg="bg-violet-50"
-            spark={[18, 20, 19, 22, 24, 23, stats?.riders ?? 0]}
-            sparkColor="#7c3aed"
+            iconColor="text-blue-700"
+            iconBg="bg-blue-50"
             loading={statsLoading && !stats}
           />
           <StatCard
@@ -193,8 +187,8 @@ export default function AdminHome() {
             value={stats?.todayRevenue}
             prefix="KES "
             icon={DollarSign}
-            iconColor="text-amber-600"
-            iconBg="bg-amber-50"
+            iconColor="text-orange-600"
+            iconBg="bg-orange-50"
             spark={revenueData.map((d) => d.revenue)}
             sparkColor="#d97706"
             fmt={fmtKES}

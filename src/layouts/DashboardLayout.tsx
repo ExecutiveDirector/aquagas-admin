@@ -17,15 +17,13 @@ import {
   BarChart3,
   LogOut,
   Menu,
+  X,
   ShoppingCart,
   CreditCard,
   RefreshCw,
   Package,
   MessageSquare,
-  Search,
-  Command,
   ChevronRight,
-  Sparkles,
   Shield,
   Megaphone,
   Plug,
@@ -63,29 +61,36 @@ import { canAccess, roleLabel } from "../config/rolePermissions";
 // NAVIGATION
 // ======================================================
 
-const NAV_MAIN = [
+const NAV_OVERVIEW = [
   { name: "Overview", href: "/", icon: Home },
-  { name: "Users", href: "/users", icon: Users },
-  { name: "Vendors", href: "/vendors", icon: Store },
-  { name: "Riders", href: "/riders", icon: Truck },
+];
+
+const NAV_OPERATIONS = [
   { name: "Orders", href: "/orders", icon: ShoppingCart },
+  { name: "Riders", href: "/riders", icon: Truck },
+  { name: "Vendors", href: "/vendors", icon: Store },
+];
+
+const NAV_MANAGEMENT = [
+  { name: "Users", href: "/users", icon: Users },
   { name: "Products", href: "/products", icon: Package },
+  { name: "Vendor Outreach", href: "/outreach", icon: Megaphone },
+  { name: "Wholesaler Sync", href: "/wholesaler-sync", icon: RefreshCw },
   { name: "Integrations", href: "/integrations", icon: Plug },
+];
+
+const NAV_FINANCE = [
   { name: "Transactions", href: "/transactions", icon: CreditCard },
 ];
 
 const NAV_SYSTEM = [
-  { name: "Vendor Outreach", href: "/outreach", icon: Megaphone },
   { name: "Notifications", href: "/notifications", icon: Bell },
   { name: "Support", href: "/support", icon: MessageSquare },
-  { name: "Wholesaler Sync", href: "/wholesaler-sync", icon: RefreshCw },
   { name: "Analytics", href: "/analytics", icon: BarChart3 },
   { name: "Settings", href: "/settings", icon: Settings },
 ];
 
-// "Admins" is appended per-render (see DashboardLayout body) rather than
-// here, since it depends on the logged-in admin's admin_role — a static
-// module-level array can't react to who's currently logged in.
+// Admin access is role-dependent and is added at render time.
 const NAV_ADMINS = { name: "Admins", href: "/admins", icon: Shield };
 
 // ======================================================
@@ -115,8 +120,8 @@ function NavItem({
 
         ${
           active
-            ? "bg-indigo-50 border-indigo-100 text-indigo-700 shadow-sm"
-            : "border-transparent text-slate-500 hover:bg-white hover:border-slate-200 hover:text-slate-800"
+            ? "bg-orange-500/10 border-orange-400/20 text-orange-200 shadow-sm"
+            : "border-transparent text-slate-300 hover:bg-white/10 hover:border-white/10 hover:text-white"
         }
       `}
     >
@@ -124,7 +129,7 @@ function NavItem({
       <div
         className={`
           absolute left-0 top-2 bottom-2 w-1 rounded-r-full transition-all
-          ${active ? "bg-indigo-600" : "bg-transparent"}
+          ${active ? "bg-orange-500" : "bg-transparent"}
         `}
       />
 
@@ -136,8 +141,8 @@ function NavItem({
 
           ${
             active
-              ? "bg-indigo-600 text-white shadow-lg shadow-indigo-200"
-              : "bg-slate-100 text-slate-400 group-hover:bg-slate-200 group-hover:text-slate-700"
+              ? "bg-orange-500 text-white shadow-lg shadow-orange-950/30"
+              : "bg-white/10 text-slate-400 group-hover:bg-white/15 group-hover:text-white"
           }
         `}
       >
@@ -147,7 +152,7 @@ function NavItem({
       <span className="truncate">{name}</span>
 
       {active && (
-        <ChevronRight className="ml-auto w-4 h-4 text-indigo-400" />
+        <ChevronRight className="ml-auto w-4 h-4 text-orange-300" />
       )}
     </button>
   );
@@ -181,10 +186,19 @@ export default function DashboardLayout() {
   // avoids dead-end nav items for every role, not just one.
   const adminRole = getAdminRole();
   const mySections = getPermissions().sections;
-  const navMain = NAV_MAIN.filter((item) => canAccess(item.href, adminRole, mySections));
-  const navSystemBase = [...NAV_SYSTEM, ...(isSuperAdmin() ? [NAV_ADMINS] : [])];
-  const navSystem = navSystemBase.filter((item) => canAccess(item.href, adminRole, mySections));
-  const allNav = [...navMain, ...navSystem];
+  const filterNav = (items: { name: string; href: string; icon: React.ElementType }[]) =>
+    items.filter((item) => canAccess(item.href, adminRole, mySections));
+  const navGroups = [
+    { label: "Overview", items: filterNav(NAV_OVERVIEW) },
+    { label: "Operations", items: filterNav(NAV_OPERATIONS) },
+    { label: "Management", items: filterNav(NAV_MANAGEMENT) },
+    { label: "Finance", items: filterNav(NAV_FINANCE) },
+    {
+      label: "System",
+      items: filterNav([...NAV_SYSTEM, ...(isSuperAdmin() ? [NAV_ADMINS] : [])]),
+    },
+  ].filter((group) => group.items.length > 0);
+  const allNav = navGroups.flatMap((group) => group.items);
 
   const isActive = (href: string) =>
     href === "/"
@@ -299,7 +313,7 @@ export default function DashboardLayout() {
     account?.email?.[0]?.toUpperCase() ?? "A";
 
   return (
-    <div className="h-screen w-screen flex overflow-hidden bg-[#F6F8FC]">
+    <div className="h-screen w-screen flex overflow-hidden bg-[#F5F7FB]">
 
       {/* =========================================
           MOBILE OVERLAY
@@ -319,9 +333,9 @@ export default function DashboardLayout() {
           fixed inset-y-0 left-0 z-50
           flex flex-col
           w-[260px]
-          bg-white
-          border-r border-slate-200/70
-          shadow-[0_10px_40px_rgba(0,0,0,0.04)]
+          bg-[#101C2E]
+          border-r border-white/10
+          shadow-[8px_0_32px_rgba(15,23,42,0.12)]
 
           transition-transform duration-300
 
@@ -338,22 +352,17 @@ export default function DashboardLayout() {
         {/* =====================================
             BRAND
         ===================================== */}
-        <div className="h-16 shrink-0 flex items-center justify-between px-5 border-b border-slate-100">
+        <div className="h-[76px] shrink-0 flex items-center justify-between px-5 border-b border-white/10">
 
           <div className="flex items-center gap-3">
-            <div
-              className="
-                w-10 h-10 rounded-2xl
-                bg-gradient-to-br from-indigo-500 to-violet-600
-                flex items-center justify-center
-                shadow-lg shadow-indigo-200
-              "
-            >
-              <Sparkles className="w-5 h-5 text-white" />
-            </div>
+            <img
+              src="/logo.png"
+              alt="AquaGas"
+              className="h-10 w-10 rounded-xl bg-white object-contain p-1.5 shadow-lg shadow-black/10"
+            />
 
             <div>
-              <p className="text-[15px] font-bold text-slate-800">
+              <p className="text-[15px] font-bold tracking-tight text-white">
                 AquaGas
               </p>
 
@@ -362,38 +371,13 @@ export default function DashboardLayout() {
               </p>
             </div>
           </div>
-        </div>
-
-        {/* =====================================
-            SEARCH
-        ===================================== */}
-        <div className="px-4 pt-4">
           <button
-            className="
-              w-full flex items-center gap-3
-              px-4 py-3 rounded-2xl
-              bg-slate-50 hover:bg-white
-              border border-slate-200
-              transition-all
-            "
+            type="button"
+            onClick={() => setSidebarOpen(false)}
+            aria-label="Close navigation"
+            className="lg:hidden rounded-xl p-2 text-slate-400 transition-colors hover:bg-white/10 hover:text-white"
           >
-            <Search className="w-4 h-4 text-slate-400" />
-
-            <span className="text-sm text-slate-400">
-              Search anything...
-            </span>
-
-            <div
-              className="
-                ml-auto flex items-center gap-1
-                px-2 py-1 rounded-lg
-                bg-white border border-slate-200
-                text-[11px] text-slate-400
-              "
-            >
-              <Command className="w-3 h-3" />
-              K
-            </div>
+            <X className="h-5 w-5" />
           </button>
         </div>
 
@@ -402,68 +386,53 @@ export default function DashboardLayout() {
         ===================================== */}
         <nav className="flex-1 overflow-y-auto px-4 py-5">
 
-          {/* MAIN */}
-          <div className="space-y-1">
-            <p className="px-3 mb-2 text-[10px] font-bold uppercase tracking-[0.18em] text-slate-400">
-              Main
-            </p>
-
-            {navMain.map(({ name, href, icon }) => (
-              <NavItem
-                key={href}
-                name={name}
-                icon={icon}
-                active={isActive(href)}
-                onClick={() => handleNavClick(href)}
-              />
-            ))}
-          </div>
-
-          {/* SYSTEM */}
-          <div className="space-y-1 mt-8">
-            <p className="px-3 mb-2 text-[10px] font-bold uppercase tracking-[0.18em] text-slate-400">
-              System
-            </p>
-
-            {navSystem.map(({ name, href, icon }) => (
-              <NavItem
-                key={href}
-                name={name}
-                icon={icon}
-                active={isActive(href)}
-                onClick={() => handleNavClick(href)}
-              />
-            ))}
-          </div>
+          {navGroups.map((group) => (
+            <section key={group.label} className="mb-7 last:mb-0">
+              <p className="px-3 mb-2 text-[10px] font-bold uppercase tracking-[0.18em] text-slate-500">
+                {group.label}
+              </p>
+              <div className="space-y-1">
+                {group.items.map(({ name, href, icon }) => (
+                  <NavItem
+                    key={href}
+                    name={name}
+                    icon={icon}
+                    active={isActive(href)}
+                    onClick={() => handleNavClick(href)}
+                  />
+                ))}
+              </div>
+            </section>
+          ))}
         </nav>
 
         {/* =====================================
             FOOTER USER
         ===================================== */}
-        <div className="p-4 border-t border-slate-100">
+        <div className="p-4 border-t border-white/10">
 
           <div
             className="
               flex items-center gap-3
               p-3 rounded-2xl
-              bg-slate-50
-              border border-slate-100
+              bg-white/5
+              border border-white/10
             "
           >
             <div
               className="
                 w-10 h-10 rounded-2xl
-                bg-gradient-to-br from-indigo-500 to-violet-600
+                bg-gradient-to-br from-orange-500 to-orange-600
                 flex items-center justify-center
                 text-white font-bold text-sm
-                shadow-lg shadow-indigo-200
+                shadow-lg shadow-orange-950/30
               "
             >
               {initials}
             </div>
 
             <div className="flex-1 min-w-0">
-              <p className="text-sm font-semibold text-slate-700 truncate">
+              <p className="text-sm font-semibold text-white truncate">
                 {account?.email}
               </p>
 
@@ -473,11 +442,13 @@ export default function DashboardLayout() {
             </div>
 
             <button
+              type="button"
               onClick={handleLogout}
+              aria-label="Sign out"
               className="
                 p-2 rounded-xl
                 text-slate-400 hover:text-red-500
-                hover:bg-white
+                hover:bg-white/10
                 transition-all
               "
             >
@@ -497,9 +468,9 @@ export default function DashboardLayout() {
         ===================================== */}
         <header
           className="
-            h-16 shrink-0
-            bg-white/80 backdrop-blur-xl
-            border-b border-slate-200/70
+            h-[76px] shrink-0
+            bg-white/90 backdrop-blur-xl
+            border-b border-slate-200/80
             px-6
             flex items-center
             shadow-sm
@@ -509,7 +480,10 @@ export default function DashboardLayout() {
 
           {/* Mobile button */}
           <button
+            type="button"
             onClick={() => setSidebarOpen(true)}
+            aria-label="Open navigation"
+            aria-expanded={sidebarOpen}
             className="
               lg:hidden mr-4
               p-2 rounded-xl
@@ -522,7 +496,7 @@ export default function DashboardLayout() {
 
           {/* Title */}
           <div>
-            <h1 className="text-[20px] font-bold tracking-tight text-slate-800">
+            <h1 className="text-[19px] font-semibold tracking-tight text-slate-900">
               {getPageTitle()}
             </h1>
 
@@ -544,16 +518,19 @@ export default function DashboardLayout() {
               className="
                 hidden md:flex items-center gap-2
                 px-3 py-2 rounded-full
-                bg-emerald-50 border border-emerald-100
-                text-emerald-700 text-xs font-semibold
+                bg-orange-50 border border-orange-100
+                text-orange-700 text-xs font-semibold
               "
             >
-              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-              System Operational
+              <span className="w-2 h-2 rounded-full bg-orange-500" />
+              Operations console
             </div>
 
             {/* Notification */}
             <button
+              type="button"
+              onClick={() => navigate("/notifications")}
+              aria-label="Open notifications"
               className="
                 relative p-2.5 rounded-2xl
                 bg-white border border-slate-200
@@ -582,10 +559,10 @@ export default function DashboardLayout() {
               <div
                 className="
                   w-10 h-10 rounded-2xl
-                  bg-gradient-to-br from-indigo-500 to-violet-600
+                  bg-gradient-to-br from-orange-500 to-orange-600
                   flex items-center justify-center
                   text-white font-bold text-sm
-                  shadow-lg shadow-indigo-200
+                  shadow-lg shadow-orange-950/30
                 "
               >
                 {initials}
@@ -614,7 +591,7 @@ export default function DashboardLayout() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.25 }}
             className="
-              p-6 lg:p-8
+              p-5 sm:p-6 lg:p-8
               max-w-[1600px]
               mx-auto
               w-full

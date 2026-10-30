@@ -274,7 +274,7 @@ function OrderDetailPanel({
       <div className="flex-1 bg-black/40 backdrop-blur-sm" onClick={onClose} />
 
       {/* Panel */}
-      <div className="w-full max-w-md bg-white dark:bg-gray-900 shadow-2xl flex flex-col overflow-y-auto">
+      <div className="w-full max-w-md h-full sm:h-auto sm:max-h-[calc(100dvh-2rem)] bg-white dark:bg-gray-900 shadow-2xl flex flex-col overflow-y-auto">
         {/* Header */}
         <div className="flex items-center justify-between px-5 py-4 border-b border-gray-200 dark:border-gray-700 sticky top-0 bg-white dark:bg-gray-900 z-10">
           <div>
@@ -355,7 +355,7 @@ function OrderDetailPanel({
               <button
                 onClick={handleStatusUpdate}
                 disabled={actionLoading || newStatus === order.order_status}
-                className="px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-medium disabled:opacity-50 transition-colors"
+                className="px-4 py-2 rounded-xl bg-orange-500 hover:bg-orange-600 text-white text-sm font-medium disabled:opacity-50 transition-colors"
               >
                 Save
               </button>
@@ -480,7 +480,7 @@ function OrderDetailPanel({
               <button
                 onClick={handleAssignRider}
                 disabled={actionLoading || !selectedRiderId}
-                className="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-medium disabled:opacity-50 transition-colors whitespace-nowrap"
+                className="px-4 py-2 rounded-xl bg-orange-500 hover:bg-orange-600 text-white text-sm font-medium disabled:opacity-50 transition-colors whitespace-nowrap"
               >
                 {actionLoading ? "…" : "Assign"}
               </button>
@@ -652,7 +652,7 @@ export default function OrdersPage() {
           <select
             value={statusFilter}
             onChange={(e) => { setStatusFilter(e.target.value); setGroupFilter(""); }}
-            className="px-3 py-2.5 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-sm text-gray-700 dark:text-gray-300 outline-none focus:border-indigo-400 focus:ring-1 focus:ring-indigo-400/20 transition-colors"
+            className="w-full sm:w-auto px-3 py-2.5 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-sm text-gray-700 dark:text-gray-300 outline-none focus:border-orange-400 focus:ring-2 focus:ring-orange-400/20 transition-colors"
           >
             <option value="">All Statuses</option>
             {Object.entries(DISPLAY_STATUS).map(([k, v]) => (
@@ -663,7 +663,7 @@ export default function OrdersPage() {
         {groupFilter && (
           <p className="text-xs text-gray-500">
             Showing the “{groupFilter}” group.{" "}
-            <button className="text-indigo-600 hover:underline" onClick={() => setGroupFilter("")}>Clear</button>
+            <button className="text-orange-600 hover:underline" onClick={() => setGroupFilter("")}>Clear</button>
           </p>
         )}
 
@@ -676,7 +676,7 @@ export default function OrdersPage() {
 
         <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm overflow-hidden">
           <div className="overflow-x-auto">
-            <table className="w-full">
+            <table className="w-full min-w-[900px]">
               <thead className="border-b border-gray-100 dark:border-gray-700 bg-gray-50/50 dark:bg-gray-800/80">
                 <tr>
                   <th className="px-4 py-3 text-left text-[11px] font-medium text-gray-400 uppercase tracking-wide">Order</th>
@@ -749,7 +749,7 @@ export default function OrdersPage() {
           </div>
 
           {totalPages > 1 && (
-            <div className="flex items-center justify-between px-4 py-3 border-t border-gray-100 dark:border-gray-700">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 px-4 py-3 border-t border-gray-100 dark:border-gray-700">
               <span className="text-xs text-gray-400">
                 Page {page} of {totalPages} ({total.toLocaleString()} orders)
               </span>

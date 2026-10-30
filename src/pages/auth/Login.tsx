@@ -126,13 +126,13 @@ export default function Login() {
   }, [email, password]);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-[radial-gradient(ellipse_at_top,_#fff7ed,_#f5f7fb_55%,_#eef2f7)] dark:from-gray-950 dark:via-gray-900 dark:to-gray-950 flex items-center justify-center p-4">
       <div className="w-full max-w-md">
 
         {/* Header */}
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-r from-blue-600 to-purple-600 rounded-full mb-4 shadow-lg shadow-blue-500/25">
-            <Shield className="w-8 h-8 text-white" />
+          <div className="inline-flex items-center justify-center w-20 h-20 rounded-2xl bg-white mb-4 shadow-xl shadow-slate-900/10 border border-white">
+            <img src="/logo.png" alt="AquaGas" className="w-16 h-16 object-contain" />
           </div>
           <h1 className="text-3xl font-bold bg-gradient-to-r from-gray-900 to-gray-700 dark:from-white dark:to-gray-300 bg-clip-text text-transparent mb-2">
             Admin Login
@@ -178,7 +178,7 @@ export default function Login() {
                       ? "border-red-300 focus:ring-red-500 focus:border-red-500"
                       : !validationErrors.email && touched.email && email
                       ? "border-green-300 focus:ring-green-500 focus:border-green-500"
-                      : "border-gray-300 focus:ring-blue-500 focus:border-blue-500"
+                      : "border-gray-300 focus:ring-orange-500 focus:border-orange-500"
                   } dark:bg-gray-700 dark:border-gray-600 dark:text-white disabled:opacity-50 disabled:cursor-not-allowed`}
                   placeholder="admin@example.com"
                 />
@@ -210,7 +210,7 @@ export default function Login() {
                 <Link
                   to="/forgot-password"
                   tabIndex={-1}
-                  className="text-xs text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 hover:underline transition-colors"
+                  className="text-xs text-orange-600 dark:text-orange-400 hover:text-orange-700 dark:hover:text-orange-300 hover:underline transition-colors"
                 >
                   Forgot password?
                 </Link>
@@ -275,7 +275,7 @@ export default function Login() {
                   checked={rememberMe}
                   onChange={(e) => setRememberMe(e.target.checked)}
                   disabled={loading}
-                  className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2 dark:bg-gray-700 dark:border-gray-600 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="w-4 h-4 text-orange-600 bg-gray-100 border-gray-300 rounded focus:ring-orange-500 focus:ring-2 dark:bg-gray-700 dark:border-gray-600 disabled:opacity-50 disabled:cursor-not-allowed"
                 />
                 <span className="text-sm text-gray-700 dark:text-gray-300">
                   Remember me
@@ -300,7 +300,7 @@ export default function Login() {
               className={`w-full flex items-center justify-center py-3 px-4 rounded-xl text-white font-medium transition-all duration-200 ${
                 loading || !isFormValid
                   ? "bg-gray-400 cursor-not-allowed opacity-60"
-                  : "bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 transform hover:scale-[1.02] shadow-lg shadow-blue-500/25 hover:shadow-blue-500/40"
+                  : "bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 shadow-lg shadow-orange-500/20 hover:shadow-orange-500/30"
               }`}
             >
               {loading ? (
