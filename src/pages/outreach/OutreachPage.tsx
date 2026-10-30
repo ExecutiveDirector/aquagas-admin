@@ -438,7 +438,7 @@ export default function OutreachPage() {
                         {tel && (
                           <a
                             href={tel}
-                            className="flex items-center gap-1 bg-indigo-600 text-white text-[11px] font-semibold px-2.5 py-1.5 rounded-lg hover:opacity-90"
+                            className="flex items-center gap-1 bg-orange-500 text-white text-[11px] font-semibold px-2.5 py-1.5 rounded-lg hover:opacity-90"
                           >
                             <Phone className="w-3.5 h-3.5" /> Call
                           </a>
