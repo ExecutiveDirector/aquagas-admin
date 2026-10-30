@@ -465,7 +465,7 @@ const Finance: React.FC = () => {
             Platform-wide payments, refunds, payouts and revenue performance.
           </p>
         </div>
-        <div className="flex gap-3">
+        <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
           <select
             value={dateRange}
             onChange={(e) => setDateRange(Number(e.target.value))}
@@ -550,7 +550,7 @@ const Finance: React.FC = () => {
         </div>
       )}
 
-      <div className="flex gap-2 mb-4 border-b border-gray-200 dark:border-gray-700">
+      <div className="flex gap-2 mb-4 border-b border-gray-200 dark:border-gray-700 overflow-x-auto">
         {tabs.map((t) => (
           <button
             key={t.key}
@@ -569,7 +569,7 @@ const Finance: React.FC = () => {
 
       {tab === 'transactions' && (
         <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md border border-gray-200 dark:border-gray-600">
-          <div className="p-6 border-b border-gray-200 dark:border-gray-600 flex flex-col sm:flex-row justify-between gap-4">
+          <div className="p-4 sm:p-6 border-b border-gray-200 dark:border-gray-600 flex flex-col sm:flex-row justify-between gap-4">
             <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-200">All Transactions</h3>
             <div className="flex flex-col sm:flex-row gap-3">
               <div className="relative">
@@ -672,7 +672,7 @@ const Finance: React.FC = () => {
 
       {tab === 'refunds' && (
         <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md border border-gray-200 dark:border-gray-600">
-          <div className="p-6 border-b border-gray-200 dark:border-gray-600 flex justify-between items-center">
+          <div className="p-4 sm:p-6 border-b border-gray-200 dark:border-gray-600 flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3">
             <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-200">Refund Requests</h3>
             <select
               value={refundStatus}
@@ -918,7 +918,7 @@ const Finance: React.FC = () => {
       )}
 
       {approvingRefund && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" onClick={() => setApprovingRefund(null)}>
+        <div className="fixed inset-0 bg-black/50 flex items-start sm:items-center justify-center z-50 p-3 sm:p-4 overflow-y-auto" onClick={() => setApprovingRefund(null)}>
           <div
             className="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-md w-full p-6 space-y-4"
             onClick={(e) => e.stopPropagation()}
@@ -965,7 +965,7 @@ const Finance: React.FC = () => {
       )}
 
       {selectedTx && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" onClick={() => setSelectedTx(null)}>
+        <div className="fixed inset-0 bg-black/50 flex items-start sm:items-center justify-center z-50 p-3 sm:p-4 overflow-y-auto" onClick={() => setSelectedTx(null)}>
           <div
             className="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-lg w-full p-6"
             onClick={(e) => e.stopPropagation()}
@@ -1046,10 +1046,10 @@ const CreatePayoutModal: React.FC<{ onClose: () => void; onCreated: () => void }
   };
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" onClick={onClose}>
+    <div className="fixed inset-0 bg-black/50 flex items-start sm:items-center justify-center z-50 p-3 sm:p-4 overflow-y-auto" onClick={onClose}>
       <form
         onSubmit={handleSubmit}
-        className="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-md w-full p-6"
+        className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl max-w-md w-full max-h-[calc(100dvh-1.5rem)] overflow-y-auto p-4 sm:p-6"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex justify-between items-start mb-4">
