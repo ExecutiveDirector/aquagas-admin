@@ -76,7 +76,7 @@ function CreateAdminModal({
   };
 
   return (
-    <div className="fixed inset-0 bg-black/30 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+    <div className="fixed inset-0 bg-black/30 backdrop-blur-sm z-50 flex items-start sm:items-center justify-center p-3 sm:p-4 overflow-y-auto">
       <div className="bg-white rounded-2xl shadow-xl w-full max-w-md p-6">
         <h2 className="text-lg font-bold text-slate-800 mb-4">New Admin</h2>
         <form onSubmit={submit} className="space-y-3">
@@ -389,7 +389,7 @@ const AdminsPage: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div>
           <h1 className="text-xl font-bold text-slate-800">Admin Management</h1>
           <p className="text-sm text-slate-400 mt-0.5">
@@ -411,7 +411,7 @@ const AdminsPage: React.FC = () => {
       </div>
 
       <div className="rounded-2xl bg-white border border-slate-200 overflow-hidden">
-        <table className="w-full text-sm">
+        <table className="w-full min-w-[760px] text-sm">
           <thead className="bg-slate-50 border-b border-slate-200">
             <tr className="text-left text-[11px] uppercase tracking-wider text-slate-400">
               <th className="px-5 py-3 font-semibold">Admin</th>
