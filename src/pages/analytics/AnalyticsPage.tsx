@@ -476,7 +476,7 @@ const TimeRangeSelector: React.FC<TimeRangeSelectorProps> = ({ selected, onChang
             key={range.value}
             onClick={() => onChange(range.value)}
             className={`rounded-lg px-3 py-1.5 text-sm font-medium transition-colors ${
-              selected === range.value ? 'bg-indigo-600 text-white shadow-sm' : 'text-gray-600 hover:bg-gray-100'
+              selected === range.value ? 'bg-orange-500 text-white shadow-sm' : 'text-gray-600 hover:bg-gray-100'
             }`}
           >
             {range.label}
@@ -541,7 +541,7 @@ const TabButton: React.FC<{ active: boolean; onClick: () => void; icon: LucideIc
   <button
     onClick={onClick}
     className={`flex items-center gap-2 whitespace-nowrap rounded-xl px-4 py-2 text-sm font-medium transition-all ${
-      active ? 'bg-indigo-600 text-white shadow-sm' : 'text-gray-600 hover:bg-white hover:shadow-sm'
+      active ? 'bg-orange-500 text-white shadow-sm' : 'text-gray-600 hover:bg-white hover:shadow-sm'
     }`}
   >
     <Icon className="h-4 w-4" />
@@ -1060,7 +1060,7 @@ const AdminAnalytics: React.FC = () => {
             <div className="relative">
               <button
                 onClick={() => setExportMenuOpen((v) => !v)}
-                className="flex items-center gap-2 rounded-xl bg-indigo-600 px-4 py-2 text-sm font-medium text-white shadow-sm transition-colors hover:bg-indigo-700"
+                className="flex items-center gap-2 rounded-xl bg-orange-500 px-4 py-2 text-sm font-medium text-white shadow-sm transition-colors hover:bg-orange-600"
               >
                 <Download className="h-4 w-4" />
                 Export
