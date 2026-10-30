@@ -620,7 +620,7 @@ const Finance: React.FC = () => {
           </div>
 
           <div className="overflow-x-auto">
-            <table className="min-w-full text-sm text-left text-gray-800 dark:text-gray-200">
+            <table className="min-w-[780px] text-sm text-left text-gray-800 dark:text-gray-200">
               <thead className="bg-gray-100 dark:bg-gray-700 text-xs uppercase text-gray-600 dark:text-gray-400">
                 <tr>
                   <th className="px-6 py-3">Reference</th>
@@ -690,7 +690,7 @@ const Finance: React.FC = () => {
             </select>
           </div>
           <div className="overflow-x-auto">
-            <table className="min-w-full text-sm text-left text-gray-800 dark:text-gray-200">
+            <table className="min-w-[780px] text-sm text-left text-gray-800 dark:text-gray-200">
               <thead className="bg-gray-100 dark:bg-gray-700 text-xs uppercase text-gray-600 dark:text-gray-400">
                 <tr>
                   <th className="px-6 py-3">Customer</th>
@@ -824,7 +824,7 @@ const Finance: React.FC = () => {
             </div>
           </div>
           <div className="overflow-x-auto">
-            <table className="min-w-full text-sm text-left text-gray-800 dark:text-gray-200">
+            <table className="min-w-[780px] text-sm text-left text-gray-800 dark:text-gray-200">
               <thead className="bg-gray-100 dark:bg-gray-700 text-xs uppercase text-gray-600 dark:text-gray-400">
                 <tr>
                   <th className="px-6 py-3">Reference</th>
