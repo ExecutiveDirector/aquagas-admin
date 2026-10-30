@@ -60,29 +60,36 @@ import { canAccess, roleLabel } from "../config/rolePermissions";
 // NAVIGATION
 // ======================================================
 
-const NAV_MAIN = [
+const NAV_OVERVIEW = [
   { name: "Overview", href: "/", icon: Home },
-  { name: "Users", href: "/users", icon: Users },
-  { name: "Vendors", href: "/vendors", icon: Store },
-  { name: "Riders", href: "/riders", icon: Truck },
+];
+
+const NAV_OPERATIONS = [
   { name: "Orders", href: "/orders", icon: ShoppingCart },
+  { name: "Riders", href: "/riders", icon: Truck },
+  { name: "Vendors", href: "/vendors", icon: Store },
+];
+
+const NAV_MANAGEMENT = [
+  { name: "Users", href: "/users", icon: Users },
   { name: "Products", href: "/products", icon: Package },
+  { name: "Vendor Outreach", href: "/outreach", icon: Megaphone },
+  { name: "Wholesaler Sync", href: "/wholesaler-sync", icon: RefreshCw },
   { name: "Integrations", href: "/integrations", icon: Plug },
+];
+
+const NAV_FINANCE = [
   { name: "Transactions", href: "/transactions", icon: CreditCard },
 ];
 
 const NAV_SYSTEM = [
-  { name: "Vendor Outreach", href: "/outreach", icon: Megaphone },
   { name: "Notifications", href: "/notifications", icon: Bell },
   { name: "Support", href: "/support", icon: MessageSquare },
-  { name: "Wholesaler Sync", href: "/wholesaler-sync", icon: RefreshCw },
   { name: "Analytics", href: "/analytics", icon: BarChart3 },
   { name: "Settings", href: "/settings", icon: Settings },
 ];
 
-// "Admins" is appended per-render (see DashboardLayout body) rather than
-// here, since it depends on the logged-in admin's admin_role — a static
-// module-level array can't react to who's currently logged in.
+// Admin access is role-dependent and is added at render time.
 const NAV_ADMINS = { name: "Admins", href: "/admins", icon: Shield };
 
 // ======================================================
@@ -178,10 +185,19 @@ export default function DashboardLayout() {
   // avoids dead-end nav items for every role, not just one.
   const adminRole = getAdminRole();
   const mySections = getPermissions().sections;
-  const navMain = NAV_MAIN.filter((item) => canAccess(item.href, adminRole, mySections));
-  const navSystemBase = [...NAV_SYSTEM, ...(isSuperAdmin() ? [NAV_ADMINS] : [])];
-  const navSystem = navSystemBase.filter((item) => canAccess(item.href, adminRole, mySections));
-  const allNav = [...navMain, ...navSystem];
+  const filterNav = (items: typeof NAV_OVERVIEW) =>
+    items.filter((item) => canAccess(item.href, adminRole, mySections));
+  const navGroups = [
+    { label: "Overview", items: filterNav(NAV_OVERVIEW) },
+    { label: "Operations", items: filterNav(NAV_OPERATIONS) },
+    { label: "Management", items: filterNav(NAV_MANAGEMENT) },
+    { label: "Finance", items: filterNav(NAV_FINANCE) },
+    {
+      label: "System",
+      items: filterNav([...NAV_SYSTEM, ...(isSuperAdmin() ? [NAV_ADMINS] : [])]),
+    },
+  ].filter((group) => group.items.length > 0);
+  const allNav = navGroups.flatMap((group) => group.items);
 
   const isActive = (href: string) =>
     href === "/"
@@ -361,39 +377,24 @@ export default function DashboardLayout() {
         ===================================== */}
         <nav className="flex-1 overflow-y-auto px-4 py-5">
 
-          {/* MAIN */}
-          <div className="space-y-1">
-            <p className="px-3 mb-2 text-[10px] font-bold uppercase tracking-[0.18em] text-slate-400">
-              Main
-            </p>
-
-            {navMain.map(({ name, href, icon }) => (
-              <NavItem
-                key={href}
-                name={name}
-                icon={icon}
-                active={isActive(href)}
-                onClick={() => handleNavClick(href)}
-              />
-            ))}
-          </div>
-
-          {/* SYSTEM */}
-          <div className="space-y-1 mt-8">
-            <p className="px-3 mb-2 text-[10px] font-bold uppercase tracking-[0.18em] text-slate-400">
-              System
-            </p>
-
-            {navSystem.map(({ name, href, icon }) => (
-              <NavItem
-                key={href}
-                name={name}
-                icon={icon}
-                active={isActive(href)}
-                onClick={() => handleNavClick(href)}
-              />
-            ))}
-          </div>
+          {navGroups.map((group) => (
+            <section key={group.label} className="mb-7 last:mb-0">
+              <p className="px-3 mb-2 text-[10px] font-bold uppercase tracking-[0.18em] text-slate-500">
+                {group.label}
+              </p>
+              <div className="space-y-1">
+                {group.items.map(({ name, href, icon }) => (
+                  <NavItem
+                    key={href}
+                    name={name}
+                    icon={icon}
+                    active={isActive(href)}
+                    onClick={() => handleNavClick(href)}
+                  />
+                ))}
+              </div>
+            </section>
+          ))}
         </nav>
 
         {/* =====================================
