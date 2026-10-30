@@ -17,6 +17,7 @@ import {
   BarChart3,
   LogOut,
   Menu,
+  X,
   ShoppingCart,
   CreditCard,
   RefreshCw,
@@ -370,6 +371,14 @@ export default function DashboardLayout() {
               </p>
             </div>
           </div>
+          <button
+            type="button"
+            onClick={() => setSidebarOpen(false)}
+            aria-label="Close navigation"
+            className="lg:hidden rounded-xl p-2 text-slate-400 transition-colors hover:bg-white/10 hover:text-white"
+          >
+            <X className="h-5 w-5" />
+          </button>
         </div>
 
         {/* =====================================
@@ -433,7 +442,9 @@ export default function DashboardLayout() {
             </div>
 
             <button
+              type="button"
               onClick={handleLogout}
+              aria-label="Sign out"
               className="
                 p-2 rounded-xl
                 text-slate-400 hover:text-red-500
@@ -469,7 +480,10 @@ export default function DashboardLayout() {
 
           {/* Mobile button */}
           <button
+            type="button"
             onClick={() => setSidebarOpen(true)}
+            aria-label="Open navigation"
+            aria-expanded={sidebarOpen}
             className="
               lg:hidden mr-4
               p-2 rounded-xl
@@ -504,16 +518,19 @@ export default function DashboardLayout() {
               className="
                 hidden md:flex items-center gap-2
                 px-3 py-2 rounded-full
-                bg-emerald-50 border border-emerald-100
-                text-emerald-700 text-xs font-semibold
+                bg-orange-50 border border-orange-100
+                text-orange-700 text-xs font-semibold
               "
             >
-              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-              System Operational
+              <span className="w-2 h-2 rounded-full bg-orange-500" />
+              Operations console
             </div>
 
             {/* Notification */}
             <button
+              type="button"
+              onClick={() => navigate("/notifications")}
+              aria-label="Open notifications"
               className="
                 relative p-2.5 rounded-2xl
                 bg-white border border-slate-200
