@@ -1033,7 +1033,7 @@ const AdminAnalytics: React.FC = () => {
         <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
           <div>
             <h1 className="flex items-center gap-3 text-2xl font-bold text-gray-900">
-              <BarChart3 className="text-indigo-600" size={26} />
+              <BarChart3 className="text-orange-500" size={26} />
               Analytics Dashboard
             </h1>
             <p className="mt-1 text-sm text-gray-500">Monitor business performance and key metrics across the platform</p>
