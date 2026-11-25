@@ -103,7 +103,7 @@ function ConfirmDialog({ title, msg, onConfirm, onCancel, danger }: ConfirmProps
         <p className="text-sm text-slate-500 mb-5">{msg}</p>
         <div className="flex gap-3 justify-end">
           <button onClick={onCancel} className="px-4 py-2 rounded-xl border border-slate-200 text-sm font-medium text-slate-600 hover:bg-slate-50 transition">Cancel</button>
-          <button onClick={onConfirm} className={`px-4 py-2 rounded-xl text-sm font-semibold text-white transition ${danger ? 'bg-red-500 hover:bg-red-600' : 'bg-indigo-600 hover:bg-indigo-700'}`}>Confirm</button>
+          <button onClick={onConfirm} className={`px-4 py-2 rounded-xl text-sm font-semibold text-white transition ${danger ? 'bg-red-500 hover:bg-red-600' : 'bg-orange-500 hover:bg-orange-600'}`}>Confirm</button>
         </div>
       </div>
     </div>
@@ -136,7 +136,7 @@ function EditModal({ notif, onSave, onClose, loading }: EditModalProps) {
         <div className="flex justify-end gap-3 px-6 py-4 border-t border-slate-100 bg-slate-50 rounded-b-2xl">
           <button onClick={onClose} className="px-4 py-2 rounded-xl border border-slate-200 text-sm font-medium text-slate-600 hover:bg-slate-100 transition">Cancel</button>
           <button disabled={loading} onClick={() => onSave(notif.notification_id, { title, content })}
-            className="px-4 py-2 rounded-xl bg-indigo-600 text-white text-sm font-semibold hover:bg-indigo-700 disabled:opacity-50 transition flex items-center gap-2">
+            className="px-4 py-2 rounded-xl bg-orange-500 text-white text-sm font-semibold hover:bg-indigo-700 disabled:opacity-50 transition flex items-center gap-2">
             {loading && <Loader2 className="w-3.5 h-3.5 animate-spin" />}Save Changes
           </button>
         </div>
@@ -327,7 +327,7 @@ export default function NotificationsPage() {
           </div>
           <div className="flex gap-2">
             <button onClick={() => setTab('compose')}
-              className="inline-flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-xl text-sm font-semibold hover:bg-indigo-700 shadow-sm shadow-indigo-200 transition">
+              className="inline-flex items-center gap-2 px-4 py-2 bg-orange-500 text-white rounded-xl text-sm font-semibold hover:bg-indigo-700 shadow-sm shadow-orange-200 transition">
               <Plus className="w-4 h-4" />New Notification
             </button>
             <button onClick={loadData} disabled={loading}
@@ -548,7 +548,7 @@ export default function NotificationsPage() {
                     Cancel
                   </button>
                   <button type="submit" disabled={actionLoading}
-                    className="px-5 py-2.5 rounded-xl bg-indigo-600 text-white text-sm font-semibold hover:bg-indigo-700 shadow-sm shadow-indigo-200 disabled:opacity-50 transition flex items-center gap-2">
+                    className="px-5 py-2.5 rounded-xl bg-orange-500 text-white text-sm font-semibold hover:bg-indigo-700 shadow-sm shadow-orange-200 disabled:opacity-50 transition flex items-center gap-2">
                     {actionLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Plus className="w-4 h-4" />}
                     Create Notification
                   </button>

@@ -154,7 +154,7 @@ export default function SupportPage() {
           </p>
           <button
             onClick={loadData}
-            className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg"
+            className="bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-lg"
           >
             Retry Connection
           </button>
@@ -233,7 +233,7 @@ export default function SupportPage() {
                     onClick={() => setActiveTab(tab.id)}
                     className={`p-4 rounded-lg transition-all duration-200 text-left group relative ${
                       isActive
-                        ? 'bg-blue-600 text-white shadow-md'
+                        ? 'bg-orange-500 text-white shadow-md'
                         : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700'
                     }`}
                   >

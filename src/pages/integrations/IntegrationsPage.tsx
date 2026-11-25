@@ -117,7 +117,7 @@ function CsvImporter({ title, hint, template, templateName, url, field, disabled
         {rows.length > 0 && <span className="text-xs text-slate-500">{rows.length} rows</span>}
         <div className="flex gap-2 sm:ml-auto">
           <button disabled={busy || disabled || !rows.length} onClick={() => run(true)} className={`${btn} border border-slate-300 text-slate-700`}>Check first</button>
-          <button disabled={busy || disabled || !rows.length || !checked} onClick={() => run(false)} className={`${btn} bg-indigo-600 text-white`}
+          <button disabled={busy || disabled || !rows.length || !checked} onClick={() => run(false)} className={`${btn} bg-orange-500 text-white`}
             title={checked ? '' : 'Run "Check first" before importing'}>Import</button>
         </div>
       </div>
@@ -246,7 +246,7 @@ export default function IntegrationsPage() {
                 </label>
               ))}
             </div>
-            <button disabled={creating} onClick={createKey} className={`${btn} bg-indigo-600 text-white`}>Create key</button>
+            <button disabled={creating} onClick={createKey} className={`${btn} bg-orange-500 text-white`}>Create key</button>
 
             <div className="divide-y divide-slate-100">
               {active.length === 0 && <p className="text-sm text-slate-500 py-2">No active keys.</p>}

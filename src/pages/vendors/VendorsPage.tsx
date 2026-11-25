@@ -368,7 +368,7 @@ function AddVendorModal({ onClose, onSubmit, loading }: { onClose: () => void; o
           ))}
           <div className="flex gap-3 pt-2">
             <button type="button" onClick={onClose} className="flex-1 py-2.5 text-sm font-medium text-gray-600 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors">Cancel</button>
-            <button type="submit" disabled={loading} className="flex-1 py-2.5 text-sm font-medium text-white bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 rounded-lg transition-colors flex items-center justify-center gap-2">
+            <button type="submit" disabled={loading} className="flex-1 py-2.5 text-sm font-medium text-white bg-orange-500 hover:bg-orange-600 disabled:opacity-50 rounded-lg transition-colors flex items-center justify-center gap-2">
               {loading ? <><RefreshCw size={14} className="animate-spin" /> Creating…</> : <><Plus size={14} /> Add vendor</>}
             </button>
           </div>
@@ -537,7 +537,7 @@ function OutletForm({ initial, onSubmit, onCancel, loading }: {
 
       <div className="flex gap-3 pt-2 border-t border-gray-100">
         <button type="button" onClick={onCancel} disabled={loading} className="flex-1 py-2.5 text-sm font-medium text-gray-600 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors">Cancel</button>
-        <button type="submit" disabled={loading} className="flex-1 py-2.5 text-sm font-medium text-white bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 rounded-lg transition-colors flex items-center justify-center gap-2">
+        <button type="submit" disabled={loading} className="flex-1 py-2.5 text-sm font-medium text-white bg-orange-500 hover:bg-orange-600 disabled:opacity-50 rounded-lg transition-colors flex items-center justify-center gap-2">
           {loading ? <><RefreshCw size={13} className="animate-spin" /> Saving…</> : 'Save outlet'}
         </button>
       </div>
@@ -1047,7 +1047,7 @@ function AddProductModal({ vendorId, outletId, onClose, onAdded }: {
               <button
                 onClick={submit}
                 disabled={saving}
-                className="w-full flex items-center justify-center gap-2 py-2 text-sm font-medium text-white bg-emerald-600 hover:bg-emerald-700 rounded-lg transition-colors disabled:opacity-60"
+                className="w-full flex items-center justify-center gap-2 py-2 text-sm font-medium text-white bg-orange-500 hover:bg-orange-600 rounded-lg transition-colors disabled:opacity-60"
               >
                 {saving ? <><RefreshCw size={13} className="animate-spin" /> Adding…</> : 'Add to outlet'}
               </button>
@@ -1154,7 +1154,7 @@ function OrderRow({ order, vendorId, onChanged }: { order: any; vendorId: string
                 <button
                   onClick={saveStatus}
                   disabled={updating || status === (order.order_status || order.status)}
-                  className="flex items-center gap-1 px-3 py-1.5 text-xs font-medium text-white bg-emerald-600 hover:bg-emerald-700 rounded-lg transition-colors disabled:opacity-40"
+                  className="flex items-center gap-1 px-3 py-1.5 text-xs font-medium text-white bg-orange-500 hover:bg-orange-600 rounded-lg transition-colors disabled:opacity-40"
                 >
                   {updating ? <RefreshCw size={11} className="animate-spin" /> : <Save size={11} />} Update
                 </button>
@@ -1284,7 +1284,7 @@ function OutletsModal({ vendor, onClose }: { vendor: Vendor; onClose: () => void
             {view === 'list' && (
               <button
                 onClick={() => setView('add')}
-                className="flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-medium text-white bg-emerald-600 hover:bg-emerald-700 rounded-lg transition-colors"
+                className="flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-medium text-white bg-orange-500 hover:bg-orange-600 rounded-lg transition-colors"
               >
                 <Plus size={13} /> Add outlet
               </button>
@@ -1313,7 +1313,7 @@ function OutletsModal({ vendor, onClose }: { vendor: Vendor; onClose: () => void
                   <p className="text-xs text-gray-400 mb-4">Add the first outlet for {vendor.business_name}</p>
                   <button
                     onClick={() => setView('add')}
-                    className="flex items-center gap-1.5 px-4 py-2 text-sm font-medium text-white bg-emerald-600 hover:bg-emerald-700 rounded-lg transition-colors"
+                    className="flex items-center gap-1.5 px-4 py-2 text-sm font-medium text-white bg-orange-500 hover:bg-orange-600 rounded-lg transition-colors"
                   >
                     <Plus size={14} /> Add first outlet
                   </button>
@@ -1555,7 +1555,7 @@ function VendorDetail({ vendor, onBack, onUpdate, onManageOutlets, loading }: {
             ))}
             <div className="col-span-2 flex justify-end gap-3 pt-2">
               <button type="button" onClick={() => setEditing(false)} className="px-4 py-2 text-sm font-medium text-gray-600 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors">Cancel</button>
-              <button type="submit" disabled={loading} className="px-4 py-2 text-sm font-medium text-white bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 rounded-lg transition-colors flex items-center gap-2">
+              <button type="submit" disabled={loading} className="px-4 py-2 text-sm font-medium text-white bg-orange-500 hover:bg-orange-600 disabled:opacity-50 rounded-lg transition-colors flex items-center gap-2">
                 {loading ? <><RefreshCw size={13} className="animate-spin" /> Saving…</> : 'Save changes'}
               </button>
             </div>
@@ -1682,7 +1682,7 @@ const VendorsPage: React.FC = () => {
   const pendingCount = vendors.filter(v => !v.is_verified).length;
 
   return (
-    <div className="min-h-screen bg-gray-50 p-6 lg:p-8">
+    <div className="min-h-screen bg-[#F5F7FB] p-4 sm:p-6 lg:p-8">
       {/* Page toast */}
       {toast && (
         <div className={`fixed top-5 right-5 z-[60] flex items-center gap-3 px-4 py-3 rounded-xl shadow-lg text-sm font-medium transition-all ${toast.type === 'success' ? 'bg-gray-900 text-white' : 'bg-red-600 text-white'}`}>
@@ -1708,7 +1708,7 @@ const VendorsPage: React.FC = () => {
             </button>
             <button
               onClick={() => setShowAddModal(true)}
-              className="flex items-center gap-2 px-4 py-2.5 bg-emerald-600 text-white text-sm font-medium rounded-lg hover:bg-emerald-700 transition-colors"
+              className="flex items-center gap-2 px-4 py-2.5 bg-orange-500 text-white text-sm font-medium rounded-lg hover:bg-orange-600 transition-colors"
             >
               <Plus size={16} /> Add vendor
             </button>
@@ -1790,7 +1790,7 @@ const VendorsPage: React.FC = () => {
                 {!search && (
                   <button
                     onClick={() => setShowAddModal(true)}
-                    className="mt-4 flex items-center gap-1.5 text-sm text-emerald-600 hover:text-emerald-700 font-medium"
+                    className="mt-4 flex items-center gap-1.5 text-sm text-orange-600 hover:text-orange-700 font-medium"
                   >
                     <Plus size={14} /> Add your first vendor
                   </button>

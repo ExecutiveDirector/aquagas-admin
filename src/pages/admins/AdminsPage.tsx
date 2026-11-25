@@ -76,7 +76,7 @@ function CreateAdminModal({
   };
 
   return (
-    <div className="fixed inset-0 bg-black/30 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+    <div className="fixed inset-0 bg-black/30 backdrop-blur-sm z-50 flex items-start sm:items-center justify-center p-3 sm:p-4 overflow-y-auto">
       <div className="bg-white rounded-2xl shadow-xl w-full max-w-md p-6">
         <h2 className="text-lg font-bold text-slate-800 mb-4">New Admin</h2>
         <form onSubmit={submit} className="space-y-3">
@@ -109,7 +109,7 @@ function CreateAdminModal({
               <option key={r} value={r}>{ROLE_LABEL[r]}</option>
             ))}
           </select>
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <input
               className="px-3 py-2 rounded-xl border border-slate-200 text-sm"
               placeholder="Department (optional)"
@@ -129,7 +129,7 @@ function CreateAdminModal({
               Cancel
             </button>
             <button type="submit" disabled={saving}
-              className="px-4 py-2 rounded-xl text-sm font-semibold bg-indigo-600 text-white hover:bg-indigo-700 disabled:opacity-50">
+              className="px-4 py-2 rounded-xl text-sm font-semibold bg-orange-500 text-white hover:bg-orange-600 disabled:opacity-50">
               {saving ? "Creating…" : "Create Admin"}
             </button>
           </div>
@@ -205,8 +205,8 @@ function EditAdminModal({
   };
 
   return (
-    <div className="fixed inset-0 bg-black/30 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-      <div className="bg-white rounded-2xl shadow-xl w-full max-w-lg p-6 max-h-[90vh] overflow-y-auto">
+    <div className="fixed inset-0 bg-black/30 backdrop-blur-sm z-50 flex items-start sm:items-center justify-center p-3 sm:p-4 overflow-y-auto">
+      <div className="bg-white rounded-2xl shadow-xl w-full max-w-lg p-4 sm:p-6 max-h-[calc(100dvh-1.5rem)] overflow-y-auto">
         <h2 className="text-lg font-bold text-slate-800 mb-1">Edit Admin</h2>
         <p className="text-xs text-slate-400 mb-4">{admin.email}</p>
         <form onSubmit={submit} className="space-y-4">
@@ -256,7 +256,7 @@ function EditAdminModal({
                   return (
                     <div
                       key={s.key}
-                      className="flex items-center justify-between px-3 py-2 rounded-xl border border-slate-200"
+                      className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 px-3 py-3 rounded-xl border border-slate-200"
                     >
                       <div>
                         <p className="text-[13px] font-medium text-slate-700">{s.label}</p>
@@ -264,7 +264,7 @@ function EditAdminModal({
                           {includedByRole ? "Included by role" : "Not included by role"}
                         </p>
                       </div>
-                      <div className="flex gap-1">
+                      <div className="flex flex-wrap gap-1 w-full sm:w-auto">
                         <button
                           type="button"
                           onClick={() => setOverride(s.key, "withdraw")}
@@ -312,7 +312,7 @@ function EditAdminModal({
               Cancel
             </button>
             <button type="submit" disabled={saving}
-              className="px-4 py-2 rounded-xl text-sm font-semibold bg-indigo-600 text-white hover:bg-indigo-700 disabled:opacity-50">
+              className="px-4 py-2 rounded-xl text-sm font-semibold bg-orange-500 text-white hover:bg-orange-600 disabled:opacity-50">
               {saving ? "Saving…" : "Save Changes"}
             </button>
           </div>
@@ -389,7 +389,7 @@ const AdminsPage: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div>
           <h1 className="text-xl font-bold text-slate-800">Admin Management</h1>
           <p className="text-sm text-slate-400 mt-0.5">
@@ -411,7 +411,7 @@ const AdminsPage: React.FC = () => {
       </div>
 
       <div className="rounded-2xl bg-white border border-slate-200 overflow-hidden">
-        <table className="w-full text-sm">
+        <table className="w-full min-w-[760px] text-sm">
           <thead className="bg-slate-50 border-b border-slate-200">
             <tr className="text-left text-[11px] uppercase tracking-wider text-slate-400">
               <th className="px-5 py-3 font-semibold">Admin</th>

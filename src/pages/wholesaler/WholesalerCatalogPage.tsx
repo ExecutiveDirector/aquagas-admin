@@ -378,7 +378,7 @@ function SourcesTab({ vendorId }: { vendorId: string }) {
         </p>
         <button
           onClick={() => setShowForm((s) => !s)}
-          className="px-3 py-1.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm flex items-center gap-1"
+          className="px-3 py-1.5 bg-orange-500 text-white rounded-lg hover:bg-orange-600 text-sm flex items-center gap-1"
         >
           <Plus className="w-4 h-4" /> Register group
         </button>
@@ -421,7 +421,7 @@ function SourcesTab({ vendorId }: { vendorId: string }) {
           <button
             type="submit"
             disabled={saving}
-            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm disabled:opacity-50"
+            className="px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 text-sm disabled:opacity-50"
           >
             {saving ? 'Saving…' : 'Save source'}
           </button>
@@ -588,7 +588,7 @@ function MarginsTab() {
                     <button
                       onClick={() => handleSave(cat)}
                       disabled={savingId === cat.category_id}
-                      className="px-3 py-1 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-xs disabled:opacity-50"
+                      className="px-3 py-1 bg-orange-500 text-white rounded-lg hover:bg-orange-600 text-xs disabled:opacity-50"
                     >
                       {savingId === cat.category_id ? 'Saving…' : 'Save'}
                     </button>
