@@ -90,6 +90,12 @@ export default function AdminHome() {
     const t = setInterval(refresh, 60_000);
     return () => clearInterval(t);
   }, [refresh]);
+  // Live: refetch as soon as the backend reports a new order.
+  useEffect(() => {
+    const onChange = () => { refresh(); };
+    window.addEventListener('aquagas:dashboard-refresh', onChange);
+    return () => window.removeEventListener('aquagas:dashboard-refresh', onChange);
+  }, [refresh]);
 
   // ── Derived data ────────────────────────────────────────────────────────────
 
